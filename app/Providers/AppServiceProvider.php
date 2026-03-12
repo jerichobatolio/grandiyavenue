@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
@@ -20,6 +22,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // One-time: ensure users.last_name exists (fix production where migrate didn't run)
+        if (!$this->app->runningInConsole() && app()->environment('production')) {
+            try {
+                if (Schema::hasTable('users') && ! Schema::hasColumn('users', 'last_name')) {
+                    DB::statement('ALTER TABLE users ADD COLUMN last_name VARCHAR(255) NULL AFTER name');
+                }
+            } catch (\Throwable $e) {
+                // Ignore so app still boots
+            }
+        }
+
         // Force HTTPS in production (e.g. Railway) so forms and links use https
         if (!$this->app->runningInConsole() && app()->environment('production')) {
             URL::forceScheme('https');
