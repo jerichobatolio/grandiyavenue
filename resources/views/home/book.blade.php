@@ -986,9 +986,14 @@ label, .form-label {
 /* Responsive Design */
 @media (max-width: 768px) {
     .tables-grid {
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        gap: 15px;
-        padding: 15px;
+        grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+        gap: 10px;
+        padding: 10px;
+    }
+    
+    .vip-tables {
+        grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+        max-width: 100%;
     }
     
     .section-buttons {
@@ -1002,8 +1007,8 @@ label, .form-label {
     }
     
     .table-item {
-        min-height: 100px;
-        padding: 15px;
+        min-height: 90px;
+        padding: 10px;
     }
     
     .table-icon {
