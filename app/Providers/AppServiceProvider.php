@@ -20,6 +20,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Force HTTPS in production (e.g. Railway) so forms and links use https
+        if (!$this->app->runningInConsole() && app()->environment('production')) {
+            URL::forceScheme('https');
+        }
+
         // When hosting: if APP_URL is still localhost but the user visits via another host
         // (e.g. your real domain), use the request URL for assets and storage so images and
         // assets load correctly.
