@@ -1466,7 +1466,7 @@ document.addEventListener('DOMContentLoaded', function() {
             Object.keys(vipRooms).forEach(roomNum => {
                 const roomDiv = document.createElement('div');
                 roomDiv.className = 'vip-room mb-4';
-                roomDiv.innerHTML = `<h4 class="room-title">${roomNum}</h4>`;
+                // No visible room title (1,2,3,4) per request
                 
                 const roomTablesDiv = document.createElement('div');
                 roomTablesDiv.className = 'tables-grid vip-tables';
