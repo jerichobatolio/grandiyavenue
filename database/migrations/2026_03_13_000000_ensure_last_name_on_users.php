@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Ensure users table has last_name (fix production missing column).
      */
     public function up(): void
     {
@@ -24,9 +24,11 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (! Schema::hasColumn('users', 'last_name')) {
+            return;
+        }
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn('last_name');
         });
     }
 };
-
