@@ -1,7 +1,7 @@
 <!--  About Section  -->
     <div id="about" class="container-fluid wow fadeIn" data-wow-duration="1.5s">
         <div class="row">
-            <div class="col-lg-6 has-img-bg"></div>
+            <div class="col-lg-6 has-img-bg" style="background-image: url('{{ url('/about-bg') }}'); background-size: cover; background-position: center;"></div>
             <div class="col-lg-6">
                 <div class="row justify-content-center">
                     <div class="col-sm-8 py-5 my-5">

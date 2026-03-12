@@ -13,6 +13,7 @@ use App\Http\Controllers\EventTypeController;
 use App\Http\Controllers\VenueTypeController;
 use App\Http\Controllers\ReturnRefundController;
 use App\Http\Controllers\Admin\ReturnRefundController as AdminReturnRefundController;
+use Illuminate\Support\Facades\Response;
 
 // Welcome page route - Main landing page
 Route::get('/', function () {
@@ -31,6 +32,15 @@ Route::get('/', function () {
 
     return view('welcome', compact('reviews'));
 })->name('welcome');
+
+// Dedicated route for About Us background image so it always works in production
+Route::get('/about-bg', function () {
+    $path = public_path('assets/imgs/about-section.jpg');
+    if (! file_exists($path)) {
+        abort(404);
+    }
+    return Response::file($path);
+})->name('about.background');
 
 // Frontend/Home routes - moved to /home
 Route::get('/home', [HomeController::class,'my_home'])->name('home'); 
