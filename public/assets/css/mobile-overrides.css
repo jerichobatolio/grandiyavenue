@@ -1,0 +1,491 @@
+/**
+ * Mobile-first overrides for Grandiya Venue & Restaurant
+ * Ensures the whole system fits and is usable on mobile devices.
+ */
+
+/* Prevent horizontal scroll and ensure touch-friendly viewport */
+html {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Ensure all containers don't cause overflow */
+.container,
+.container-fluid {
+  max-width: 100%;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+/* ========== Typography scaling for mobile ========== */
+@media (max-width: 767.98px) {
+  body {
+    font-size: 0.95rem;
+  }
+
+  h1 {
+    font-size: 1.75rem !important;
+  }
+
+  h2 {
+    font-size: 1.5rem !important;
+  }
+
+  h3 {
+    font-size: 1.25rem !important;
+  }
+
+  h4 {
+    font-size: 1.1rem !important;
+  }
+
+  .section-title {
+    font-size: 1.75rem !important;
+    line-height: 1.3;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    word-wrap: break-word;
+  }
+
+  .display-2 {
+    font-size: 1.75rem !important;
+  }
+
+  .display-4 {
+    font-size: 1.25rem !important;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .section-title {
+    font-size: 1.5rem !important;
+  }
+
+  .display-2 {
+    font-size: 1.5rem !important;
+  }
+
+  .display-4 {
+    font-size: 1.1rem !important;
+  }
+}
+
+/* ========== Header / Hero section ========== */
+@media (max-width: 767.98px) {
+  .header {
+    min-height: 60vh;
+    max-height: none;
+    background-attachment: scroll;
+  }
+
+  .header .overlay {
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .header .overlay h1 {
+    font-size: 1.5rem !important;
+    margin: 0.5rem 0;
+  }
+
+  .header .overlay h2 {
+    font-size: 1.1rem !important;
+    margin-bottom: 1rem;
+  }
+
+  .header .overlay .btn {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .header {
+    min-height: 50vh;
+  }
+
+  .header .overlay h1 {
+    font-size: 1.35rem !important;
+  }
+
+  .header .overlay h2 {
+    font-size: 1rem !important;
+  }
+}
+
+/* ========== Navbar mobile ========== */
+@media (max-width: 991.98px) {
+  .custom-navbar {
+    padding: 0.5rem 0.75rem !important;
+  }
+
+  .custom-navbar .navbar-toggler {
+    padding: 0.35rem 0.6rem;
+    font-size: 1.1rem;
+  }
+
+  .custom-navbar .collapse.navbar-collapse {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 0.5rem 0;
+  }
+
+  .custom-navbar .navbar-nav .nav-link {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.95rem;
+  }
+
+  .custom-navbar .navbar-nav .nav-link.return-refund-btn {
+    white-space: normal;
+    text-align: left;
+  }
+
+  /* Dropdowns fit viewport on mobile */
+  .navbar-nav .nav-item.dropdown .dropdown-menu,
+  .dropdown-menu.dropdown-menu-end {
+    min-width: 0;
+    max-width: min(400px, calc(100vw - 1.5rem));
+    left: 0.75rem;
+    right: 0.75rem;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .profile-modal-content,
+  .photo-upload-content {
+    width: 95% !important;
+    max-width: none;
+    margin: 1rem;
+    max-height: 85vh;
+  }
+}
+
+/* ========== Gallery section ========== */
+@media (max-width: 767.98px) {
+  #gallary .section-title {
+    font-size: 1.6rem !important;
+  }
+
+  .gallary.row {
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: 2rem;
+  }
+
+  .gallary .gallary-item {
+    flex: 0 0 50%;
+    max-width: 50%;
+    padding: 2px;
+  }
+
+  .gallary .gallary-img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .gallary .gallary-item {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+
+/* ========== About section ========== */
+@media (max-width: 991.98px) {
+  #about .has-img-bg {
+    min-height: 200px;
+  }
+
+  #about .col-lg-6 .py-5 {
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+  }
+
+  #about .my-5 {
+    margin-top: 1rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  #about .col-sm-8 {
+    max-width: 100%;
+    flex: 0 0 100%;
+  }
+
+  #about h2 {
+    font-size: 1.5rem !important;
+  }
+
+  #about p {
+    font-size: 0.95rem;
+  }
+}
+
+/* ========== Book table section ========== */
+@media (max-width: 767.98px) {
+  #book-table .section-title {
+    font-size: 1.5rem !important;
+  }
+
+  #book-table .section-buttons {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  #book-table .section-buttons .btn {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  #book-table .calendar-container,
+  #book-table .restaurant-section {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
+}
+
+/* ========== Book event section ========== */
+@media (max-width: 767.98px) {
+  #book-event h2 {
+    font-size: 1.5rem !important;
+  }
+
+  #book-event .lead {
+    font-size: 1rem;
+  }
+
+  #book-event .card {
+    max-height: none;
+    margin-top: 0;
+  }
+}
+
+/* ========== Blog / Categories section ========== */
+@media (max-width: 767.98px) {
+  #blog .section-title {
+    font-size: 1.5rem !important;
+    padding: 1rem 0 !important;
+  }
+
+  .categories-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+    gap: 12px !important;
+    width: 100% !important;
+    padding: 0 0.5rem;
+  }
+
+  .category-card img {
+    max-height: 120px;
+  }
+
+  .category-name {
+    font-size: 0.9rem !important;
+    padding: 8px 10px !important;
+    white-space: normal !important;
+    line-height: 1.2;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .categories-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+}
+
+/* ========== Announcements ========== */
+@media (max-width: 767.98px) {
+  #announcements .section-title {
+    font-size: 1.5rem !important;
+  }
+
+  .announcements-carousel {
+    max-width: 100%;
+    padding: 0 0.5rem;
+  }
+
+  .announcement-card {
+    margin: 8px;
+    padding: 12px;
+  }
+
+  .announcement-content {
+    font-size: 0.9rem;
+  }
+}
+
+/* ========== Footer ========== */
+@media (max-width: 767.98px) {
+  #contact .row {
+    flex-direction: column;
+  }
+
+  #contact .col-md-6 {
+    max-width: 100%;
+  }
+
+  #contact .px-5 {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  #contact iframe {
+    min-height: 280px !important;
+  }
+
+  #contact h3,
+  .container-fluid.bg-dark h3 {
+    font-size: 1.35rem !important;
+  }
+
+  #contact h4 {
+    font-size: 1.1rem !important;
+  }
+
+  #contact p,
+  .container-fluid.bg-dark p {
+    font-size: 0.95rem;
+  }
+
+  .container-fluid.bg-dark.has-height-md .row {
+    flex-direction: column;
+  }
+
+  .container-fluid.bg-dark.has-height-md .col-sm-4 {
+    max-width: 100%;
+    padding: 1rem 0.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .container-fluid.bg-dark.has-height-md .col-sm-4:last-child {
+    border-bottom: none;
+  }
+
+  /* Reviews section in footer */
+  .container-fluid.bg-dark .section-title {
+    font-size: 1.5rem !important;
+  }
+
+  .container-fluid.bg-dark .col-md-8.offset-md-2 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    max-width: 100%;
+  }
+
+  .container-fluid.bg-dark .card-body {
+    padding: 1rem !important;
+  }
+}
+
+/* ========== Chatbot ========== */
+@media (max-width: 575.98px) {
+  .chatbot-icon {
+    bottom: 80px;
+    right: 12px;
+  }
+
+  .chatbot-icon img {
+    width: 56px;
+    height: 56px;
+  }
+
+  .chatbot-popup {
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: 0.5rem;
+    width: auto !important;
+    max-width: none;
+  }
+
+  .chatbot-header {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+
+  .chatbot-body {
+    max-height: 250px;
+  }
+}
+
+/* ========== Forms and inputs (touch targets) ========== */
+@media (max-width: 767.98px) {
+  .form-control,
+  .form-select,
+  select.form-control,
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="number"],
+  textarea {
+    min-height: 44px;
+    font-size: 16px; /* Prevents zoom on focus on iOS */
+  }
+
+  textarea {
+    min-height: 80px;
+  }
+
+  .btn {
+    min-height: 44px;
+    padding: 0.5rem 1rem;
+  }
+}
+
+/* ========== Utility: images and embeds ========== */
+img,
+iframe,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ========== Notification dropdown list on small screens ========== */
+@media (max-width: 575.98px) {
+  #notifList .notification-item {
+    padding: 8px 10px;
+  }
+
+  .notification-content p {
+    font-size: 0.85rem;
+  }
+
+  .dropdown-header h6 {
+    font-size: 0.95rem;
+  }
+}
+
+/* ========== Cart / Checkout and other inner pages ========== */
+@media (max-width: 767.98px) {
+  .cart-container {
+    padding: 0.75rem !important;
+    margin: 10px 0 !important;
+  }
+
+  .cart-container table {
+    min-width: 0 !important;
+    font-size: 0.9rem;
+  }
+
+  .cart-container th,
+  .cart-container td {
+    padding: 8px 4px !important;
+  }
+
+  body {
+    padding: 10px !important;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .cart-container th,
+  .cart-container td {
+    font-size: 0.8rem;
+    padding: 6px 2px !important;
+  }
+}
