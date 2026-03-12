@@ -157,6 +157,13 @@
             transform: translateY(0);
             background-color: rgba(255, 255, 255, 0.2) !important;
         }
+
+        /* Active section highlight in navbar */
+        .navbar-nav .nav-link.active {
+            font-weight: 700 !important;
+            background-color: rgba(255, 255, 255, 0.2) !important;
+            color: #fff !important;
+        }
         
         /* Ensure navbar is clickable */
         .navbar-nav {
@@ -1796,34 +1803,57 @@
             });
         });
 
-        // Use IntersectionObserver to update active nav on scroll
-        if ('IntersectionObserver' in window) {
-            const sectionMap = {
-                home: document.getElementById('home'),
-                about: document.getElementById('about'),
-                gallary: document.getElementById('gallary'),
-                'book-table': document.getElementById('book-table'),
-                'book-event': document.getElementById('book-event')
-            };
+        // Scroll-spy: update active nav and URL hash based on scroll position
+        var sectionIds = ['home', 'about', 'gallary', 'book-table', 'book-event'];
+        var scrollSpyTicking = false;
 
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const id = entry.target.id;
-                        const link = document.querySelector(`.navbar-nav .nav-link[data-section="${id}"]`);
-                        if (link) {
-                            document.querySelectorAll('.navbar-nav .nav-link[data-section]').forEach(l => l.classList.remove('active'));
-                            link.classList.add('active');
-                        }
-                    }
+        function updateActiveFromScroll() {
+            var navbar = document.querySelector('.custom-navbar');
+            var offset = navbar ? navbar.offsetHeight + 80 : 120;
+            var scrollY = window.pageYOffset || document.documentElement.scrollTop;
+            var currentId = 'home';
+            for (var i = sectionIds.length - 1; i >= 0; i--) {
+                var el = document.getElementById(sectionIds[i]);
+                if (el && el.offsetTop <= scrollY + offset) {
+                    currentId = sectionIds[i];
+                    break;
+                }
+            }
+            var link = document.querySelector('.navbar-nav .nav-link[data-section="' + currentId + '"]');
+            if (link) {
+                document.querySelectorAll('.navbar-nav .nav-link[data-section]').forEach(function(l) { l.classList.remove('active'); });
+                link.classList.add('active');
+            }
+            if (window.history && window.history.replaceState) {
+                var newHash = currentId === 'home' ? '' : '#' + currentId;
+                var url = window.location.pathname + window.location.search + newHash;
+                if (window.location.hash !== newHash) {
+                    window.history.replaceState(null, '', url);
+                }
+            }
+        }
+
+        function onScrollSpy() {
+            if (!scrollSpyTicking) {
+                requestAnimationFrame(function() {
+                    updateActiveFromScroll();
+                    scrollSpyTicking = false;
                 });
-            }, {
-                threshold: 0.4
-            });
+                scrollSpyTicking = true;
+            }
+        }
 
-            Object.values(sectionMap).forEach(sec => {
-                if (sec) observer.observe(sec);
-            });
+        updateActiveFromScroll();
+        window.addEventListener('scroll', onScrollSpy, { passive: true });
+
+        // On load, if URL has hash (e.g. #about), set active and ensure scroll position matches
+        var hash = window.location.hash.slice(1);
+        if (hash && sectionIds.indexOf(hash) !== -1) {
+            var linkByHash = document.querySelector('.navbar-nav .nav-link[data-section="' + hash + '"]');
+            if (linkByHash) {
+                document.querySelectorAll('.navbar-nav .nav-link[data-section]').forEach(function(l) { l.classList.remove('active'); });
+                linkByHash.classList.add('active');
+            }
         }
     });
 </script>
