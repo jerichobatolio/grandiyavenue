@@ -15,6 +15,6 @@
 <link rel="stylesheet" href="{{ asset('assets/vendors/animate/animate.css') }}">
 
 <!-- Bootstrap + Foodhut main styles -->
-<link rel="stylesheet" href="{{ asset('assets/css/Foodhut.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/foodhut.css') }}">
 <!-- Mobile overrides: fit whole system on small screens -->
 <link rel="stylesheet" href="{{ asset('assets/css/mobile-overrides.css') }}">
