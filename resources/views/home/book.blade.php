@@ -1462,11 +1462,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 vipRooms[roomNum].push(table);
             });
             
-            // Create room sections
+            // Create room sections (hide the word "Room" in header)
             Object.keys(vipRooms).forEach(roomNum => {
                 const roomDiv = document.createElement('div');
                 roomDiv.className = 'vip-room mb-4';
-                roomDiv.innerHTML = `<h4 class="room-title">Room ${roomNum}</h4>`;
+                roomDiv.innerHTML = `<h4 class="room-title">${roomNum}</h4>`;
                 
                 const roomTablesDiv = document.createElement('div');
                 roomTablesDiv.className = 'tables-grid vip-tables';
