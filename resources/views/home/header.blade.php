@@ -1722,38 +1722,24 @@
         
         // Function to perform the actual scrolling
         function performScroll() {
-            const element = document.getElementById(sectionId);
+            var element = sectionId === 'home' ? (document.querySelector('header#home') || document.getElementById('home')) : document.getElementById(sectionId);
+            if (!element) {
+                element = document.querySelector('[id="' + sectionId + '"]');
+            }
             if (element) {
-                // Get navbar height to offset for fixed navbar
-                const navbar = document.querySelector('.custom-navbar');
-                const navbarHeight = navbar ? navbar.offsetHeight : 0;
-                
-                // Calculate the position to scroll to
-                const elementPosition = element.offsetTop - navbarHeight - 20; // 20px extra padding
-                
-                // Smooth scroll to the calculated position
-                window.scrollTo({
-                    top: elementPosition,
-                    behavior: 'smooth'
-                });
-                
-                console.log('Successfully scrolled to section:', sectionId);
-                return true;
-            } else {
-                console.log('Section not found:', sectionId);
-                // Try to find the element with different selectors
-                const alternativeElement = document.querySelector(`[id*="${sectionId}"]`);
-                if (alternativeElement) {
-                    console.log('Found alternative element:', alternativeElement);
-                    const navbar = document.querySelector('.custom-navbar');
-                    const navbarHeight = navbar ? navbar.offsetHeight : 0;
-                    const elementPosition = alternativeElement.offsetTop - navbarHeight - 20;
-                    window.scrollTo({
-                        top: elementPosition,
-                        behavior: 'smooth'
-                    });
-                    return true;
+                var navbar = document.querySelector('.custom-navbar');
+                var navbarHeight = navbar ? navbar.offsetHeight : 0;
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                setTimeout(function() {
+                    var top = element.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop);
+                    window.scrollTo({ top: top - navbarHeight - 20, behavior: 'smooth' });
+                }, 100);
+                setActiveNav(sectionId);
+                if (window.history && window.history.replaceState) {
+                    var newHash = sectionId === 'home' ? '' : '#' + sectionId;
+                    window.history.replaceState(null, '', window.location.pathname + window.location.search + newHash);
                 }
+                return true;
             }
             return false;
         }
@@ -1807,15 +1793,23 @@
         var sectionIds = ['home', 'about', 'gallary', 'book-table', 'book-event'];
         var scrollSpyTicking = false;
 
+        function getSectionTop(el) {
+            if (!el) return 0;
+            var rect = el.getBoundingClientRect();
+            return rect.top + (window.pageYOffset || document.documentElement.scrollTop);
+        }
+
         function updateActiveFromScroll() {
             var navbar = document.querySelector('.custom-navbar');
             var offset = navbar ? navbar.offsetHeight + 80 : 120;
             var scrollY = window.pageYOffset || document.documentElement.scrollTop;
             var currentId = 'home';
             for (var i = sectionIds.length - 1; i >= 0; i--) {
-                var el = document.getElementById(sectionIds[i]);
-                if (el && el.offsetTop <= scrollY + offset) {
-                    currentId = sectionIds[i];
+                var sid = sectionIds[i];
+                var el = sid === 'home' ? document.querySelector('header#home') || document.getElementById('home') : document.getElementById(sid);
+                var top = getSectionTop(el);
+                if (el && top <= scrollY + offset) {
+                    currentId = sid;
                     break;
                 }
             }
