@@ -13,6 +13,8 @@ use App\Http\Controllers\EventTypeController;
 use App\Http\Controllers\VenueTypeController;
 use App\Http\Controllers\ReturnRefundController;
 use App\Http\Controllers\Admin\ReturnRefundController as AdminReturnRefundController;
+use Illuminate\Support\Facades\Response as FacadeResponse;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Response;
 
 // Welcome page route - Main landing page
@@ -39,8 +41,21 @@ Route::get('/about-bg', function () {
     if (! file_exists($path)) {
         abort(404);
     }
-    return Response::file($path);
+    return FacadeResponse::file($path);
 })->name('about.background');
+
+// Serve user profile photos directly from the public storage disk
+Route::get('/user-profile-photo/{user}', function (\App\Models\User $user) {
+    if (! $user->profile_photo_path) {
+        abort(404);
+    }
+
+    if (! Storage::disk('public')->exists($user->profile_photo_path)) {
+        abort(404);
+    }
+
+    return Storage::disk('public')->response($user->profile_photo_path);
+})->name('user.profile.photo');
 
 // Frontend/Home routes - moved to /home
 Route::get('/home', [HomeController::class,'my_home'])->name('home'); 

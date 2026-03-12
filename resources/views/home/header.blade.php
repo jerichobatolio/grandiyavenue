@@ -835,7 +835,7 @@
                     @php
                         $authUser = auth()->user();
                         $profilePhotoSrc = $authUser && $authUser->profile_photo_path
-                            ? ($authUser->profile_photo_url . '?v=' . ($authUser->updated_at?->timestamp ?? time()))
+                            ? (route('user.profile.photo', $authUser->id) . '?v=' . ($authUser->updated_at?->timestamp ?? time()))
                             : null;
                     @endphp
                     <li class="nav-item dropdown">
