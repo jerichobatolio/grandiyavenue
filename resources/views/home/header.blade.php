@@ -579,17 +579,60 @@
         <span aria-hidden="true">&times;</span>
     </button>
 </div>
+@endif
+
 <script>
-    setTimeout(function () {
+    // Helper: show a top toast-style alert (success or error) that auto-hides
+    function showTopAlert(message, type = 'success') {
+        const existing = document.getElementById('global-dynamic-alert');
+        if (existing) existing.remove();
+
+        const alertDiv = document.createElement('div');
+        alertDiv.id = 'global-dynamic-alert';
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.role = 'alert';
+        alertDiv.style.position = 'fixed';
+        alertDiv.style.top = '70px';
+        alertDiv.style.left = '50%';
+        alertDiv.style.transform = 'translateX(-50%)';
+        alertDiv.style.zIndex = '4000';
+        alertDiv.style.minWidth = '260px';
+        alertDiv.style.maxWidth = '90%';
+
+        alertDiv.innerHTML = `
+            <span>${message}</span>
+            <button type="button" class="close" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        `;
+
+        alertDiv.querySelector('.close').addEventListener('click', function () {
+            alertDiv.remove();
+        });
+
+        document.body.appendChild(alertDiv);
+
+        setTimeout(function () {
+            if (alertDiv.parentNode) {
+                alertDiv.classList.remove('show');
+                setTimeout(() => alertDiv.remove(), 300);
+            }
+        }, 4000);
+    }
+
+    // Auto-hide Blade-rendered success alert after load
+    window.addEventListener('DOMContentLoaded', function () {
         const el = document.getElementById('global-success-alert');
         if (el) {
-            el.classList.remove('show');
-            el.classList.add('hide');
-            setTimeout(() => el.remove(), 300);
+            setTimeout(function () {
+                if (el.parentNode) {
+                    el.classList.remove('show');
+                    setTimeout(() => el.remove(), 300);
+                }
+            }, 4000);
         }
-    }, 4000);
+    });
 </script>
-@endif
 
 <!-- Navbar -->
 <nav class="custom-navbar navbar navbar-expand-lg navbar-dark fixed-top" data-spy="affix" data-offset-top="10" style="background-color: rgba(33, 37, 41, 0.95);">
@@ -1609,12 +1652,12 @@
                     }, 300);
                 }
             } else {
-                alert('Failed to delete notification. Please try again.');
+                showTopAlert('Failed to delete notification. Please try again.', 'danger');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Failed to delete notification. Please try again.');
+            showTopAlert('Failed to delete notification. Please try again.', 'danger');
         });
         
         return false;
