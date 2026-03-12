@@ -642,11 +642,11 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav">
-            <li class="nav-item"><a class="nav-link" href="#home" onclick="scrollToSection('home'); return false;">Home</a></li>
-            <li class="nav-item"><a class="nav-link" href="#about" onclick="scrollToSection('about'); return false;">About</a></li>
-            <li class="nav-item"><a class="nav-link" href="#gallary" onclick="scrollToSection('gallary'); return false;">Menu</a></li>
-            <li class="nav-item"><a class="nav-link" href="#book-table" onclick="scrollToSection('book-table'); return false;">Reservation</a></li>
-            <li class="nav-item"><a class="nav-link" href="#book-event" onclick="scrollToSection('book-event'); return false;">📅 Book Event</a></li>
+            <li class="nav-item"><a class="nav-link active" data-section="home" href="#home" onclick="scrollToSection('home'); return false;">Home</a></li>
+            <li class="nav-item"><a class="nav-link" data-section="about" href="#about" onclick="scrollToSection('about'); return false;">About</a></li>
+            <li class="nav-item"><a class="nav-link" data-section="gallary" href="#gallary" onclick="scrollToSection('gallary'); return false;">Menu</a></li>
+            <li class="nav-item"><a class="nav-link" data-section="book-table" href="#book-table" onclick="scrollToSection('book-table'); return false;">Reservation</a></li>
+            <li class="nav-item"><a class="nav-link" data-section="book-event" href="#book-event" onclick="scrollToSection('book-event'); return false;">📅 Book Event</a></li>
         </ul>
 
         <a class="navbar-brand m-auto" href="{{ url('/') }}">
@@ -1750,9 +1750,22 @@
             }
             return false;
         }
+
+        // Update active nav link
+        function setActiveNav(sectionKey) {
+            const navLinks = document.querySelectorAll('.navbar-nav .nav-link[data-section]');
+            navLinks.forEach(link => {
+                if (link.getAttribute('data-section') === sectionKey) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        }
         
         // Try to scroll immediately
         if (performScroll()) {
+            setActiveNav(sectionId);
             return;
         }
         
@@ -1765,6 +1778,8 @@
                     top: 0,
                     behavior: 'smooth'
                 });
+            } else {
+                setActiveNav(sectionId);
             }
         }, 100);
     }
@@ -1780,5 +1795,35 @@
                 scrollToSection(sectionId);
             });
         });
+
+        // Use IntersectionObserver to update active nav on scroll
+        if ('IntersectionObserver' in window) {
+            const sectionMap = {
+                home: document.getElementById('home'),
+                about: document.getElementById('about'),
+                gallary: document.getElementById('gallary'),
+                'book-table': document.getElementById('book-table'),
+                'book-event': document.getElementById('book-event')
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.id;
+                        const link = document.querySelector(`.navbar-nav .nav-link[data-section="${id}"]`);
+                        if (link) {
+                            document.querySelectorAll('.navbar-nav .nav-link[data-section]').forEach(l => l.classList.remove('active'));
+                            link.classList.add('active');
+                        }
+                    }
+                });
+            }, {
+                threshold: 0.4
+            });
+
+            Object.values(sectionMap).forEach(sec => {
+                if (sec) observer.observe(sec);
+            });
+        }
     });
 </script>
