@@ -893,7 +893,7 @@
 
 <!-- header -->
 <header id="home" class="header" style="background-image: url('{{ asset('assets/imgs/main.jpg') }}'); background-size: cover; background-position: center; min-height: 750px;">
-    <div class="overlay text-white text-center">
+    <div class="overlay text-white text-center" style="padding-top: 18vh; padding-bottom: 12vh;">
         <h1 class="display-2 font-weight-bold my-3">Grandiya Venue And Restaurant</h1>
         <h2 class="display-4 mb-5 text-white">Booking and Reservation System</h2>
         <a class="btn btn-lg btn-primary" href="#gallary">View Our Menu</a>
