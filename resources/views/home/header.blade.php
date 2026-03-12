@@ -569,7 +569,7 @@
 <body>
 
 <!-- Navbar -->
-<nav class="custom-navbar navbar navbar-expand-lg navbar-dark fixed-top" data-spy="affix" data-offset-top="10">
+<nav class="custom-navbar navbar navbar-expand-lg navbar-dark fixed-top" data-spy="affix" data-offset-top="10" style="background-color: rgba(33, 37, 41, 0.95);">
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
         aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -892,7 +892,7 @@
 </nav>
 
 <!-- header -->
-<header id="home" class="header">
+<header id="home" class="header" style="background-image: url('{{ asset('assets/imgs/main.jpg') }}'); background-size: cover; background-position: center; min-height: 750px;">
     <div class="overlay text-white text-center">
         <h1 class="display-2 font-weight-bold my-3">Grandiya Venue And Restaurant</h1>
         <h2 class="display-4 mb-5 text-white">Booking and Reservation System</h2>
