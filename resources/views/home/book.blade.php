@@ -112,8 +112,8 @@
         <div class="booking-form mt-5">
             <h4 class="mb-3" style="color: white !important;">📝 Complete Your Table Reservation</h4>
             
-            <!-- Success Message -->
-            @if(session('success'))
+            <!-- Success Message (only for reservation-related success, not profile photo updates) -->
+            @if(session('success') && !\Illuminate\Support\Str::contains(session('success'), 'Profile photo updated successfully!'))
                 <div class="alert alert-success alert-dismissible fade show" role="alert" style="margin-bottom: 20px;">
                     <i class="fas fa-check-circle mr-2"></i>
                     <strong>Success!</strong> {{ session('success') }}
