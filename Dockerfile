@@ -32,6 +32,6 @@ RUN php artisan config:clear \
     && php artisan route:clear \
     && php artisan view:clear
 
-# Run on PORT (Railway sets this); run migrations then start server
+# Run on PORT (Railway sets this); run migrations (ignore if tables exist) then start server
 EXPOSE 8000
-CMD sh -c 'php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}'
+CMD sh -c 'php artisan migrate --force || true && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}'
