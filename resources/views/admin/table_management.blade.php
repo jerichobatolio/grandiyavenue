@@ -420,17 +420,6 @@
                   </div>
                   <div class="form-row">
                     <div class="form-group">
-                      <label for="vipRoom">VIP Room (if VIP Cabin)</label>
-                      <select id="vipRoom" name="vipRoom">
-                        <option value="">Not VIP</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                      </select>
-                    </div>
-                    <div class="form-group">
                       <label for="tableDescription">Description (Optional)</label>
                       <input type="text" id="tableDescription" name="tableDescription" placeholder="e.g., Near window, Corner table">
                     </div>
@@ -1788,23 +1777,7 @@
                        ">
                    </div>
                    
-                   <div class="form-group" style="margin-bottom: 20px;">
-                       <label style="display: block; margin-bottom: 8px; font-weight: bold;">VIP Room (if VIP section):</label>
-                       <select id="editTableRoom" style="
-                           width: 100%;
-                           padding: 10px;
-                           border: 2px solid #ddd;
-                           border-radius: 8px;
-                           font-size: 16px;
-                       ">
-                           <option value="">Not Applicable</option>
-                           <option value="1" ${table.room === 1 ? 'selected' : ''}>1</option>
-                           <option value="2" ${table.room === 2 ? 'selected' : ''}>2</option>
-                           <option value="3" ${table.room === 3 ? 'selected' : ''}>3</option>
-                           <option value="4" ${table.room === 4 ? 'selected' : ''}>4</option>
-                           <option value="5" ${table.room === 5 ? 'selected' : ''}>5</option>
-                       </select>
-                   </div>
+                   <!-- Removed VIP Room (if VIP section) dropdown per request -->
                    
                    <div class="form-group" style="margin-bottom: 20px;">
                        <label style="display: block; margin-bottom: 8px; font-weight: bold;">Description (Optional):</label>
