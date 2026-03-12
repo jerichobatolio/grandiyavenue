@@ -568,6 +568,29 @@
 </head>
 <body>
 
+@if(session('success'))
+<div id="global-success-alert"
+     class="alert alert-success alert-dismissible fade show"
+     role="alert"
+     style="position: fixed; top: 70px; left: 50%; transform: translateX(-50%); z-index: 4000; min-width: 260px; max-width: 90%;">
+    <i class="fas fa-check-circle mr-2"></i>
+    {{ session('success') }}
+    <button type="button" class="close" data-bs-dismiss="alert" aria-label="Close" onclick="document.getElementById('global-success-alert')?.remove()">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+<script>
+    setTimeout(function () {
+        const el = document.getElementById('global-success-alert');
+        if (el) {
+            el.classList.remove('show');
+            el.classList.add('hide');
+            setTimeout(() => el.remove(), 300);
+        }
+    }, 4000);
+</script>
+@endif
+
 <!-- Navbar -->
 <nav class="custom-navbar navbar navbar-expand-lg navbar-dark fixed-top" data-spy="affix" data-offset-top="10" style="background-color: rgba(33, 37, 41, 0.95);">
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
