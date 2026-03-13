@@ -46,4 +46,54 @@ class TableStatus extends Model
             'V33' => ['number' => 'V33', 'section' => 'vip', 'seats' => 8, 'status' => 'available', 'room' => 3, 'description' => 'VIP Cabin Room 3'],
         ];
     }
+
+    public static function inferSectionFromTableNumber(?string $tableNumber): ?string
+    {
+        $tableNumber = strtoupper(trim((string) $tableNumber));
+        if ($tableNumber === '') {
+            return null;
+        }
+
+        if ($tableNumber === 'GARDEN' || str_starts_with($tableNumber, 'G')) {
+            return 'garden';
+        }
+
+        if (str_starts_with($tableNumber, 'VIP') || str_starts_with($tableNumber, 'V')) {
+            return 'vip';
+        }
+
+        if (str_starts_with($tableNumber, 'A')) {
+            return 'hallway';
+        }
+
+        if (
+            str_starts_with($tableNumber, 'B') ||
+            str_starts_with($tableNumber, 'T') ||
+            str_starts_with($tableNumber, 'FH')
+        ) {
+            return 'top';
+        }
+
+        return null;
+    }
+
+    public static function inferRoomFromTableNumber(?string $tableNumber, ?string $section = null): ?int
+    {
+        $tableNumber = strtoupper(trim((string) $tableNumber));
+        $section = $section ?: self::inferSectionFromTableNumber($tableNumber);
+
+        if ($section !== 'vip' || $tableNumber === '') {
+            return null;
+        }
+
+        if (preg_match('/^VIP\s*C\s*(\d+)$/', $tableNumber, $matches)) {
+            return (int) $matches[1];
+        }
+
+        if (preg_match('/^V(\d)/', $tableNumber, $matches)) {
+            return (int) $matches[1];
+        }
+
+        return null;
+    }
 }

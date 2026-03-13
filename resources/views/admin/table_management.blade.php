@@ -558,6 +558,7 @@
       const localSectionsExist = localStorageSections && Object.keys(localStorageSections).length > 0;
       const serverTablesExist = serverLayout.tables && Object.keys(serverLayout.tables).length > 0;
       const serverSectionsExist = serverLayout.sections && Object.keys(serverLayout.sections).length > 0;
+      const serverHasIncompleteTables = serverTablesExist && Object.values(serverLayout.tables).some(table => !table || !table.section);
 
       const localTablesDifferFromServer = localTablesExist && (
           !serverTablesExist ||
@@ -633,7 +634,9 @@
                : Object.keys(sections));
 
        const shouldInitialSyncToServer =
-           localTablesDifferFromServer || localSectionsDifferFromServer;
+          localTablesDifferFromServer ||
+          localSectionsDifferFromServer ||
+          (localTablesExist && serverHasIncompleteTables);
 
        let layoutSaveTimer = null;
 

@@ -685,15 +685,19 @@ class AdminController extends Controller
             return TableStatus::defaultDefinitions();
         }
 
+        $defaultDefinitions = TableStatus::defaultDefinitions();
         $definitions = [];
         foreach ($storedTables as $table) {
+            $fallback = $defaultDefinitions[$table->table_number] ?? [];
+            $section = $table->section ?: ($fallback['section'] ?? TableStatus::inferSectionFromTableNumber($table->table_number));
+
             $definitions[$table->table_number] = [
                 'number' => $table->table_number,
-                'section' => $table->section,
+                'section' => $section,
                 'seats' => $table->seat_capacity ?? 8,
                 'status' => $table->status ?? 'available',
-                'room' => $table->room,
-                'description' => $table->description,
+                'room' => $table->room ?? ($fallback['room'] ?? TableStatus::inferRoomFromTableNumber($table->table_number, $section)),
+                'description' => $table->description ?? ($fallback['description'] ?? null),
             ];
         }
 
