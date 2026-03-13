@@ -17,23 +17,8 @@ use Illuminate\Support\Facades\Response as FacadeResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Response;
 
-// Welcome page route - Main landing page
-Route::get('/', function () {
-    $reviews = collect();
-
-    if (Schema::hasTable('reviews')) {
-        try {
-            $reviews = \App\Models\Review::where('status', 'approved')
-                ->orderBy('created_at', 'desc')
-                ->take(9)
-                ->get();
-        } catch (\Illuminate\Database\QueryException $e) {
-            // If the table is corrupted or missing in the engine, fail silently and continue.
-        }
-    }
-
-    return view('welcome', compact('reviews'));
-})->name('welcome');
+// Redirect root to the main home page so all devices see the same content
+Route::redirect('/', '/home')->name('welcome');
 
 // Dedicated route for About Us background image so it always works in production
 Route::get('/about-bg', function () {
