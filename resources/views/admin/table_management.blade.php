@@ -767,6 +767,7 @@
        updateStatistics();
        updateSectionDropdowns();
        refreshSectionContent('overview');
+       saveTablesToStorage(); // push the currently loaded admin tables as the shared source of truth
        saveSectionsToStorage(); // persist Section A inclusion fix (and merged defaults)
        
        console.log('Page initialization complete');
