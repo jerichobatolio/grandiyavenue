@@ -538,10 +538,42 @@
           'V33': { number: 'V33', section: 'vip', seats: 8, status: 'available', room: 3, description: '' }
       };
 
-      // Load tables from server first, then localStorage, then defaults
-      let tables = (serverLayout.tables && Object.keys(serverLayout.tables).length)
-          ? serverLayout.tables
-          : (localStorageTables || defaultTables);
+      function stableStringify(value) {
+          if (Array.isArray(value)) {
+              return JSON.stringify(value.map(v => (v && typeof v === 'object') ? JSON.parse(stableStringify(v)) : v));
+          }
+          if (value && typeof value === 'object') {
+              const sorted = {};
+              Object.keys(value).sort().forEach(key => {
+                  sorted[key] = value[key] && typeof value[key] === 'object'
+                      ? JSON.parse(stableStringify(value[key]))
+                      : value[key];
+              });
+              return JSON.stringify(sorted);
+          }
+          return JSON.stringify(value);
+      }
+
+      const localTablesExist = localStorageTables && Object.keys(localStorageTables).length > 0;
+      const localSectionsExist = localStorageSections && Object.keys(localStorageSections).length > 0;
+      const serverTablesExist = serverLayout.tables && Object.keys(serverLayout.tables).length > 0;
+      const serverSectionsExist = serverLayout.sections && Object.keys(serverLayout.sections).length > 0;
+
+      const localTablesDifferFromServer = localTablesExist && (
+          !serverTablesExist ||
+          stableStringify(localStorageTables) !== stableStringify(serverLayout.tables)
+      );
+      const localSectionsDifferFromServer = localSectionsExist && (
+          !serverSectionsExist ||
+          stableStringify(localStorageSections) !== stableStringify(serverLayout.sections) ||
+          stableStringify(localStorageSectionOrder || []) !== stableStringify(serverLayout.sectionOrder || [])
+      );
+
+      // Prefer the current admin browser data when it exists, so the latest admin-edited
+      // layout can seed/update the shared backend layout for all devices.
+      let tables = localTablesExist
+          ? localStorageTables
+          : ((serverLayout.tables && Object.keys(serverLayout.tables).length) ? serverLayout.tables : defaultTables);
        
        // Default sections data
           const sectionAInclusions = 'Standard setup (table, chairs, basic décor)';
@@ -580,10 +612,10 @@
               }
          };
 
-      // Load sections from server first, then localStorage, then defaults
-      let sections = (serverLayout.sections && Object.keys(serverLayout.sections).length)
-          ? serverLayout.sections
-          : (localStorageSections || defaultSections);
+      // Prefer local section data from the current admin browser, then server, then defaults.
+      let sections = localSectionsExist
+          ? localStorageSections
+          : ((serverLayout.sections && Object.keys(serverLayout.sections).length) ? serverLayout.sections : defaultSections);
 
       // Ensure required "home" sections exist (data-safe upgrade)
       const requiredSections = defaultSections;
@@ -594,13 +626,14 @@
       if (sections.hallway) sections.hallway.inclusions = sectionAInclusions;
 
        // Maintain an explicit order array of section keys
-       let sectionOrder = (Array.isArray(serverLayout.sectionOrder) && serverLayout.sectionOrder.length)
-           ? serverLayout.sectionOrder
-           : (localStorageSectionOrder || Object.keys(sections));
+       let sectionOrder = (Array.isArray(localStorageSectionOrder) && localStorageSectionOrder.length)
+           ? localStorageSectionOrder
+           : ((Array.isArray(serverLayout.sectionOrder) && serverLayout.sectionOrder.length)
+               ? serverLayout.sectionOrder
+               : Object.keys(sections));
 
        const shouldInitialSyncToServer =
-           (!serverLayout.tables || Object.keys(serverLayout.tables).length === 0) &&
-           localStorageTables && Object.keys(localStorageTables).length > 0;
+           localTablesDifferFromServer || localSectionsDifferFromServer;
 
        let layoutSaveTimer = null;
 
