@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class TableStatus extends Model
 {
@@ -108,5 +110,24 @@ class TableStatus extends Model
         }
 
         return $definitions;
+    }
+
+    public static function ensureLayoutColumnsExist(): void
+    {
+        if (!Schema::hasTable('table_statuses')) {
+            return;
+        }
+
+        if (!Schema::hasColumn('table_statuses', 'section')) {
+            Schema::table('table_statuses', function (Blueprint $table) {
+                $table->string('section')->nullable()->after('table_number');
+            });
+        }
+
+        if (!Schema::hasColumn('table_statuses', 'room')) {
+            Schema::table('table_statuses', function (Blueprint $table) {
+                $table->unsignedInteger('room')->nullable()->after('section');
+            });
+        }
     }
 }

@@ -548,6 +548,8 @@ class AdminController extends Controller
     public function updateTableStatus(Request $request)
     {
         try {
+            TableStatus::ensureLayoutColumnsExist();
+
             $request->validate([
                 'table_number' => 'required|string',
                 'status' => 'required|in:available,reserved'
@@ -598,6 +600,8 @@ class AdminController extends Controller
     public function saveTableLayout(Request $request)
     {
         try {
+            TableStatus::ensureLayoutColumnsExist();
+
             $request->validate([
                 'sections' => 'nullable|array',
                 'sectionOrder' => 'nullable|array',
