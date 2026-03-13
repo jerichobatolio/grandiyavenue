@@ -641,32 +641,34 @@
        let layoutSaveTimer = null;
 
        async function persistLayoutToServer() {
-           try {
-               const response = await fetch('/table-layout', {
-                   method: 'POST',
-                   headers: {
-                       'Content-Type': 'application/json',
-                       'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                   },
-                   body: JSON.stringify({
-                       sections: sections,
-                       sectionOrder: sectionOrder,
-                       tables: tables
-                   })
-               });
+          const response = await fetch('/table-layout', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+              },
+              body: JSON.stringify({
+                  sections: sections,
+                  sectionOrder: sectionOrder,
+                  tables: tables
+              })
+          });
 
-               const data = await response.json();
-               if (!response.ok || !data.success) {
-                   throw new Error(data.message || 'Failed to save layout');
-               }
-           } catch (error) {
-               console.error('Error saving layout to server:', error);
-           }
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+              throw new Error(data.message || 'Failed to save layout');
+          }
+
+          return data;
        }
 
        function scheduleLayoutSave() {
            clearTimeout(layoutSaveTimer);
-           layoutSaveTimer = setTimeout(persistLayoutToServer, 300);
+          layoutSaveTimer = setTimeout(() => {
+              persistLayoutToServer().catch(error => {
+                  console.error('Error saving layout to server:', error);
+              });
+          }, 300);
        }
 
        // Save sections to localStorage
@@ -876,8 +878,9 @@
                if (!Array.isArray(sectionOrder)) sectionOrder = [];
                sectionOrder.push(sectionValue);
                
-               // Save to localStorage
+               // Save locally and push the updated section data immediately to the backend
                saveSectionsToStorage();
+               await persistLayoutToServer();
                
                // Reset form
                this.reset();
@@ -1431,8 +1434,9 @@
                    section.icon = ''; // Clear icon when image is set
                }
                
-               // Save to localStorage
+               // Save locally and push the updated section data immediately to the backend
                saveSectionsToStorage();
+               await persistLayoutToServer();
                
                // Refresh display
                renderSections();
