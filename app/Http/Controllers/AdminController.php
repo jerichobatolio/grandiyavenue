@@ -649,6 +649,22 @@ class AdminController extends Controller
             ], 500);
         }
     }
+
+    public function getTableLayout()
+    {
+        try {
+            return response()->json([
+                'success' => true,
+                'layout' => $this->getTableLayoutPayload()['tableLayout'],
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching table layout: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching table layout: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
     
     /**
      * Test route for debugging

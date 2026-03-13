@@ -1082,7 +1082,7 @@ document.addEventListener('DOMContentLoaded', function() {
             wireAutoTimeOut('res_time_in', 'res_time_out', 4);
             wireAutoTimeOut('guest_time_in', 'guest_time_out', 4);
     // Load real table status from database
-    const serverTableLayout = @json($tableLayout ?? []);
+    let serverTableLayout = @json($tableLayout ?? []);
     const realTableStatus = @json($tableStatus ?? []);
     let tableStatus = realTableStatus;
     // Only use localStorage as fallback if server rendered no status yet
@@ -1114,6 +1114,52 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (e) {
             console.log('Failed to load live table status', e);
+        }
+    }
+
+    async function loadLiveTableLayout() {
+        try {
+            const resp = await fetch('/table-layout');
+            const data = await resp.json();
+            if (data && data.success && data.layout) {
+                serverTableLayout = data.layout;
+                restaurantTables = normalizeTables(serverTableLayout.tables || {});
+
+                const liveSections = (serverTableLayout.sections && typeof serverTableLayout.sections === 'object')
+                    ? serverTableLayout.sections
+                    : {};
+                restaurantSections = { ...canonicalSections, ...liveSections };
+
+                sectionOrder = Array.isArray(serverTableLayout.sectionOrder) && serverTableLayout.sectionOrder.length
+                    ? serverTableLayout.sectionOrder
+                    : Object.keys(restaurantSections);
+
+                if (data.layout.tableStatus && typeof data.layout.tableStatus === 'object') {
+                    tableStatus = Object.assign({}, data.layout.tableStatus);
+                }
+
+                renderSectionButtons();
+                renderAllTableSections();
+
+                const activeButton = document.querySelector('.section-btn.active');
+                const activeSection = activeButton ? activeButton.getAttribute('data-section') : null;
+                if (activeSection && activeSection !== 'calendar') {
+                    updateSectionInfo(activeSection);
+                }
+
+                // Re-apply live statuses after re-render
+                document.querySelectorAll('.table-item').forEach(el => {
+                    const num = el.getAttribute('data-table');
+                    const st = tableStatus[num] || 'available';
+                    el.setAttribute('data-status', st);
+                    el.classList.remove('available', 'reserved');
+                    el.classList.add(st);
+                    const statusEl = el.querySelector('.table-status');
+                    if (statusEl) statusEl.textContent = st === 'available' ? 'Available' : 'Reserved';
+                });
+            }
+        } catch (e) {
+            console.log('Failed to load live table layout', e);
         }
     }
     
@@ -1685,22 +1731,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize on page load
     initializeTableStatuses();
+    loadLiveTableLayout();
     loadLiveTableStatus();
     setupRealTimeUpdates();
-    
-    // Periodically check for table updates from admin (every 2 seconds)
-    setInterval(function() {
-        const adminTables = normalizeTables(JSON.parse(localStorage.getItem('restaurantTables') || 'null'));
-        const currentCount = Object.keys(restaurantTables).length;
-        const adminCount = Object.keys(adminTables).length;
-        
-        // If admin has more/different tables, reload
-        if (adminCount > 0 && (adminCount !== currentCount || JSON.stringify(adminTables) !== JSON.stringify(restaurantTables))) {
-            console.log('Admin tables changed, reloading...');
-            restaurantTables = adminTables;
-            renderAllTableSections();
-        }
-    }, 2000);
     
     // Real-time table status updates
     function setupRealTimeUpdates() {

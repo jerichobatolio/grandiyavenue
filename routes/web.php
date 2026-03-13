@@ -221,6 +221,7 @@ Route::get('/admin/create-test-reservation', [AdminController::class,'createTest
 
 // Admin table management
 Route::get('/table_management', [AdminController::class,'table_management']);
+Route::get('/table-layout', [AdminController::class,'getTableLayout']);
 Route::post('/table-layout', [AdminController::class,'saveTableLayout']);
 Route::get('/table-status', [AdminController::class,'getTableStatus']);
 Route::post('/table-status', [AdminController::class,'updateTableStatus']);
