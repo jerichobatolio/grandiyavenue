@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
 
@@ -62,6 +63,20 @@ class TableLayoutSetting extends Model
         }
 
         return self::first();
+    }
+
+    public static function ensureTableExists(): void
+    {
+        if (Schema::hasTable('table_layout_settings')) {
+            return;
+        }
+
+        Schema::create('table_layout_settings', function (Blueprint $table) {
+            $table->id();
+            $table->longText('sections_json')->nullable();
+            $table->longText('section_order_json')->nullable();
+            $table->timestamps();
+        });
     }
 
     public static function resolvedSections(): array

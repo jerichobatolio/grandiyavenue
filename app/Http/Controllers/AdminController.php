@@ -605,6 +605,7 @@ class AdminController extends Controller
             ]);
 
             if ($request->has('sections') || $request->has('sectionOrder')) {
+                TableLayoutSetting::ensureTableExists();
                 $settings = TableLayoutSetting::firstOrNew(['id' => 1]);
                 $settings->sections_json = $request->input('sections', $settings->sections_json ?? TableLayoutSetting::defaultSections());
                 $settings->section_order_json = $request->input('sectionOrder', $settings->section_order_json ?? array_keys(TableLayoutSetting::defaultSections()));
