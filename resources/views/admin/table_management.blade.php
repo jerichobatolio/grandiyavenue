@@ -502,6 +502,9 @@
    <script>
    document.addEventListener('DOMContentLoaded', function() {
       const serverLayout = @json($tableLayout ?? []);
+      const localStorageTables = JSON.parse(localStorage.getItem('restaurantTables') || 'null');
+      const localStorageSections = JSON.parse(localStorage.getItem('restaurantSections') || 'null');
+      const localStorageSectionOrder = JSON.parse(localStorage.getItem('sectionOrder') || 'null');
 
        // Default table data
       const defaultTables = {
@@ -538,7 +541,7 @@
       // Load tables from server first, then localStorage, then defaults
       let tables = (serverLayout.tables && Object.keys(serverLayout.tables).length)
           ? serverLayout.tables
-          : (JSON.parse(localStorage.getItem('restaurantTables')) || defaultTables);
+          : (localStorageTables || defaultTables);
        
        // Default sections data
           const sectionAInclusions = 'Standard setup (table, chairs, basic décor)';
@@ -580,7 +583,7 @@
       // Load sections from server first, then localStorage, then defaults
       let sections = (serverLayout.sections && Object.keys(serverLayout.sections).length)
           ? serverLayout.sections
-          : (JSON.parse(localStorage.getItem('restaurantSections')) || defaultSections);
+          : (localStorageSections || defaultSections);
 
       // Ensure required "home" sections exist (data-safe upgrade)
       const requiredSections = defaultSections;
@@ -593,7 +596,11 @@
        // Maintain an explicit order array of section keys
        let sectionOrder = (Array.isArray(serverLayout.sectionOrder) && serverLayout.sectionOrder.length)
            ? serverLayout.sectionOrder
-           : (JSON.parse(localStorage.getItem('sectionOrder') || 'null') || Object.keys(sections));
+           : (localStorageSectionOrder || Object.keys(sections));
+
+       const shouldInitialSyncToServer =
+           (!serverLayout.tables || Object.keys(serverLayout.tables).length === 0) &&
+           localStorageTables && Object.keys(localStorageTables).length > 0;
 
        let layoutSaveTimer = null;
 
@@ -727,6 +734,19 @@
        saveSectionsToStorage(); // persist Section A inclusion fix (and merged defaults)
        
        console.log('Page initialization complete');
+
+       // One-time migration: if this browser has the real admin layout in localStorage
+       // and the backend is still empty, push it automatically so public pages on
+       // other devices will see the same tables/sections.
+       if (shouldInitialSyncToServer) {
+           persistLayoutToServer()
+               .then(() => {
+                   showAlert('Admin table layout synced to server for all devices.', 'success');
+               })
+               .catch((error) => {
+                   console.error('Initial layout sync failed:', error);
+               });
+       }
 
        // Add table form submission
       document.getElementById('addTableForm').addEventListener('submit', function(e) {
