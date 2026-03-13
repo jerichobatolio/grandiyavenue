@@ -817,7 +817,7 @@ class HomeController extends Controller
             ];
         }
 
-        return $definitions;
+        return TableStatus::removeLegacyRows($definitions);
     }
 
     private function getTableLayoutPayload(): array

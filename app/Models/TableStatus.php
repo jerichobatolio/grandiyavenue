@@ -96,4 +96,17 @@ class TableStatus extends Model
 
         return null;
     }
+
+    public static function removeLegacyRows(array $definitions): array
+    {
+        foreach (['T1', 'T2', 'T3'] as $legacyTableNumber) {
+            unset($definitions[$legacyTableNumber]);
+        }
+
+        if (isset($definitions['Garden'])) {
+            unset($definitions['G1']);
+        }
+
+        return $definitions;
+    }
 }
