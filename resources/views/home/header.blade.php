@@ -553,22 +553,100 @@
 
         /* Mobile: dropdowns and modals fit viewport */
         @media (max-width: 991.98px) {
+            .custom-navbar {
+                padding: 0.75rem 1rem;
+                align-items: center;
+            }
+            .custom-navbar .navbar-brand {
+                position: static !important;
+                transform: none !important;
+                flex: 1 1 auto;
+                max-width: calc(100% - 64px);
+                margin: 0 0.75rem 0 0 !important;
+                font-size: 1.05rem;
+                line-height: 1.2;
+                white-space: normal;
+                text-align: left;
+            }
+            .custom-navbar .brand-txt {
+                display: block;
+                word-break: break-word;
+            }
+            .custom-navbar .navbar-toggler {
+                margin-left: auto;
+                flex-shrink: 0;
+            }
+            .custom-navbar .navbar-collapse {
+                width: 100%;
+                flex-basis: 100%;
+                margin-top: 0.85rem;
+                padding: 0.85rem;
+                background: rgba(18, 22, 28, 0.97);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 14px;
+                box-shadow: 0 12px 24px rgba(0, 0, 0, 0.28);
+            }
+            .custom-navbar .navbar-nav {
+                width: 100%;
+            }
+            .custom-navbar .navbar-nav .nav-item {
+                width: 100%;
+            }
+            .custom-navbar .navbar-nav .nav-link,
+            .custom-navbar .navbar-nav .dropdown-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+                width: 100%;
+                padding: 0.8rem 1rem;
+                margin: 0;
+            }
+            .custom-navbar .navbar-nav + .navbar-nav {
+                margin-top: 0.5rem;
+                padding-top: 0.5rem;
+                border-top: 1px solid rgba(255, 255, 255, 0.08);
+            }
+            .custom-navbar .navbar-nav .dropdown-menu,
             .nav-item.dropdown .dropdown-menu,
             .dropdown-menu[aria-labelledby="notifDropdown"],
             .notif-dropdown-menu {
+                position: static !important;
+                right: auto !important;
+                left: auto !important;
+                transform: none !important;
+                margin-top: 0.5rem !important;
+                width: 100%;
                 min-width: 0 !important;
-                max-width: min(400px, calc(100vw - 1.5rem)) !important;
+                max-width: 100% !important;
             }
             .dropdown-menu[aria-labelledby="profileDropdown"] {
                 min-width: 0 !important;
-                max-width: min(320px, calc(100vw - 1.5rem)) !important;
+                max-width: 100% !important;
             }
         }
         @media (max-width: 575.98px) {
+            .custom-navbar {
+                padding: 0.65rem 0.85rem;
+            }
+            .custom-navbar .navbar-brand {
+                font-size: 0.95rem;
+                max-width: calc(100% - 58px);
+            }
+            .custom-navbar .navbar-collapse {
+                padding: 0.75rem;
+            }
             .chatbot-popup {
                 left: 0.5rem;
                 right: 0.5rem;
                 width: auto !important;
+            }
+            .chatbot-icon {
+                right: 12px;
+                bottom: 84px;
+            }
+            .chatbot-icon img {
+                width: 64px;
+                height: 64px;
             }
         }
     </style>
@@ -643,24 +721,22 @@
 
 <!-- Navbar -->
 <nav class="custom-navbar navbar navbar-expand-lg navbar-dark fixed-top" data-spy="affix" data-offset-top="10" style="background-color: rgba(33, 37, 41, 0.95);">
+    <a class="navbar-brand" href="{{ url('/') }}">
+        <span class="brand-txt">Grandiya Venue & Restaurant</span>
+    </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
         aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav">
+        <ul class="navbar-nav me-auto">
             <li class="nav-item"><a class="nav-link active" data-section="home" href="#home" onclick="scrollToSection('home'); return false;">Home</a></li>
             <li class="nav-item"><a class="nav-link" data-section="about" href="#about" onclick="scrollToSection('about'); return false;">About</a></li>
             <li class="nav-item"><a class="nav-link" data-section="gallary" href="#gallary" onclick="scrollToSection('gallary'); return false;">Menu</a></li>
             <li class="nav-item"><a class="nav-link" data-section="book-table" href="#book-table" onclick="scrollToSection('book-table'); return false;">Reservation</a></li>
             <li class="nav-item"><a class="nav-link" data-section="book-event" href="#book-event" onclick="scrollToSection('book-event'); return false;">📅 Book Event</a></li>
         </ul>
-
-        <a class="navbar-brand m-auto" href="{{ url('/') }}">
-            <span class="brand-txt">Grandiya Venue & Restaurant</span>
-        </a>
-
-        <ul class="navbar-nav">
+        <ul class="navbar-nav ms-auto">
             @if (Route::has('login'))
                 @auth
                     <!-- Return/Refund Button -->
