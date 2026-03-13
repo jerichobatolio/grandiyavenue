@@ -1083,15 +1083,7 @@ document.addEventListener('DOMContentLoaded', function() {
             wireAutoTimeOut('guest_time_in', 'guest_time_out', 4);
     // Load real table status from database
     let serverTableLayout = @json($tableLayout ?? []);
-    const realTableStatus = @json($tableStatus ?? []);
-    let tableStatus = realTableStatus;
-    // Only use localStorage as fallback if server rendered no status yet
-    try {
-        const lsStatus = JSON.parse(localStorage.getItem('tableStatus') || 'null');
-        if (Object.keys(tableStatus || {}).length === 0 && lsStatus && typeof lsStatus === 'object') {
-            tableStatus = Object.assign({}, lsStatus);
-        }
-    } catch (e) { /* ignore */ }
+    let tableStatus = @json($tableStatus ?? []);
 
     // Fallback: fetch latest status from server in case page wasn't rendered with tableStatus
     async function loadLiveTableStatus() {
@@ -1195,8 +1187,8 @@ document.addEventListener('DOMContentLoaded', function() {
         return {};
     }
 
-    // Load shared table data from server; localStorage is fallback only
-    let restaurantTables = normalizeTables(serverTableLayout.tables || JSON.parse(localStorage.getItem('restaurantTables') || 'null'));
+    // Load shared table data from server only
+    let restaurantTables = normalizeTables(serverTableLayout.tables || {});
 
     // Default/canonical sections (guaranteed)
     const canonicalSections = {
@@ -1284,15 +1276,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load sections from admin panel data
     function loadSectionsFromAdminData() {
-        // Load from server-rendered layout first; localStorage only as fallback
+        // Load from the shared server-rendered layout only
         let storedSections = serverTableLayout.sections || null;
         let storedOrder = serverTableLayout.sectionOrder || null;
-        if (!storedSections || Object.keys(storedSections).length === 0) {
-            try {
-                storedSections = JSON.parse(localStorage.getItem('restaurantSections') || 'null');
-                storedOrder = JSON.parse(localStorage.getItem('sectionOrder') || 'null');
-            } catch (e) { /* ignore */ }
-        }
 
         // If server/admin data exists, use only that data. Otherwise fall back to canonical sections.
         if (storedSections && typeof storedSections === 'object' && Object.keys(storedSections).length > 0) {
@@ -1324,50 +1310,16 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load tables from admin panel data
     function loadTablesFromAdminData() {
-        // Load tables from shared server layout first, localStorage only as fallback
-        const adminTables = normalizeTables(
-            (serverTableLayout.tables && Object.keys(serverTableLayout.tables).length)
-                ? serverTableLayout.tables
-                : JSON.parse(localStorage.getItem('restaurantTables') || 'null')
-        );
+        // Load tables from the shared server layout only
+        const adminTables = normalizeTables(serverTableLayout.tables || {});
         
         // If admin has created tables, use ONLY admin tables (admin is the source of truth)
         if (Object.keys(adminTables).length > 0) {
             restaurantTables = adminTables;
             console.log('Loaded tables from admin:', Object.keys(restaurantTables));
         } else {
-            // No admin data - use defaults
-            restaurantTables = {
-                // Section A tables (A1–A4)
-                'A1': { number: 'A1', section: 'hallway', seats: 8, status: 'available', description: 'Section A table' },
-                'A2': { number: 'A2', section: 'hallway', seats: 8, status: 'available', description: 'Section A table' },
-                'A3': { number: 'A3', section: 'hallway', seats: 8, status: 'available', description: 'Section A table' },
-                'A4': { number: 'A4', section: 'hallway', seats: 8, status: 'available', description: 'Section A table' },
-
-                // Section B tables (B1–B4)
-                'B1': { number: 'B1', section: 'top', seats: 8, status: 'available', description: 'Section B table' },
-                'B2': { number: 'B2', section: 'top', seats: 8, status: 'available', description: 'Section B table' },
-                'B3': { number: 'B3', section: 'top', seats: 8, status: 'available', description: 'Section B table' },
-                'B4': { number: 'B4', section: 'top', seats: 8, status: 'available', description: 'Section B table' },
-
-                // Garden tables (G1–G4)
-                'G1': { number: 'G1', section: 'garden', seats: 6, status: 'available', description: 'Garden table' },
-                'G2': { number: 'G2', section: 'garden', seats: 6, status: 'available', description: 'Garden table' },
-                'G3': { number: 'G3', section: 'garden', seats: 8, status: 'available', description: 'Garden table' },
-                'G4': { number: 'G4', section: 'garden', seats: 8, status: 'available', description: 'Garden table' },
-
-                // VIP Cabin Room Tables (3 rooms, 3 tables each)
-                'V11': { number: 'V11', section: 'vip', seats: 8, status: 'available', room: 1, description: 'VIP Cabin Room 1' },
-                'V12': { number: 'V12', section: 'vip', seats: 8, status: 'available', room: 1, description: 'VIP Cabin Room 1' },
-                'V13': { number: 'V13', section: 'vip', seats: 8, status: 'available', room: 1, description: 'VIP Cabin Room 1' },
-                'V21': { number: 'V21', section: 'vip', seats: 8, status: 'available', room: 2, description: 'VIP Cabin Room 2' },
-                'V22': { number: 'V22', section: 'vip', seats: 8, status: 'available', room: 2, description: 'VIP Cabin Room 2' },
-                'V23': { number: 'V23', section: 'vip', seats: 8, status: 'available', room: 2, description: 'VIP Cabin Room 2' },
-                'V31': { number: 'V31', section: 'vip', seats: 8, status: 'available', room: 3, description: 'VIP Cabin Room 3' },
-                'V32': { number: 'V32', section: 'vip', seats: 8, status: 'available', room: 3, description: 'VIP Cabin Room 3' },
-                'V33': { number: 'V33', section: 'vip', seats: 8, status: 'available', room: 3, description: 'VIP Cabin Room 3' }
-            };
-            console.log('Using default tables (no admin data)');
+            restaurantTables = {};
+            console.log('No shared admin tables found');
         }
         
         // Render all sections with the loaded data

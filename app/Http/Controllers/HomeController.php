@@ -798,7 +798,7 @@ class HomeController extends Controller
     {
         $storedTables = TableStatus::all();
         if ($storedTables->isEmpty()) {
-            return TableStatus::defaultDefinitions();
+            return [];
         }
 
         $defaultDefinitions = TableStatus::defaultDefinitions();
