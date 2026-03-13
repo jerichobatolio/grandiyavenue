@@ -501,6 +501,8 @@
 
    <script>
    document.addEventListener('DOMContentLoaded', function() {
+      const serverLayout = @json($tableLayout ?? []);
+
        // Default table data
       const defaultTables = {
           // Section A (A1–A4)
@@ -533,8 +535,10 @@
           'V33': { number: 'V33', section: 'vip', seats: 8, status: 'available', room: 3, description: '' }
       };
 
-       // Load tables from localStorage or use defaults
-       let tables = JSON.parse(localStorage.getItem('restaurantTables')) || defaultTables;
+      // Load tables from server first, then localStorage, then defaults
+      let tables = (serverLayout.tables && Object.keys(serverLayout.tables).length)
+          ? serverLayout.tables
+          : (JSON.parse(localStorage.getItem('restaurantTables')) || defaultTables);
        
        // Default sections data
           const sectionAInclusions = 'Standard setup (table, chairs, basic décor)';
@@ -573,8 +577,10 @@
               }
          };
 
-      // Load sections from localStorage or use defaults
-      let sections = JSON.parse(localStorage.getItem('restaurantSections')) || defaultSections;
+      // Load sections from server first, then localStorage, then defaults
+      let sections = (serverLayout.sections && Object.keys(serverLayout.sections).length)
+          ? serverLayout.sections
+          : (JSON.parse(localStorage.getItem('restaurantSections')) || defaultSections);
 
       // Ensure required "home" sections exist (data-safe upgrade)
       const requiredSections = defaultSections;
@@ -585,7 +591,40 @@
       if (sections.hallway) sections.hallway.inclusions = sectionAInclusions;
 
        // Maintain an explicit order array of section keys
-       let sectionOrder = JSON.parse(localStorage.getItem('sectionOrder') || 'null') || Object.keys(sections);
+       let sectionOrder = (Array.isArray(serverLayout.sectionOrder) && serverLayout.sectionOrder.length)
+           ? serverLayout.sectionOrder
+           : (JSON.parse(localStorage.getItem('sectionOrder') || 'null') || Object.keys(sections));
+
+       let layoutSaveTimer = null;
+
+       async function persistLayoutToServer() {
+           try {
+               const response = await fetch('/table-layout', {
+                   method: 'POST',
+                   headers: {
+                       'Content-Type': 'application/json',
+                       'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                   },
+                   body: JSON.stringify({
+                       sections: sections,
+                       sectionOrder: sectionOrder,
+                       tables: tables
+                   })
+               });
+
+               const data = await response.json();
+               if (!response.ok || !data.success) {
+                   throw new Error(data.message || 'Failed to save layout');
+               }
+           } catch (error) {
+               console.error('Error saving layout to server:', error);
+           }
+       }
+
+       function scheduleLayoutSave() {
+           clearTimeout(layoutSaveTimer);
+           layoutSaveTimer = setTimeout(persistLayoutToServer, 300);
+       }
 
        // Save sections to localStorage
        function saveSectionsToStorage() {
@@ -600,6 +639,7 @@
            window.dispatchEvent(new CustomEvent('sectionDataChanged', {
                detail: { sectionData: sections, sectionOrder: sectionOrder }
            }));
+           scheduleLayoutSave();
        }
        
        // Load table statuses from server on page load
@@ -652,6 +692,7 @@
            window.dispatchEvent(new CustomEvent('tableDataChanged', {
                detail: { tableData: tables }
            }));
+           scheduleLayoutSave();
        }
 
        // Management tab switching

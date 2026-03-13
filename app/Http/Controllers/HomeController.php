@@ -23,6 +23,7 @@ use App\Models\FoodPackageItem; // ✅ Simple food package items for events
 use App\Models\Announcement; // ✅ Announcements for home page
 use App\Models\Faq; // ✅ FAQs for Grandiya Assistant
 use App\Models\EventBooking; // ✅ Event bookings for calendar
+use App\Models\TableLayoutSetting;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -77,7 +78,8 @@ class HomeController extends Controller
                 ->count();
         }
         
-        // Get real table status from database
+        // Get real table status and shared layout from database
+        $tableLayout = $this->getTableLayoutPayload();
         $tableStatus = $this->getTableStatus();
         $reservations = $this->getReservationsForCalendar();
         
@@ -98,6 +100,7 @@ class HomeController extends Controller
             'packageInclusions',
             'notifications',
             'notifCount',
+            'tableLayout',
             'tableStatus',
             'reservations',
             'reviews',
@@ -185,7 +188,8 @@ class HomeController extends Controller
                     ->where('is_read', false)
                     ->count();
 
-                // Get real table status from database
+                // Get real table status and shared layout from database
+                $tableLayout = $this->getTableLayoutPayload();
                 $tableStatus = $this->getTableStatus();
                 $reservations = $this->getReservationsForCalendar();
                 
@@ -206,6 +210,7 @@ class HomeController extends Controller
                     'packageInclusions',
                     'notifications',
                     'notifCount',
+                    'tableLayout',
                     'tableStatus',
                     'reservations',
                     'reviews',
@@ -767,22 +772,12 @@ class HomeController extends Controller
      */
     private function getTableStatus()
     {
-        // Define all available tables
-        $allTables = [
-            // Top Section Tables
-            'T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8',
-            // Hallway Tables  
-            'H9', 'H10', 'H11', 'H12', 'H13', 'H14', 'H15', 'H16',
-            // VIP Cabin Room Tables
-            'V11', 'V12', 'V13', 'V21', 'V22', 'V23', 'V31', 'V32', 'V33'
-        ];
-        
+        $definitions = $this->getResolvedTableDefinitions();
         $tableStatus = [];
         $today = now()->format('Y-m-d');
-        
-        // Initialize all tables as available
-        foreach ($allTables as $table) {
-            $tableStatus[$table] = 'available';
+
+        foreach ($definitions as $table) {
+            $tableStatus[$table['number']] = $table['status'] ?? 'available';
         }
         
         // Check for reservations today and mark tables as reserved
@@ -791,20 +786,38 @@ class HomeController extends Controller
             ->get();
             
         foreach ($todayReservations as $reservation) {
-            if ($reservation->table_number && isset($tableStatus[$reservation->table_number])) {
+            if ($reservation->table_number && array_key_exists($reservation->table_number, $tableStatus)) {
                 $tableStatus[$reservation->table_number] = 'reserved';
             }
         }
-        
-        // Apply admin overrides from database
-        $adminOverrides = TableStatus::all()->pluck('status', 'table_number')->toArray();
-        foreach ($adminOverrides as $table => $status) {
-            if (isset($tableStatus[$table])) {
-                $tableStatus[$table] = $status;
-            }
-        }
-        
+
         return $tableStatus;
+    }
+
+    private function getResolvedTableDefinitions(): array
+    {
+        $definitions = TableStatus::defaultDefinitions();
+        foreach (TableStatus::all() as $table) {
+            $definitions[$table->table_number] = [
+                'number' => $table->table_number,
+                'section' => $table->section ?? ($definitions[$table->table_number]['section'] ?? null),
+                'seats' => $table->seat_capacity ?? ($definitions[$table->table_number]['seats'] ?? 8),
+                'status' => $table->status ?? ($definitions[$table->table_number]['status'] ?? 'available'),
+                'room' => $table->room ?? ($definitions[$table->table_number]['room'] ?? null),
+                'description' => $table->description ?? ($definitions[$table->table_number]['description'] ?? null),
+            ];
+        }
+
+        return $definitions;
+    }
+
+    private function getTableLayoutPayload(): array
+    {
+        return [
+            'sections' => TableLayoutSetting::resolvedSections(),
+            'sectionOrder' => TableLayoutSetting::resolvedSectionOrder(),
+            'tables' => $this->getResolvedTableDefinitions(),
+        ];
     }
     
     /**

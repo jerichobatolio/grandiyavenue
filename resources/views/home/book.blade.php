@@ -1082,13 +1082,14 @@ document.addEventListener('DOMContentLoaded', function() {
             wireAutoTimeOut('res_time_in', 'res_time_out', 4);
             wireAutoTimeOut('guest_time_in', 'guest_time_out', 4);
     // Load real table status from database
+    const serverTableLayout = @json($tableLayout ?? []);
     const realTableStatus = @json($tableStatus ?? []);
     let tableStatus = realTableStatus;
-    // Merge in any admin-provided status from localStorage (takes precedence)
+    // Only use localStorage as fallback if server rendered no status yet
     try {
         const lsStatus = JSON.parse(localStorage.getItem('tableStatus') || 'null');
-        if (lsStatus && typeof lsStatus === 'object') {
-            tableStatus = Object.assign({}, tableStatus, lsStatus);
+        if (Object.keys(tableStatus || {}).length === 0 && lsStatus && typeof lsStatus === 'object') {
+            tableStatus = Object.assign({}, lsStatus);
         }
     } catch (e) { /* ignore */ }
 
@@ -1148,8 +1149,8 @@ document.addEventListener('DOMContentLoaded', function() {
         return {};
     }
 
-    // Load tables from localStorage (admin is source of truth)
-    let restaurantTables = normalizeTables(JSON.parse(localStorage.getItem('restaurantTables') || 'null'));
+    // Load shared table data from server; localStorage is fallback only
+    let restaurantTables = normalizeTables(serverTableLayout.tables || JSON.parse(localStorage.getItem('restaurantTables') || 'null'));
 
     // Default/canonical sections (guaranteed)
     const canonicalSections = {
@@ -1195,9 +1196,11 @@ document.addEventListener('DOMContentLoaded', function() {
         garden: "{{ asset('assets/imgs/sections/garden.jpg') }}"      // Garden
     };
 
-    // Sections and order (prefer admin/localStorage, but keep canonical sections)
+    // Sections and order (prefer server data, then fallback)
     let restaurantSections = { ...canonicalSections };
-    let sectionOrder = Object.keys(restaurantSections);
+    let sectionOrder = Array.isArray(serverTableLayout.sectionOrder) && serverTableLayout.sectionOrder.length
+        ? serverTableLayout.sectionOrder
+        : Object.keys(restaurantSections);
     
     // Initialize table statuses and capacities
     function initializeTableStatuses() {
@@ -1235,13 +1238,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load sections from admin panel data
     function loadSectionsFromAdminData() {
-        // Load from localStorage (admin-managed)
-        let storedSections = null;
-        let storedOrder = null;
-        try {
-            storedSections = JSON.parse(localStorage.getItem('restaurantSections') || 'null');
-            storedOrder = JSON.parse(localStorage.getItem('sectionOrder') || 'null');
-        } catch (e) { /* ignore */ }
+        // Load from server-rendered layout first; localStorage only as fallback
+        let storedSections = serverTableLayout.sections || null;
+        let storedOrder = serverTableLayout.sectionOrder || null;
+        if (!storedSections || Object.keys(storedSections).length === 0) {
+            try {
+                storedSections = JSON.parse(localStorage.getItem('restaurantSections') || 'null');
+                storedOrder = JSON.parse(localStorage.getItem('sectionOrder') || 'null');
+            } catch (e) { /* ignore */ }
+        }
 
         // Merge: stored sections + canonical (canonical always present)
         const merged = { ...(storedSections && typeof storedSections === 'object' ? storedSections : {}) };
@@ -1275,8 +1280,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load tables from admin panel data
     function loadTablesFromAdminData() {
-        // Load tables from admin panel (localStorage)
-        const adminTables = normalizeTables(JSON.parse(localStorage.getItem('restaurantTables') || 'null'));
+        // Load tables from shared server layout first, localStorage only as fallback
+        const adminTables = normalizeTables(
+            (serverTableLayout.tables && Object.keys(serverTableLayout.tables).length)
+                ? serverTableLayout.tables
+                : JSON.parse(localStorage.getItem('restaurantTables') || 'null')
+        );
         
         // If admin has created tables, use ONLY admin tables (admin is the source of truth)
         if (Object.keys(adminTables).length > 0) {

@@ -11,6 +11,7 @@ use App\Models\User;         // ✅ Users
 use App\Models\Category;     // ✅ Categories
 use App\Models\Subcategory;  // ✅ Subcategories
 use App\Models\TableStatus;  // ✅ Table Status
+use App\Models\TableLayoutSetting;
 use App\Models\EventBooking; // ✅ Event Bookings
 use App\Models\Bundle; // ✅ Bundles
 use App\Models\Review; // ✅ Reviews
@@ -519,7 +520,7 @@ class AdminController extends Controller
     // -------------------- TABLE MANAGEMENT --------------------
     public function table_management()
     {
-        return view('admin.table_management');
+        return view('admin.table_management', $this->getTableLayoutPayload());
     }
     
     /**
@@ -528,7 +529,7 @@ class AdminController extends Controller
     public function getTableStatus()
     {
         try {
-            $tableStatus = $this->getRealTableStatus();
+            $tableStatus = $this->getResolvedTableStatuses();
             return response()->json([
                 'success' => true,
                 'tableStatus' => $tableStatus
@@ -557,13 +558,22 @@ class AdminController extends Controller
             
             // Log the table status change
             \Log::info("Admin updating table {$tableNumber} to {$status}");
-            
-            // Store table status in database
+
+            if ($request->filled('old_table_number') && $request->old_table_number !== $tableNumber) {
+                TableStatus::where('table_number', $request->old_table_number)->delete();
+            }
+
+            $existing = TableStatus::where('table_number', $tableNumber)->first();
+            $defaults = TableStatus::defaultDefinitions()[$tableNumber] ?? [];
+
             TableStatus::updateOrCreate(
                 ['table_number' => $tableNumber],
                 [
+                    'section' => $request->input('section', $existing?->section ?? $defaults['section'] ?? null),
+                    'room' => $request->filled('room') ? (int) $request->room : ($existing?->room ?? ($defaults['room'] ?? null)),
                     'status' => $status,
-                    'seat_capacity' => $request->seat_capacity ?? 8
+                    'seat_capacity' => (int) $request->input('seat_capacity', $existing?->seat_capacity ?? $defaults['seats'] ?? 8),
+                    'description' => $request->input('description', $existing?->description ?? $defaults['description'] ?? null),
                 ]
             );
             
@@ -573,7 +583,7 @@ class AdminController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => "Table {$tableNumber} status updated to {$status}",
-                'tableStatus' => $this->getAllTableStatuses()
+                'tableStatus' => $this->getResolvedTableStatuses()
             ]);
             
         } catch (\Exception $e) {
@@ -581,6 +591,61 @@ class AdminController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error updating table status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function saveTableLayout(Request $request)
+    {
+        try {
+            $request->validate([
+                'sections' => 'nullable|array',
+                'sectionOrder' => 'nullable|array',
+                'tables' => 'nullable|array',
+            ]);
+
+            if ($request->has('sections') || $request->has('sectionOrder')) {
+                $settings = TableLayoutSetting::firstOrNew(['id' => 1]);
+                $settings->sections_json = $request->input('sections', $settings->sections_json ?? TableLayoutSetting::defaultSections());
+                $settings->section_order_json = $request->input('sectionOrder', $settings->section_order_json ?? array_keys(TableLayoutSetting::defaultSections()));
+                $settings->save();
+            }
+
+            if ($request->has('tables')) {
+                $incomingTables = $request->input('tables', []);
+                $normalized = [];
+                foreach ($incomingTables as $key => $table) {
+                    $number = trim((string) ($table['number'] ?? $key));
+                    if ($number === '') {
+                        continue;
+                    }
+
+                    $normalized[$number] = [
+                        'section' => $table['section'] ?? null,
+                        'room' => isset($table['room']) && $table['room'] !== '' ? (int) $table['room'] : null,
+                        'status' => in_array(($table['status'] ?? 'available'), ['available', 'reserved'], true) ? $table['status'] : 'available',
+                        'seat_capacity' => (int) ($table['seats'] ?? $table['seat_capacity'] ?? 8),
+                        'description' => $table['description'] ?? null,
+                    ];
+                }
+
+                if ($normalized) {
+                    TableStatus::whereNotIn('table_number', array_keys($normalized))->delete();
+                    foreach ($normalized as $number => $data) {
+                        TableStatus::updateOrCreate(['table_number' => $number], $data);
+                    }
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'layout' => $this->getTableLayoutPayload(),
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error saving table layout: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error saving table layout: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -597,45 +662,43 @@ class AdminController extends Controller
     /**
      * Get all table statuses from database
      */
-    private function getAllTableStatuses()
+    private function getResolvedTableDefinitions(): array
     {
-        // Define all available tables
-        $allTables = [
-            // Top Section Tables
-            'T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8',
-            // Hallway Tables  
-            'H9', 'H10', 'H11', 'H12', 'H13', 'H14', 'H15', 'H16',
-            // VIP Cabin Room Tables
-            'V11', 'V12', 'V13', 'V21', 'V22', 'V23', 'V31', 'V32', 'V33'
-        ];
-        
+        $definitions = TableStatus::defaultDefinitions();
+        foreach (TableStatus::all() as $table) {
+            $definitions[$table->table_number] = [
+                'number' => $table->table_number,
+                'section' => $table->section ?? ($definitions[$table->table_number]['section'] ?? null),
+                'seats' => $table->seat_capacity ?? ($definitions[$table->table_number]['seats'] ?? 8),
+                'status' => $table->status ?? ($definitions[$table->table_number]['status'] ?? 'available'),
+                'room' => $table->room ?? ($definitions[$table->table_number]['room'] ?? null),
+                'description' => $table->description ?? ($definitions[$table->table_number]['description'] ?? null),
+            ];
+        }
+
+        return $definitions;
+    }
+
+    private function getResolvedTableStatuses()
+    {
+        $definitions = $this->getResolvedTableDefinitions();
         $tableStatus = [];
         $today = now()->format('Y-m-d');
-        
-        // Initialize all tables as available
-        foreach ($allTables as $table) {
-            $tableStatus[$table] = 'available';
+
+        foreach ($definitions as $table) {
+            $tableStatus[$table['number']] = $table['status'] ?? 'available';
         }
         
-        // Check for reservations today and mark tables as reserved
         $todayReservations = Book::whereDate('date', $today)
             ->whereIn('status', ['pending', 'approved'])
             ->get();
             
         foreach ($todayReservations as $reservation) {
-            if ($reservation->table_number && isset($tableStatus[$reservation->table_number])) {
+            if ($reservation->table_number && array_key_exists($reservation->table_number, $tableStatus)) {
                 $tableStatus[$reservation->table_number] = 'reserved';
             }
         }
-        
-        // Apply admin overrides from database
-        $adminOverrides = TableStatus::all()->pluck('status', 'table_number')->toArray();
-        foreach ($adminOverrides as $table => $status) {
-            if (isset($tableStatus[$table])) {
-                $tableStatus[$table] = $status;
-            }
-        }
-        
+
         return $tableStatus;
     }
 
@@ -644,7 +707,19 @@ class AdminController extends Controller
      */
     private function getRealTableStatus()
     {
-        return $this->getAllTableStatuses();
+        return $this->getResolvedTableStatuses();
+    }
+
+    private function getTableLayoutPayload(): array
+    {
+        return [
+            'tableLayout' => [
+                'sections' => TableLayoutSetting::resolvedSections(),
+                'sectionOrder' => TableLayoutSetting::resolvedSectionOrder(),
+                'tables' => $this->getResolvedTableDefinitions(),
+                'tableStatus' => $this->getResolvedTableStatuses(),
+            ],
+        ];
     }
     
     /**
