@@ -720,7 +720,8 @@
        loadTableStatusesFromServer();
        
        // Save tables to localStorage
-       function saveTablesToStorage() {
+      function saveTablesToStorage(options = {}) {
+          const { skipServerSync = false } = options;
            localStorage.setItem('restaurantTables', JSON.stringify(tables));
            // Also save table status for customer page
            const tableStatus = {};
@@ -737,7 +738,9 @@
            window.dispatchEvent(new CustomEvent('tableDataChanged', {
                detail: { tableData: tables }
            }));
-           scheduleLayoutSave();
+           if (!skipServerSync) {
+               scheduleLayoutSave();
+           }
        }
 
        // Management tab switching
@@ -1993,88 +1996,40 @@
                        delete tables[tableNumber];
                        
                        // Update status mapping if exists
-                       if (currentTableStatus[tableNumber]) {
-                           currentTableStatus[newTableNumber] = newStatus;
-                           delete currentTableStatus[tableNumber];
-                       }
+                       currentTableStatus[newTableNumber] = newStatus;
+                       delete currentTableStatus[tableNumber];
                    }
                } else {
                    // Table number didn't change, just update the data
                    if (tables[tableNumber]) {
-                       const oldSection = tables[tableNumber].section;
-                       
                        tables[tableNumber].section = newSection;
                        tables[tableNumber].status = newStatus;
                        tables[tableNumber].seats = newSeats;
                        tables[tableNumber].room = newRoom ? parseInt(newRoom) : null;
                        tables[tableNumber].description = newDescription;
                        tables[tableNumber].number = newTableNumber; // Update number property
-                       
-                       // If section changed, save tables immediately to update display
-                       if (oldSection !== newSection) {
-                           saveTablesToStorage();
-                       }
                    }
-               }
-               
-               // Update table status on server
-               const baseUrl = window.location.protocol + '//' + window.location.host;
-               const url = baseUrl + '/table-status';
-               console.log('Making request to:', url);
-               console.log('Current location:', window.location.href);
-               console.log('Base URL:', baseUrl);
-               const response = await fetch(url, {
-                   method: 'POST',
-                   headers: {
-                       'Content-Type': 'application/json',
-                       'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                   },
-                   body: JSON.stringify({
-                       table_number: newTableNumber,
-                       old_table_number: newTableNumber !== tableNumber ? tableNumber : undefined,
-                       status: newStatus,
-                       seat_capacity: newSeats,
-                       section: newSection,
-                       room: newRoom,
-                       description: newDescription
-                   })
-               });
-               
-               console.log('Response status:', response.status);
-               
-               if (!response.ok) {
-                   throw new Error(`HTTP error! status: ${response.status}`);
-               }
-               
-               const data = await response.json();
-               console.log('Response data:', data);
-               
-               if (data.success) {
-                   // Update current table status with new table number
+
                    currentTableStatus[newTableNumber] = newStatus;
-                   
-                   // Save to localStorage
-                   saveTablesToStorage();
-                   
-                   // Refresh all sections
-                   refreshAllSections();
-                   
-                   // Show success message
-                   showStatusUpdateMessage(newTableNumber, newStatus);
-                   
-                   // Broadcast update to public view
-                   broadcastTableUpdate(newTableNumber, newStatus);
-                   
-                   // Close modal
-                   window.closeEditModal();
-                   
-                   // Show additional success message
-                   const messageText = newTableNumber !== tableNumber 
-                       ? `Table renamed from ${tableNumber} to ${newTableNumber} successfully!` 
-                       : `Table ${newTableNumber} updated successfully!`;
-                   showAlert(messageText, 'success');
-               } else {
-                   alert('Error updating table: ' + data.message);
+               }
+
+               // Update the admin UI immediately before waiting for the backend.
+               saveTablesToStorage({ skipServerSync: true });
+               refreshAllSections();
+               window.closeEditModal();
+
+               const messageText = newTableNumber !== tableNumber 
+                   ? `Table renamed from ${tableNumber} to ${newTableNumber} successfully!` 
+                   : `Table ${newTableNumber} updated successfully!`;
+               showAlert(messageText, 'success');
+               showStatusUpdateMessage(newTableNumber, newStatus);
+               broadcastTableUpdate(newTableNumber, newStatus);
+
+               try {
+                   await persistLayoutToServer();
+               } catch (syncError) {
+                   console.error('Error syncing edited table to server:', syncError);
+                   showAlert('Table updated locally, but syncing to server failed. Please try again.', 'error');
                }
            } catch (error) {
                console.error('Error saving table edit:', error);
