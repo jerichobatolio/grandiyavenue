@@ -1294,22 +1294,20 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (e) { /* ignore */ }
         }
 
-        // Merge: stored sections + canonical (canonical always present)
-        const merged = { ...(storedSections && typeof storedSections === 'object' ? storedSections : {}) };
-        Object.keys(canonicalSections).forEach(k => {
-            if (!merged[k]) {
-                merged[k] = canonicalSections[k];
-            } else {
-                // Merge stored section with canonical, preserving stored fields (image, capacity, inclusions)
+        // If server/admin data exists, use only that data. Otherwise fall back to canonical sections.
+        if (storedSections && typeof storedSections === 'object' && Object.keys(storedSections).length > 0) {
+            const merged = {};
+            Object.keys(storedSections).forEach(k => {
                 merged[k] = {
-                    ...canonicalSections[k],
-                    ...merged[k], // Stored data takes precedence
-                    name: merged[k].name || canonicalSections[k].name,
-                    value: merged[k].value || canonicalSections[k].value || k
+                    ...(canonicalSections[k] || {}),
+                    ...storedSections[k],
+                    value: storedSections[k]?.value || canonicalSections[k]?.value || k
                 };
-            }
-        });
-        restaurantSections = merged;
+            });
+            restaurantSections = merged;
+        } else {
+            restaurantSections = { ...canonicalSections };
+        }
 
         // Use stored order if valid; otherwise build from keys
         const keys = Object.keys(restaurantSections);

@@ -796,15 +796,20 @@ class HomeController extends Controller
 
     private function getResolvedTableDefinitions(): array
     {
-        $definitions = TableStatus::defaultDefinitions();
-        foreach (TableStatus::all() as $table) {
+        $storedTables = TableStatus::all();
+        if ($storedTables->isEmpty()) {
+            return TableStatus::defaultDefinitions();
+        }
+
+        $definitions = [];
+        foreach ($storedTables as $table) {
             $definitions[$table->table_number] = [
                 'number' => $table->table_number,
-                'section' => $table->section ?? ($definitions[$table->table_number]['section'] ?? null),
-                'seats' => $table->seat_capacity ?? ($definitions[$table->table_number]['seats'] ?? 8),
-                'status' => $table->status ?? ($definitions[$table->table_number]['status'] ?? 'available'),
-                'room' => $table->room ?? ($definitions[$table->table_number]['room'] ?? null),
-                'description' => $table->description ?? ($definitions[$table->table_number]['description'] ?? null),
+                'section' => $table->section,
+                'seats' => $table->seat_capacity ?? 8,
+                'status' => $table->status ?? 'available',
+                'room' => $table->room,
+                'description' => $table->description,
             ];
         }
 

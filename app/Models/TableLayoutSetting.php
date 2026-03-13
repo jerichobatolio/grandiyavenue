@@ -70,19 +70,19 @@ class TableLayoutSetting extends Model
         $settings = self::getSettings();
         $stored = $settings?->sections_json;
 
-        if (!is_array($stored)) {
+        if (!is_array($stored) || !$stored) {
             return $defaults;
         }
 
-        $merged = $stored;
-        foreach ($defaults as $key => $defaultSection) {
-            $merged[$key] = array_merge(
-                $defaultSection,
-                is_array($merged[$key] ?? null) ? $merged[$key] : []
+        $resolved = [];
+        foreach ($stored as $key => $section) {
+            $resolved[$key] = array_merge(
+                $defaults[$key] ?? [],
+                is_array($section) ? $section : []
             );
         }
 
-        return $merged;
+        return $resolved;
     }
 
     public static function resolvedSectionOrder(): array
