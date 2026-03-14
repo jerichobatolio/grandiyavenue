@@ -154,7 +154,8 @@
          th:nth-child(8), td:nth-child(8) { min-width: 110px; } /* Section */
          th:nth-child(9), td:nth-child(9) { min-width: 100px; } /* Occasion */
          th:nth-child(10), td:nth-child(10) { min-width: 100px; } /* Status */
-         th:nth-child(11), td:nth-child(11) { min-width: 200px; } /* Actions */
+         th:nth-child(11), td:nth-child(11) { min-width: 190px; } /* Payment */
+         th:nth-child(12), td:nth-child(12) { min-width: 200px; } /* Actions */
 
          td {
           padding: 12px 8px;
@@ -204,7 +205,7 @@
           flex-wrap: wrap;
          }
 
-         .btn-approve, .btn-cancel, .btn-delete {
+         .btn-approve, .btn-cancel, .btn-delete, .btn-proof {
           padding: 6px 10px;
           border: none;
           border-radius: 6px;
@@ -243,6 +244,20 @@
 
          .btn-delete:hover {
           background-color: #5a6268;
+          transform: translateY(-1px);
+         }
+
+         .btn-proof {
+          background-color: #17a2b8;
+          color: white;
+          text-decoration: none;
+          display: inline-block;
+         }
+
+         .btn-proof:hover {
+          background-color: #138496;
+          color: white;
+          text-decoration: none;
           transform: translateY(-1px);
          }
 
@@ -658,6 +673,7 @@
                       <th>📍 Section</th>
                       <th>🎯 Occasion</th>
                       <th>📊 Status</th>
+                      <th>💳 Payment</th>
                       <th>⚡ Actions</th>
                     </tr>
                   </thead>
@@ -724,6 +740,16 @@
                         @endif
                       </td>
                       <td>
+                        @if($reservation->payment_proof_path)
+                          <div style="margin-bottom: 6px;"><strong>Paid:</strong> ₱{{ number_format($reservation->amount_paid ?? 0, 2) }}</div>
+                          <button type="button" class="btn-proof" onclick="viewReservationPaymentProof('{{ Storage::url($reservation->payment_proof_path) }}', '{{ addslashes(trim(($reservation->name ?? '') . ' ' . ($reservation->last_name ?? ''))) ?: 'Customer' }}')">
+                            View Proof
+                          </button>
+                        @else
+                          <span class="text-muted">No proof yet</span>
+                        @endif
+                      </td>
+                      <td>
                         <div class="action-buttons">
                           <button class="btn-approve" onclick="approveReservation({{ $reservation->id }})" title="Approve Reservation">
                             ✅ Approve
@@ -739,7 +765,7 @@
                     </tr>
                     @empty
                     <tr>
-                      <td colspan="12" class="no-reservations">
+                      <td colspan="13" class="no-reservations">
                         📭 No reservations found
                       </td>
                </tr>
@@ -768,6 +794,7 @@
                       <th>📍 Section</th>
                       <th>🎯 Occasion</th>
                       <th>📊 Status</th>
+                      <th>💳 Payment</th>
                       <th>⚡ Actions</th>
                     </tr>
                   </thead>
@@ -829,6 +856,16 @@
                         <span class="status-badge pending">⏳ Pending</span>
                       </td>
                       <td>
+                        @if($reservation->payment_proof_path)
+                          <div style="margin-bottom: 6px;"><strong>Paid:</strong> ₱{{ number_format($reservation->amount_paid ?? 0, 2) }}</div>
+                          <button type="button" class="btn-proof" onclick="viewReservationPaymentProof('{{ Storage::url($reservation->payment_proof_path) }}', '{{ addslashes(trim(($reservation->name ?? '') . ' ' . ($reservation->last_name ?? ''))) ?: 'Customer' }}')">
+                            View Proof
+                          </button>
+                        @else
+                          <span class="text-muted">No proof yet</span>
+                        @endif
+                      </td>
+                      <td>
                         <div class="action-buttons">
                           <button class="btn-approve" onclick="approveReservation({{ $reservation->id }})" title="Approve Reservation">
                             ✅ Approve
@@ -844,7 +881,7 @@
                     </tr>
                     @empty
                     <tr>
-                      <td colspan="11" class="no-reservations">
+                      <td colspan="12" class="no-reservations">
                         📭 No pending reservations found
                       </td>
                     </tr>
@@ -1249,6 +1286,25 @@
       </div>
     </div>
     <!-- JavaScript files-->
+    <div class="modal fade" id="reservationPaymentProofModal" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Payment Proof - <span id="reservationPaymentProofCustomer"></span></h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body text-center">
+            <img id="reservationPaymentProofImage" src="" alt="Reservation Payment Proof" class="img-fluid" style="max-width: 58%; max-height: 56vh; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
    @include('admin.js')
 
    <script>
@@ -2103,6 +2159,12 @@
                 occasion: reservation.occasion,
                 duration_hours: reservation.duration_hours,
                 special_requests: reservation.special_requests,
+                down_payment_amount: reservation.down_payment_amount,
+                amount_paid: reservation.amount_paid,
+                payment_proof_path: reservation.payment_proof_path,
+                payment_proof_url: reservation.payment_proof_url,
+                gcash_reference_number: reservation.gcash_reference_number,
+                gcash_transaction_id: reservation.gcash_transaction_id,
                 created_at: reservation.created_at,
                 updated_at: reservation.updated_at,
                 is_archived: reservation.is_archived || false
@@ -2213,6 +2275,12 @@
         time_out: reservation.time_out || 'N/A',
         duration_hours: reservation.duration_hours || 'N/A',
         special_requests: reservation.special_requests || '',
+        down_payment_amount: reservation.down_payment_amount || null,
+        amount_paid: reservation.amount_paid || null,
+        payment_proof_path: reservation.payment_proof_path || null,
+        payment_proof_url: reservation.payment_proof_url || null,
+        gcash_reference_number: reservation.gcash_reference_number || null,
+        gcash_transaction_id: reservation.gcash_transaction_id || null,
         created_at: reservation.created_at || 'N/A',
         updated_at: reservation.updated_at || 'N/A'
       });
@@ -2336,6 +2404,10 @@
               <div><strong>Phone:</strong> ${reservation.phone || 'N/A'}</div>
               <div><strong>Occasion:</strong> ${getAdminOccasionText(reservation)}</div>
               ${reservation.special_requests ? `<div><strong>Special Requests:</strong> ${reservation.special_requests}</div>` : ''}
+              ${!isAdminEventBooking(reservation) ? `
+                <div><strong>Amount Paid:</strong> ${reservation.amount_paid ? `PHP ${Number(reservation.amount_paid).toFixed(2)}` : 'PHP 0.00'}</div>
+                ${reservation.payment_proof_url ? `<div style="margin-top:8px;"><button class="btn-proof" onclick="viewReservationPaymentProof('${String(reservation.payment_proof_url).replace(/'/g, "\\'")}', '${String(((reservation.name || '') + ' ' + (reservation.last_name || '')).trim() || 'Customer').replace(/'/g, "\\'")}')">View Proof</button></div>` : '<div><strong>Proof:</strong> Not uploaded yet</div>'}
+              ` : ''}
               <div class="reservation-actions" style="margin-top: 10px; display: flex; gap: 10px;">
                 ${getActionButtons(reservation)}
               </div>
@@ -2625,6 +2697,21 @@
 
    return 'N/A';
  }
+
+  function viewReservationPaymentProof(imageUrl, customerName) {
+    const customerEl = document.getElementById('reservationPaymentProofCustomer');
+    const imageEl = document.getElementById('reservationPaymentProofImage');
+
+    if (customerEl) {
+      customerEl.textContent = customerName || 'Customer';
+    }
+
+    if (imageEl) {
+      imageEl.src = imageUrl || '';
+    }
+
+    $('#reservationPaymentProofModal').modal('show');
+  }
 
   function getActionButtons(reservation) {
     const rawStatus = reservation && reservation.status;

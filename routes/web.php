@@ -109,6 +109,7 @@ Route::get('/api/booking-conflicts', [EventBookingController::class, 'checkBooki
 
 // Event booking routes - require authentication
 Route::middleware(['auth'])->group(function () {
+    Route::post('/book-table/payment-proof', [HomeController::class, 'uploadTablePaymentProof'])->name('book.table.payment.proof');
     Route::post('/book-event', [EventBookingController::class, 'storeBooking'])->name('book.event.store');
     Route::post('/upload-payment-proof', [EventBookingController::class, 'uploadPaymentProof'])->name('book.event.payment.proof');
     Route::post('/cancel-booking', [EventBookingController::class, 'cancelPendingBooking'])->name('book.event.cancel');

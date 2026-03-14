@@ -177,7 +177,7 @@
                         $defaultPhone = $user ? ($user->phone ?? '') : '';
                     @endphp
                     <!-- If logged in, normal reservation -->
-                    <form action="{{ url('book_table') }}" method="POST" id="booking-form">
+                    <form action="{{ url('book_table') }}" method="POST" id="booking-form" data-payment-flow="table-downpayment">
                         @csrf
                         <input type="hidden" name="table_number" id="table_number" required>
                         <input type="hidden" name="table_section" id="table_section" required>
@@ -333,6 +333,60 @@
             @endif
         </div>
 
+        <div id="table-payment-modal" class="table-payment-modal" style="display: none;">
+            <div class="table-payment-modal-content">
+                <div class="table-payment-modal-header">
+                    <h3 class="mb-0">Table Reservation Downpayment</h3>
+                    <p class="mb-0 table-payment-helper-text">Complete your PHP 1,000 downpayment and upload your proof of payment.</p>
+                </div>
+                <div class="table-payment-modal-body">
+                    <div class="table-payment-summary">
+                        <div class="payment-summary-row">
+                            <span>Reservation</span>
+                            <strong id="table-payment-summary-table">-</strong>
+                        </div>
+                        <div class="payment-summary-row">
+                            <span>Date</span>
+                            <strong id="table-payment-summary-date">-</strong>
+                        </div>
+                        <div class="payment-summary-row">
+                            <span>Time</span>
+                            <strong id="table-payment-summary-time">-</strong>
+                        </div>
+                        <div class="payment-summary-row">
+                            <span>Downpayment</span>
+                            <strong id="table-payment-summary-amount">PHP 1,000.00</strong>
+                        </div>
+                    </div>
+
+                    <div class="table-payment-qr-wrap text-center">
+                        @if(isset($adminQrCode) && $adminQrCode && $adminQrCode->is_active)
+                            <img id="table-payment-qr-image" src="{{ $adminQrCode->image_url }}" alt="GCash QR Code" class="img-fluid">
+                            <p class="small table-payment-helper-text mt-2 mb-0">Scan this QR code, pay the fixed downpayment, then upload your proof below.</p>
+                        @else
+                            <div class="alert alert-warning mb-0">
+                                No active payment QR code is available right now. You can still continue once the admin QR has been set.
+                            </div>
+                        @endif
+                    </div>
+
+                    <form id="table-payment-proof-form" enctype="multipart/form-data">
+                        <input type="hidden" id="table-payment-booking-id" name="booking_id">
+                        <div class="mb-3">
+                            <label for="table-payment-proof" class="text-dark mb-1">Upload Proof of Payment</label>
+                            <input type="file" id="table-payment-proof" name="payment_proof" class="form-control custom-form-control" accept="image/png,image/jpeg,image/jpg,image/webp" required>
+                            <small class="table-payment-helper-text d-block mt-1">Accepted formats: JPG, PNG, WEBP. Maximum file size: 2MB.</small>
+                        </div>
+                        <div id="table-payment-proof-preview" class="table-payment-proof-preview" style="display: none;"></div>
+                        <div class="d-flex justify-content-end mt-3">
+                            <button type="submit" id="table-payment-proof-submit" class="btn btn-success">
+                                Upload Proof And Continue
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
 
 <style>
 /* Section Buttons */
@@ -943,6 +997,126 @@ label, .form-label {
     color: #856404 !important;
 }
 
+.table-payment-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 12000;
+    background: rgba(0, 0, 0, 0.72);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.table-payment-modal-content {
+    width: min(760px, 100%);
+    max-height: 92vh;
+    overflow-y: auto;
+    background: #ffffff;
+    color: #333333;
+    border-radius: 18px;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+}
+
+.table-payment-modal-header {
+    padding: 22px 24px 14px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.table-payment-modal-body {
+    padding: 24px;
+}
+
+.table-payment-summary {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 18px;
+}
+
+.table-payment-helper-text {
+    color: #111111 !important;
+}
+
+.payment-summary-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 8px 0;
+    border-bottom: 1px dashed #d6dbe1;
+}
+
+.payment-summary-row:last-child {
+    border-bottom: none;
+}
+
+.table-payment-qr-wrap {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 18px;
+}
+
+.table-payment-qr-wrap img {
+    max-width: 260px;
+    width: 100%;
+    border-radius: 12px;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+}
+
+.table-payment-proof-preview {
+    border: 1px dashed #ced4da;
+    border-radius: 14px;
+    padding: 12px;
+    background: #f8f9fa;
+}
+
+.table-payment-proof-preview img {
+    width: 100%;
+    max-height: 260px;
+    object-fit: contain;
+    border-radius: 10px;
+}
+
+.table-receipt-card {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 14px;
+    padding: 18px;
+}
+
+.table-receipt-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 18px;
+}
+
+.table-receipt-item {
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: #ffffff;
+    border: 1px solid #edf0f2;
+}
+
+.table-receipt-item strong {
+    display: block;
+    margin-bottom: 4px;
+}
+
+.table-receipt-proof {
+    margin-top: 18px;
+}
+
+.table-receipt-proof img {
+    width: 100%;
+    max-height: 280px;
+    object-fit: contain;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
 /* Fix table text colors */
 .table-item {
     color: #333 !important;
@@ -985,6 +1159,24 @@ label, .form-label {
 
 /* Responsive Design */
 @media (max-width: 768px) {
+    .table-payment-modal {
+        padding: 12px;
+    }
+
+    .table-payment-modal-header,
+    .table-payment-modal-body {
+        padding: 16px;
+    }
+
+    .table-receipt-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .payment-summary-row {
+        flex-direction: column;
+        gap: 6px;
+    }
+
     .tables-grid {
         grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
         gap: 10px;
@@ -2067,6 +2259,156 @@ document.addEventListener('DOMContentLoaded', function() {
             tableSectionInputGuest.value = '';
         }
     }
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    const tablePaymentProofUploadUrl = @json(route('book.table.payment.proof'));
+    const fixedTableDownpayment = 1000;
+    let pendingTableBooking = null;
+
+    function formatPeso(amount) {
+        return new Intl.NumberFormat('en-PH', {
+            style: 'currency',
+            currency: 'PHP',
+            minimumFractionDigits: 2,
+        }).format(Number(amount || 0));
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function setBookButtonState(isLoading) {
+        const submitBtn = document.getElementById('book-btn');
+        if (!submitBtn) return;
+
+        submitBtn.disabled = isLoading || !selectedTable;
+        submitBtn.innerHTML = isLoading ? '⏳ Processing...' : '📅 Book Selected Table';
+    }
+
+    function openTablePaymentModal(booking) {
+        pendingTableBooking = booking;
+        const modal = document.getElementById('table-payment-modal');
+        if (!modal) return;
+
+        document.getElementById('table-payment-booking-id').value = booking.id || '';
+        document.getElementById('table-payment-summary-table').textContent = booking.table_section
+            ? `${booking.table_number} - ${booking.table_section}`
+            : (booking.table_number || '-');
+        document.getElementById('table-payment-summary-date').textContent = booking.date_display || '-';
+        document.getElementById('table-payment-summary-time').textContent = `${booking.time_in_display || '-'} to ${booking.time_out_display || '-'}`;
+        document.getElementById('table-payment-summary-amount').textContent = formatPeso(booking.down_payment_amount || fixedTableDownpayment);
+
+        const proofForm = document.getElementById('table-payment-proof-form');
+        if (proofForm) {
+            proofForm.reset();
+        }
+
+        const preview = document.getElementById('table-payment-proof-preview');
+        if (preview) {
+            preview.style.display = 'none';
+            preview.innerHTML = '';
+        }
+
+        modal.style.display = 'flex';
+    }
+
+    function closeTablePaymentModal() {
+        const modal = document.getElementById('table-payment-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    function resetTableBookingModalState() {
+        closeTablePaymentModal();
+        pendingTableBooking = null;
+    }
+
+    const tablePaymentProofInput = document.getElementById('table-payment-proof');
+    if (tablePaymentProofInput) {
+        tablePaymentProofInput.addEventListener('change', function () {
+            const preview = document.getElementById('table-payment-proof-preview');
+            const file = this.files && this.files[0];
+            if (!preview || !file) {
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                preview.innerHTML = `<img src="${event.target?.result || ''}" alt="Payment proof preview">`;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    const tablePaymentProofForm = document.getElementById('table-payment-proof-form');
+    if (tablePaymentProofForm) {
+        tablePaymentProofForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            if (!pendingTableBooking || !pendingTableBooking.id) {
+                alert('Reservation not found. Please try booking again.');
+                return;
+            }
+
+            const submitBtn = document.getElementById('table-payment-proof-submit');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Uploading Proof...';
+            }
+
+            try {
+                const formData = new FormData(tablePaymentProofForm);
+                formData.set('booking_id', pendingTableBooking.id);
+
+                const response = await fetch(tablePaymentProofUploadUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                    },
+                    body: formData,
+                });
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    const errorMessages = data.errors
+                        ? Object.values(data.errors).flat().join('\n')
+                        : (data.message || 'Failed to upload payment proof.');
+                    throw new Error(errorMessages);
+                }
+
+                resetTableBookingModalState();
+                window.location.href = data.booking?.receipt_url || (`/booking/receipt/${data.booking.id}`);
+            } catch (error) {
+                alert(error.message || 'Failed to upload payment proof.');
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Upload Proof And Continue';
+                }
+            }
+        });
+    }
+
+    document.addEventListener('click', function (event) {
+        const homeTrigger = event.target.closest('a[href="#home"], a[href="/home"], a[href="/home#home"], a[href$="#home"]');
+        if (homeTrigger) {
+            resetTableBookingModalState();
+        }
+    });
+
+    window.addEventListener('hashchange', function () {
+        if ((window.location.hash || '').toLowerCase() === '#home') {
+            resetTableBookingModalState();
+        }
+    });
     
     
     // Event listeners for capacity validation
@@ -2093,7 +2435,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Form validation
     const bookingForm = document.getElementById('booking-form');
     if (bookingForm) {
-        bookingForm.addEventListener('submit', function(e) {
+        bookingForm.addEventListener('submit', async function(e) {
             console.log('Form submission started');
             console.log('Selected table:', selectedTable);
             
@@ -2127,40 +2469,44 @@ document.addEventListener('DOMContentLoaded', function() {
                     return false;
                 }
             }
-            
-            // If all validations pass, allow form submission
-            console.log('All validations passed, submitting form...');
-            
-            // Show loading state
-            const submitBtn = document.getElementById('book-btn');
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '⏳ Processing...';
+
+            const usesPaymentFlow = bookingForm.dataset.paymentFlow === 'table-downpayment';
+            if (!usesPaymentFlow) {
+                return true;
             }
-            
-            // Show immediate success message
-            setTimeout(() => {
-                const successAlert = document.createElement('div');
-                successAlert.className = 'alert alert-success alert-dismissible fade show';
-                successAlert.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-                successAlert.innerHTML = `
-                    <i class="fas fa-check-circle mr-2"></i>
-                    <strong>Success!</strong> Your reservation is being processed...
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                `;
-                document.body.appendChild(successAlert);
-                
-                // Auto remove after 5 seconds
-                setTimeout(() => {
-                    if (successAlert.parentElement) {
-                        successAlert.remove();
-                    }
-                }, 5000);
-            }, 1000);
-            
-            return true;
+
+            e.preventDefault();
+            console.log('All validations passed, creating reservation...');
+
+            try {
+                setBookButtonState(true);
+
+                const formData = new FormData(bookingForm);
+                const response = await fetch(bookingForm.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                    },
+                    body: formData,
+                });
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    const errorMessages = data.errors
+                        ? Object.values(data.errors).flat().join('\n')
+                        : (data.message || 'Failed to create reservation.');
+                    throw new Error(errorMessages);
+                }
+
+                openTablePaymentModal(data.booking);
+            } catch (error) {
+                alert(error.message || 'Failed to create reservation.');
+            } finally {
+                setBookButtonState(false);
+            }
+
+            return false;
         });
     }
     

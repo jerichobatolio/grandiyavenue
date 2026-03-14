@@ -243,6 +243,10 @@
         <div class="booking-details">
             <h3>📅 Reservation Details</h3>
             <div class="info-row">
+                <span class="info-label">Receipt No.:</span>
+                <span class="info-value"><strong>TR-{{ str_pad($booking->id, 6, '0', STR_PAD_LEFT) }}</strong></span>
+            </div>
+            <div class="info-row">
                 <span class="info-label">Table Number:</span>
                 <span class="info-value"><strong>{{ $booking->table_number }}</strong></span>
             </div>
@@ -283,6 +287,28 @@
                 {{ $booking->special_requests }}
             </div>
             @endif
+        </div>
+
+        <div class="booking-details">
+            <h3>💳 Payment Details</h3>
+            <div class="info-row">
+                <span class="info-label">Required Downpayment:</span>
+                <span class="info-value"><strong>₱{{ number_format($booking->down_payment_amount ?? 1000, 2) }}</strong></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Amount Paid:</span>
+                <span class="info-value"><strong>₱{{ number_format($booking->amount_paid ?? 0, 2) }}</strong></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Proof Uploaded:</span>
+                <span class="info-value"><strong>{{ $booking->gcash_payment_date ? $booking->gcash_payment_date->format('F d, Y h:i A') : 'Yes' }}</strong></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Proof Status:</span>
+                <span class="info-value">
+                    <strong>{{ $booking->payment_proof_path ? 'Uploaded' : 'Pending Upload' }}</strong>
+                </span>
+            </div>
         </div>
         
         <div class="receipt-footer">

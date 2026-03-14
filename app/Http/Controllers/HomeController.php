@@ -26,6 +26,7 @@ use App\Models\EventBooking; // ✅ Event bookings for calendar
 use App\Models\TableLayoutSetting;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class HomeController extends Controller
@@ -374,11 +375,23 @@ class HomeController extends Controller
 
     public function book_table(Request $request)
     {
+        if (!Auth::check()) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Authentication required for table reservations.',
+                ], 401);
+            }
+
+            return redirect('login');
+        }
+
         try {
             // Get table capacity from database
             $tableNumber = $request->table_number;
             $tableStatus = TableStatus::where('table_number', $tableNumber)->first();
             $tableCapacity = $tableStatus ? ($tableStatus->seat_capacity ?? 8) : 8;
+            $downPaymentAmount = $this->getTableBookingDownPaymentAmount();
             
             $request->validate([
                 'name' => 'required|string|max:255',
@@ -433,8 +446,10 @@ class HomeController extends Controller
             $data->table_section = $request->table_section ?? '';
             $data->occasion = $request->occasion ?? null;
             $data->special_requests = $request->special_requests ?? null;
+            $data->down_payment_amount = $downPaymentAmount;
+            $data->payment_option = 'downpayment';
             $data->status = $request->status ?? 'pending';
-            $data->user_id = Auth::id(); // Will be null if not authenticated, which is fine
+            $data->user_id = Auth::id();
 
             $data->save();
 
@@ -468,10 +483,26 @@ class HomeController extends Controller
                 ]);
             }
 
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Table reservation created. Please upload your payment proof.',
+                    'booking' => $this->formatTableBookingPayload($data->fresh()),
+                ]);
+            }
+
             return redirect()->route('booking.receipt', ['id' => $data->id])
                 ->with('success', 'Table reservation submitted successfully! Please wait for admin approval.');
             
         } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->validator->errors(),
+                ], 422);
+            }
+
             return redirect()->back()
                 ->withErrors($e->validator)
                 ->withInput()
@@ -481,10 +512,82 @@ class HomeController extends Controller
             \Log::error('Table booking error: ' . $e->getMessage());
             \Log::error('Table booking stack trace: ' . $e->getTraceAsString());
             \Log::error('Request data: ' . json_encode($request->all()));
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sorry, there was an error processing your reservation. Please try again.',
+                ], 500);
+            }
             
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Sorry, there was an error processing your reservation. Please try again. Error: ' . $e->getMessage());
+        }
+    }
+
+    public function uploadTablePaymentProof(Request $request)
+    {
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Authentication required.',
+            ], 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'booking_id' => 'required|exists:books,id',
+            'payment_proof' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'gcash_reference_number' => 'nullable|string|max:255',
+            'gcash_transaction_id' => 'nullable|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $booking = Book::where('id', $request->booking_id)
+                ->where('user_id', Auth::id())
+                ->first();
+
+            if (!$booking) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Reservation not found.',
+                ], 404);
+            }
+
+            $amountPaid = (float) ($booking->down_payment_amount ?: $this->getTableBookingDownPaymentAmount());
+            $path = $request->file('payment_proof')->store('table_booking_payment_proofs', 'public');
+
+            $booking->update([
+                'payment_option' => 'downpayment',
+                'amount_paid' => $amountPaid,
+                'payment_proof_path' => $path,
+                'payment_confirmed_at' => null,
+                'gcash_reference_number' => $request->input('gcash_reference_number') ?: ('GCASH-TABLE-' . time() . '-' . $booking->id),
+                'gcash_transaction_id' => $request->input('gcash_transaction_id') ?: ('TBL-TXN-' . time() . '-' . $booking->id),
+                'gcash_payment_date' => now(),
+                'status' => 'pending',
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment proof uploaded successfully. Your reservation is pending admin approval.',
+                'booking' => $this->formatTableBookingPayload($booking->fresh()),
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Table payment proof upload error: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error uploading payment proof: ' . $e->getMessage(),
+            ], 500);
         }
     }
 
@@ -958,6 +1061,12 @@ class HomeController extends Controller
                 'time_out' => $timeOut,
                 'duration_hours' => $reservation->duration_hours ?? 'N/A',
                 'special_requests' => $reservation->special_requests ?? '',
+                'down_payment_amount' => $reservation->down_payment_amount,
+                'amount_paid' => $reservation->amount_paid,
+                'payment_proof_path' => $reservation->payment_proof_path,
+                'payment_proof_url' => $reservation->payment_proof_path ? Storage::url($reservation->payment_proof_path) : null,
+                'gcash_reference_number' => $reservation->gcash_reference_number,
+                'gcash_transaction_id' => $reservation->gcash_transaction_id,
                 'created_at' => $reservation->created_at ? $reservation->created_at->format('Y-m-d H:i:s') : 'N/A',
                 'updated_at' => $reservation->updated_at ? $reservation->updated_at->format('Y-m-d H:i:s') : 'N/A',
             ];
@@ -1136,5 +1245,47 @@ class HomeController extends Controller
         }
         
         return view('receipts.booking_receipt', compact('booking'));
+    }
+
+    private function getTableBookingDownPaymentAmount(): float
+    {
+        return 1000.00;
+    }
+
+    private function formatTableBookingPayload(Book $booking): array
+    {
+        $timeIn = $booking->time_in ? \Carbon\Carbon::parse($booking->time_in) : null;
+        $timeOut = $booking->time_out ? \Carbon\Carbon::parse($booking->time_out) : null;
+
+        return [
+            'id' => $booking->id,
+            'receipt_number' => 'TR-' . str_pad((string) $booking->id, 6, '0', STR_PAD_LEFT),
+            'name' => $booking->name,
+            'last_name' => $booking->last_name,
+            'phone' => $booking->phone,
+            'guest' => $booking->guest,
+            'date' => $booking->date ? $booking->date->format('Y-m-d') : null,
+            'date_display' => $booking->date ? $booking->date->format('F d, Y') : 'N/A',
+            'time_in' => $timeIn ? $timeIn->format('H:i') : null,
+            'time_in_display' => $timeIn ? $timeIn->format('h:i A') : 'N/A',
+            'time_out' => $timeOut ? $timeOut->format('H:i') : null,
+            'time_out_display' => $timeOut ? $timeOut->format('h:i A') : 'N/A',
+            'table_number' => $booking->table_number,
+            'table_section' => $booking->table_section,
+            'occasion' => $booking->occasion,
+            'special_requests' => $booking->special_requests,
+            'status' => $booking->status,
+            'down_payment_amount' => (float) ($booking->down_payment_amount ?: $this->getTableBookingDownPaymentAmount()),
+            'amount_paid' => (float) ($booking->amount_paid ?: 0),
+            'payment_option' => $booking->payment_option,
+            'payment_proof_path' => $booking->payment_proof_path,
+            'payment_proof_url' => $booking->payment_proof_path ? Storage::url($booking->payment_proof_path) : null,
+            'gcash_reference_number' => $booking->gcash_reference_number,
+            'gcash_transaction_id' => $booking->gcash_transaction_id,
+            'gcash_payment_date' => $booking->gcash_payment_date ? $booking->gcash_payment_date->format('Y-m-d H:i:s') : null,
+            'gcash_payment_date_display' => $booking->gcash_payment_date ? $booking->gcash_payment_date->format('F d, Y h:i A') : null,
+            'redirect_url' => url('/home'),
+            'receipt_url' => route('booking.receipt', ['id' => $booking->id]),
+        ];
     }
 }
