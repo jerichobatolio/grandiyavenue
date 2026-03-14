@@ -2421,10 +2421,6 @@
               <div><strong>Phone:</strong> ${reservation.phone || 'N/A'}</div>
               <div><strong>Occasion:</strong> ${getAdminOccasionText(reservation)}</div>
               ${reservation.special_requests ? `<div><strong>Special Requests:</strong> ${reservation.special_requests}</div>` : ''}
-              ${!isAdminEventBooking(reservation) ? `
-                <div><strong>Amount Paid:</strong> ${reservation.amount_paid ? `PHP ${Number(reservation.amount_paid).toFixed(2)}` : 'PHP 0.00'}</div>
-                ${reservation.payment_proof_url ? `<div style="margin-top:8px;"><button class="btn-proof" onclick="viewReservationPaymentProof('${String(reservation.payment_proof_url).replace(/'/g, "\\'")}', '${String(((reservation.name || '') + ' ' + (reservation.last_name || '')).trim() || 'Customer').replace(/'/g, "\\'")}')">View Proof</button></div>` : '<div><strong>Proof:</strong> Not uploaded yet</div>'}
-              ` : ''}
               <div class="reservation-actions" style="margin-top: 10px; display: flex; gap: 10px;">
                 ${getActionButtons(reservation)}
               </div>
