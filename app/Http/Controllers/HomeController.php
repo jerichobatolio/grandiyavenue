@@ -397,7 +397,7 @@ class HomeController extends Controller
             
             $request->validate([
                 'name' => 'required|string|max:255',
-                'last_name' => 'nullable|string|max:255',
+                'last_name' => 'required|string|max:255',
                 'phone' => 'required|string|digits:11',
                 'guest' => 'required|integer|min:1|max:' . $tableCapacity,
                 'date' => 'required|date|after_or_equal:today',

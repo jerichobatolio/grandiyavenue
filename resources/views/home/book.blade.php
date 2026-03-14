@@ -191,7 +191,7 @@
                             <div class="col-sm-6 col-md-3 col-xs-12 mb-3">
                                 <label for="res_last_name" class="text-white-50 mb-1">Last Name</label>
                                 <input id="res_last_name" type="text" class="form-control form-control-lg custom-form-control" 
-                                       name="last_name" value="{{ old('last_name', $defaultLastName) }}">
+                                       name="last_name" value="{{ old('last_name', $defaultLastName) }}" required>
                             </div>
                             <div class="col-sm-6 col-md-3 col-xs-12 mb-3">
                                 <label for="res_phone" class="text-white-50 mb-1">Phone Number</label>
@@ -267,7 +267,7 @@
                             <div class="col-sm-6 col-md-3 col-xs-12 mb-3">
                                 <label for="guest_last_name" class="text-white-50 mb-1">Last Name</label>
                                 <input id="guest_last_name" type="text" class="form-control form-control-lg custom-form-control" 
-                                       name="last_name" value="{{ old('last_name') }}">
+                                       name="last_name" value="{{ old('last_name') }}" required>
                             </div>
                             <div class="col-sm-6 col-md-3 col-xs-12 mb-3">
                                 <label for="guest_phone" class="text-white-50 mb-1">Phone Number</label>
