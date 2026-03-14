@@ -1828,16 +1828,6 @@
             return document.getElementById('navbarSupportedContent');
         }
 
-        function closeMobileNavbar() {
-            var collapseEl = getNavbarCollapse();
-            if (!collapseEl || window.innerWidth >= 992 || !collapseEl.classList.contains('show')) {
-                return;
-            }
-
-            var collapseInstance = bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false });
-            collapseInstance.hide();
-        }
-
         function getPreferredScrollTarget(sectionKey) {
             if (sectionKey === 'book-table') {
                 return document.getElementById('book-table-title') || document.getElementById('book-table');
@@ -1865,8 +1855,25 @@
             }
             return 20;
         }
-        
-        // Function to perform the actual scrolling
+
+        function setActiveNav(sectionKey) {
+            const navLinks = document.querySelectorAll('.navbar-nav .nav-link[data-section]');
+            navLinks.forEach(link => {
+                if (link.getAttribute('data-section') === sectionKey) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        }
+
+        function updateSectionHash(sectionKey) {
+            if (window.history && window.history.replaceState) {
+                var newHash = sectionKey === 'home' ? '' : '#' + sectionKey;
+                window.history.replaceState(null, '', window.location.pathname + window.location.search + newHash);
+            }
+        }
+
         function performScroll() {
             var element = getPreferredScrollTarget(sectionId);
             if (!element) {
@@ -1880,47 +1887,52 @@
                 var destination = Math.max(top - navbarHeight - sectionGap, 0);
                 window.scrollTo({ top: destination, behavior: 'smooth' });
                 setActiveNav(sectionId);
-                closeMobileNavbar();
-                if (window.history && window.history.replaceState) {
-                    var newHash = sectionId === 'home' ? '' : '#' + sectionId;
-                    window.history.replaceState(null, '', window.location.pathname + window.location.search + newHash);
-                }
+                updateSectionHash(sectionId);
                 return true;
             }
             return false;
         }
 
-        // Update active nav link
-        function setActiveNav(sectionKey) {
-            const navLinks = document.querySelectorAll('.navbar-nav .nav-link[data-section]');
-            navLinks.forEach(link => {
-                if (link.getAttribute('data-section') === sectionKey) {
-                    link.classList.add('active');
-                } else {
-                    link.classList.remove('active');
-                }
-            });
-        }
-        
-        // Try to scroll immediately
-        if (performScroll()) {
-            setActiveNav(sectionId);
-            return;
-        }
-        
-        // If element not found, wait a bit and try again (for dynamic content)
-        setTimeout(() => {
-            if (!performScroll()) {
-                console.warn('Could not find section:', sectionId);
-                // Fallback: scroll to top
-                window.scrollTo({
-                    top: 0,
-                    behavior: 'smooth'
-                });
-            } else {
-                setActiveNav(sectionId);
+        function performScrollWithRetry() {
+            if (performScroll()) {
+                return;
             }
-        }, 100);
+
+            setTimeout(() => {
+                if (!performScroll()) {
+                    console.warn('Could not find section:', sectionId);
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+                }
+            }, 100);
+        }
+
+        function closeMobileNavbarThenScroll() {
+            var collapseEl = getNavbarCollapse();
+            var shouldWaitForCollapse = collapseEl && window.innerWidth < 992 && collapseEl.classList.contains('show');
+
+            if (!shouldWaitForCollapse) {
+                performScrollWithRetry();
+                return;
+            }
+
+            var collapseInstance = bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false });
+            var onHidden = function () {
+                collapseEl.removeEventListener('hidden.bs.collapse', onHidden);
+                setTimeout(function () {
+                    performScrollWithRetry();
+                }, 50);
+            };
+
+            collapseEl.addEventListener('hidden.bs.collapse', onHidden, { once: true });
+            collapseInstance.hide();
+        }
+
+        setActiveNav(sectionId);
+        updateSectionHash(sectionId);
+        closeMobileNavbarThenScroll();
     }
     
     // Add click event listeners to navigation links as backup
