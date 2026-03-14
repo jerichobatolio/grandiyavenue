@@ -352,7 +352,44 @@ document.addEventListener('DOMContentLoaded', function () {
         setText('dashboard-status', 'Snapshot');
     }
 
+    async function refreshDashboardStats() {
+        try {
+            setText('dashboard-status', 'Updating...');
+            const response = await fetch('{{ route('admin.dashboard.stats') }}', {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to refresh dashboard stats.');
+            }
+
+            const payload = await response.json();
+            renderAll(payload);
+        } catch (error) {
+            console.error('Dashboard refresh failed:', error);
+            setText('dashboard-status', 'Refresh failed');
+        }
+    }
+
     renderAll(initialData);
+
+    // Keep the dashboard metrics current after reservation approvals/cancellations.
+    setInterval(refreshDashboardStats, 10000);
+    window.addEventListener('storage', function (event) {
+        if (event.key === 'adminDashboardRefresh' && event.newValue) {
+            refreshDashboardStats();
+        }
+    });
+    window.addEventListener('adminDashboardRefresh', function () {
+        refreshDashboardStats();
+    });
+    document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) {
+            refreshDashboardStats();
+        }
+    });
 });
 </script>
 @endsection

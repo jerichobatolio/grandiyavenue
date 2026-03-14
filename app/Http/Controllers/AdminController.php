@@ -2309,6 +2309,16 @@ class AdminController extends Controller
             ->whereDate('created_at', $today)
             ->sum(DB::raw('COALESCE(amount_paid, down_payment_amount)'));
 
+        // Table reservation revenue is recognized once the reservation is approved.
+        $tableReservationRevenue = Book::where('is_archived', false)
+            ->whereIn('status', ['approved', 'confirmed'])
+            ->sum(DB::raw('COALESCE(amount_paid, down_payment_amount)'));
+
+        $tableReservationRevenueToday = Book::where('is_archived', false)
+            ->whereIn('status', ['approved', 'confirmed'])
+            ->whereDate('updated_at', $today)
+            ->sum(DB::raw('COALESCE(amount_paid, down_payment_amount)'));
+
         // Refunds decrease revenue – deduct as soon as approved (and when refunded)
         $refundsTotal = ReturnRefund::whereIn('status', ['approved', 'refunded'])
             ->sum('refund_amount');
@@ -2317,8 +2327,8 @@ class AdminController extends Controller
             ->whereDate('processed_at', $today)
             ->sum('refund_amount');
 
-        $totalRevenue = ($orderRevenueTotal + $eventRevenue) - $refundsTotal;
-        $revenueToday = ($orderRevenueToday + $eventRevenueToday) - $refundsToday;
+        $totalRevenue = ($orderRevenueTotal + $eventRevenue + $tableReservationRevenue) - $refundsTotal;
+        $revenueToday = ($orderRevenueToday + $eventRevenueToday + $tableReservationRevenueToday) - $refundsToday;
 
         // Show grouped (per-customer) active orders in the Orders card so it matches the Orders page
         $activeOrders = Order::where('is_archived', false)
@@ -2374,7 +2384,7 @@ class AdminController extends Controller
             $reservationsData[] = Book::whereBetween('created_at', [$dateStart, $dateEnd])->count();
             $eventsData[] = EventBooking::whereBetween('created_at', [$dateStart, $dateEnd])->count();
 
-            // Net revenue per day (orders + event bookings - refunds)
+            // Net revenue per day (orders + approved table reservations + event bookings - refunds)
             $dailyOrderRevenue = Order::where('delivery_status', 'Delivered')
                 ->whereBetween('created_at', [$dateStart, $dateEnd])
                 ->sum('price');
@@ -2384,11 +2394,16 @@ class AdminController extends Controller
                 ->whereBetween('created_at', [$dateStart, $dateEnd])
                 ->sum(DB::raw('COALESCE(amount_paid, down_payment_amount)'));
 
+            $dailyTableReservationRevenue = Book::where('is_archived', false)
+                ->whereIn('status', ['approved', 'confirmed'])
+                ->whereBetween('updated_at', [$dateStart, $dateEnd])
+                ->sum(DB::raw('COALESCE(amount_paid, down_payment_amount)'));
+
             $dailyRefunds = ReturnRefund::where('status', 'refunded')
                 ->whereBetween('processed_at', [$dateStart, $dateEnd])
                 ->sum('refund_amount');
 
-            $revenueData[] = ($dailyOrderRevenue + $dailyEventRevenue) - $dailyRefunds;
+            $revenueData[] = ($dailyOrderRevenue + $dailyEventRevenue + $dailyTableReservationRevenue) - $dailyRefunds;
         }
 
         // Status breakdown
@@ -2507,6 +2522,16 @@ class AdminController extends Controller
             ->whereDate('created_at', $today)
             ->sum(DB::raw('COALESCE(amount_paid, down_payment_amount)'));
 
+        // Table reservation revenue is recognized once the reservation is approved.
+        $tableReservationRevenue = Book::where('is_archived', false)
+            ->whereIn('status', ['approved', 'confirmed'])
+            ->sum(DB::raw('COALESCE(amount_paid, down_payment_amount)'));
+
+        $tableReservationRevenueToday = Book::where('is_archived', false)
+            ->whereIn('status', ['approved', 'confirmed'])
+            ->whereDate('updated_at', $today)
+            ->sum(DB::raw('COALESCE(amount_paid, down_payment_amount)'));
+
         // Refunds decrease revenue – deduct as soon as approved (and when refunded)
         $refundsTotal = ReturnRefund::whereIn('status', ['approved', 'refunded'])
             ->sum('refund_amount');
@@ -2515,8 +2540,8 @@ class AdminController extends Controller
             ->whereDate('processed_at', $today)
             ->sum('refund_amount');
 
-        $totalRevenue = ($orderRevenueTotal + $eventRevenue) - $refundsTotal;
-        $revenueToday = ($orderRevenueToday + $eventRevenueToday) - $refundsToday;
+        $totalRevenue = ($orderRevenueTotal + $eventRevenue + $tableReservationRevenue) - $refundsTotal;
+        $revenueToday = ($orderRevenueToday + $eventRevenueToday + $tableReservationRevenueToday) - $refundsToday;
 
         // Show grouped (per-customer) active orders in the Orders card so it matches the Orders page
         $activeOrders = Order::where('is_archived', false)
@@ -2572,7 +2597,7 @@ class AdminController extends Controller
             $reservationsData[] = Book::whereBetween('created_at', [$dateStart, $dateEnd])->count();
             $eventsData[] = EventBooking::whereBetween('created_at', [$dateStart, $dateEnd])->count();
 
-            // Net revenue per day (orders + event bookings - refunds)
+            // Net revenue per day (orders + approved table reservations + event bookings - refunds)
             $dailyOrderRevenue = Order::where('delivery_status', 'Delivered')
                 ->whereBetween('created_at', [$dateStart, $dateEnd])
                 ->sum('price');
@@ -2582,11 +2607,16 @@ class AdminController extends Controller
                 ->whereBetween('created_at', [$dateStart, $dateEnd])
                 ->sum(DB::raw('COALESCE(amount_paid, down_payment_amount)'));
 
+            $dailyTableReservationRevenue = Book::where('is_archived', false)
+                ->whereIn('status', ['approved', 'confirmed'])
+                ->whereBetween('updated_at', [$dateStart, $dateEnd])
+                ->sum(DB::raw('COALESCE(amount_paid, down_payment_amount)'));
+
             $dailyRefunds = ReturnRefund::where('status', 'refunded')
                 ->whereBetween('processed_at', [$dateStart, $dateEnd])
                 ->sum('refund_amount');
 
-            $revenueData[] = ($dailyOrderRevenue + $dailyEventRevenue) - $dailyRefunds;
+            $revenueData[] = ($dailyOrderRevenue + $dailyEventRevenue + $dailyTableReservationRevenue) - $dailyRefunds;
         }
 
         // Status breakdown

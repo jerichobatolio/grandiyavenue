@@ -1490,6 +1490,7 @@
               updateReservationsData();
               // Sync with customer calendar
               syncAdminReservationsToCustomer();
+              notifyDashboardReservationChange();
           } else {
               // Revert status on error
               updateReservationStatus(reservationId, 'pending');
@@ -1585,6 +1586,7 @@
               updateReservationsData();
               // Sync with customer calendar
               syncAdminReservationsToCustomer();
+              notifyDashboardReservationChange();
           } else {
               // Revert status on error
               updateReservationStatus(reservationId, 'pending');
@@ -1926,6 +1928,21 @@
            }
        }, 3000);
    }
+
+  function notifyDashboardReservationChange() {
+      try {
+          const payload = JSON.stringify({
+              source: 'admin-reservations',
+              timestamp: Date.now()
+          });
+          localStorage.setItem('adminDashboardRefresh', payload);
+          window.dispatchEvent(new CustomEvent('adminDashboardRefresh', {
+              detail: { source: 'admin-reservations', timestamp: Date.now() }
+          }));
+      } catch (error) {
+          console.error('Failed to notify dashboard refresh:', error);
+      }
+  }
 
    // Admin Calendar functionality
    let adminCurrentDate = new Date();
