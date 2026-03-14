@@ -387,6 +387,8 @@ class HomeController extends Controller
         }
 
         try {
+            Book::ensurePaymentColumnsExist();
+
             // Get table capacity from database
             $tableNumber = $request->table_number;
             $tableStatus = TableStatus::where('table_number', $tableNumber)->first();
@@ -551,6 +553,8 @@ class HomeController extends Controller
         }
 
         try {
+            Book::ensurePaymentColumnsExist();
+
             $booking = Book::where('id', $request->booking_id)
                 ->where('user_id', Auth::id())
                 ->first();
