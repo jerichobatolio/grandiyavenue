@@ -1904,6 +1904,7 @@
                            border-radius: 8px;
                            cursor: pointer;
                            font-size: 16px;
+                           pointer-events: auto;
                        ">Cancel</button>
                        <button onclick="saveTableEdit('${tableNumber}')" style="
                            padding: 10px 20px;
@@ -1913,6 +1914,7 @@
                            border-radius: 8px;
                            cursor: pointer;
                            font-size: 16px;
+                           pointer-events: auto;
                        ">Save Changes</button>
                    </div>
                </div>
@@ -1957,7 +1959,8 @@
            const newSection = document.getElementById('editTableSection').value;
            const newStatus = document.getElementById('editTableStatus').value;
            const newSeats = parseInt(document.getElementById('editTableSeats').value);
-           const newRoom = document.getElementById('editTableRoom').value;
+           const roomField = document.getElementById('editTableRoom');
+           const newRoom = roomField ? roomField.value : '';
            const newDescription = document.getElementById('editTableDescription').value;
            
            console.log('Saving table edit:', { tableNumber, newTableNumber, newSection, newStatus, newSeats, newRoom, newDescription });
