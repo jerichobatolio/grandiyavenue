@@ -346,18 +346,10 @@
                 }
             };
             
-            // Generate and download PDF, then redirect to homepage
-            html2pdf().set(opt).from(element).save().then(function() {
-                // Wait a moment for the download to complete, then redirect
-                setTimeout(function() {
-                    window.location.href = '{{ url("/home") }}';
-                }, 1000);
-            }).catch(function(error) {
+            // Generate and download PDF without leaving the receipt page
+            html2pdf().set(opt).from(element).save().catch(function(error) {
                 console.error('PDF generation error:', error);
-                // Even if there's an error, still redirect after a delay
-                setTimeout(function() {
-                    window.location.href = '{{ url("/home") }}';
-                }, 2000);
+                alert('Failed to download receipt. Please try again.');
             });
         }
     </script>
