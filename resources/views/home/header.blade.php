@@ -1824,6 +1824,20 @@
     function scrollToSection(sectionId) {
         console.log('Scrolling to section:', sectionId);
 
+        function getNavbarCollapse() {
+            return document.getElementById('navbarSupportedContent');
+        }
+
+        function closeMobileNavbar() {
+            var collapseEl = getNavbarCollapse();
+            if (!collapseEl || window.innerWidth >= 992 || !collapseEl.classList.contains('show')) {
+                return;
+            }
+
+            var collapseInstance = bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false });
+            collapseInstance.hide();
+        }
+
         function getPreferredScrollTarget(sectionKey) {
             if (sectionKey === 'book-table') {
                 return document.getElementById('book-table-title') || document.getElementById('book-table');
@@ -1866,6 +1880,7 @@
                 var destination = Math.max(top - navbarHeight - sectionGap, 0);
                 window.scrollTo({ top: destination, behavior: 'smooth' });
                 setActiveNav(sectionId);
+                closeMobileNavbar();
                 if (window.history && window.history.replaceState) {
                     var newHash = sectionId === 'home' ? '' : '#' + sectionId;
                     window.history.replaceState(null, '', window.location.pathname + window.location.search + newHash);
@@ -1910,6 +1925,34 @@
     
     // Add click event listeners to navigation links as backup
     document.addEventListener('DOMContentLoaded', function() {
+        const navbarCollapse = document.getElementById('navbarSupportedContent');
+        const navbarToggler = document.querySelector('.custom-navbar .navbar-toggler');
+
+        function closeMobileNavbarMenu() {
+            if (!navbarCollapse || window.innerWidth >= 992 || !navbarCollapse.classList.contains('show')) {
+                return;
+            }
+
+            const collapseInstance = bootstrap.Collapse.getOrCreateInstance(navbarCollapse, { toggle: false });
+            collapseInstance.hide();
+        }
+
+        if (navbarToggler && navbarCollapse) {
+            navbarToggler.addEventListener('click', function(e) {
+                if (window.innerWidth >= 992) return;
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                const collapseInstance = bootstrap.Collapse.getOrCreateInstance(navbarCollapse, { toggle: false });
+                if (navbarCollapse.classList.contains('show')) {
+                    collapseInstance.hide();
+                } else {
+                    collapseInstance.show();
+                }
+            });
+        }
+
         const navLinks = document.querySelectorAll('.navbar-nav .nav-link[href^="#"]');
         navLinks.forEach(link => {
             link.addEventListener('click', function(e) {
@@ -1917,6 +1960,13 @@
                 const href = this.getAttribute('href');
                 const sectionId = href.substring(1); // Remove the #
                 scrollToSection(sectionId);
+            });
+        });
+
+        const directMobileLinks = document.querySelectorAll('.custom-navbar .navbar-nav a.nav-link:not([href^="#"]):not(.dropdown-toggle)');
+        directMobileLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                closeMobileNavbarMenu();
             });
         });
 
