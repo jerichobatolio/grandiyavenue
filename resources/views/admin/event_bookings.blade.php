@@ -624,7 +624,7 @@
                                         </td>
                                         <td>
                                         @php
-                                            $paymentLabel = $booking->payment_option === 'full_payment' ? 'Full Payment' : null;
+                                            $paymentLabel = $booking->payment_option === 'full_payment' ? 'Full Payment' : ($booking->payment_option === 'down_payment' ? 'Down Payment' : null);
                                             $paidAmount = !is_null($booking->amount_paid) ? $booking->amount_paid : $booking->down_payment_amount;
                                         @endphp
                                             <strong>₱{{ number_format($paidAmount, 2) }}</strong>
@@ -818,7 +818,7 @@
                                         </td>
                                         <td>
                                         @php
-                                            $paymentLabel = $booking->payment_option === 'full_payment' ? 'Full Payment' : null;
+                                            $paymentLabel = $booking->payment_option === 'full_payment' ? 'Full Payment' : ($booking->payment_option === 'down_payment' ? 'Down Payment' : null);
                                             $paidAmount = !is_null($booking->amount_paid) ? $booking->amount_paid : $booking->down_payment_amount;
                                         @endphp
                                             <strong>₱{{ number_format($paidAmount, 2) }}</strong>

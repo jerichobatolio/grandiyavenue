@@ -375,17 +375,22 @@
             @endif
         </div>
         
+        @php
+            $receiptFullPaymentAmount = optional($booking->packageInclusion)->price
+                ?? optional($booking->eventType)->price
+                ?? $booking->amount_paid
+                ?? ($booking->down_payment_amount ? $booking->down_payment_amount * 2 : null);
+        @endphp
         @if($booking->amount_paid || $booking->down_payment_amount)
         <div class="payment-details">
             <h3>💰 Payment Information</h3>
+            @if($receiptFullPaymentAmount)
+            <div class="info-row">
+                <span class="info-label">Total Event Price:</span>
+                <span class="info-value"><strong>₱{{ number_format($receiptFullPaymentAmount, 2) }}</strong></span>
+            </div>
+            @endif
             @if($booking->payment_option === 'full_payment')
-                {{-- Show Event Price and Amount Paid for full payment --}}
-                @if($booking->eventType)
-                <div class="info-row">
-                    <span class="info-label">Event Price:</span>
-                    <span class="info-value"><strong>₱{{ number_format($booking->eventType->price, 2) }}</strong></span>
-                </div>
-                @endif
                 @if($booking->amount_paid)
                 <div class="info-row">
                     <span class="info-label">Amount Paid:</span>
@@ -393,9 +398,8 @@
                 </div>
                 @endif
             @else
-                {{-- Show Down Payment and Amount Paid for down payment --}}
                 <div class="info-row">
-                    <span class="info-label">Down Payment:</span>
+                    <span class="info-label">Required Downpayment:</span>
                     <span class="info-value"><strong>₱{{ number_format($booking->down_payment_amount, 2) }}</strong></span>
                 </div>
                 @if($booking->amount_paid)

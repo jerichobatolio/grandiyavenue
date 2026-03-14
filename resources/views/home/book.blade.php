@@ -60,7 +60,7 @@
         }
     </style>
     <div class="">
-        <h2 class="section-title mb-5" style="color: white !important;"> RESERVE A TABLE</h2>
+        <h2 id="book-table-title" class="section-title mb-5" style="color: white !important;"> RESERVE A TABLE</h2>
         
         <!-- Section Selection Buttons -->
         <div class="section-buttons mb-4" id="section-buttons">

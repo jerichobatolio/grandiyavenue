@@ -112,6 +112,33 @@
         #book-event .payment-option-box strong {
             color: #ffc107;
         }
+
+        #book-event .payment-option-choice {
+            border: 2px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: 0.2s ease;
+            text-align: left;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        #book-event .payment-option-choice.active {
+            border-color: #ffc107;
+            background: rgba(255, 193, 7, 0.12);
+            box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.15);
+        }
+
+        #book-event .payment-option-choice input[type="radio"] {
+            margin-right: 10px;
+            transform: scale(1.15);
+        }
+
+        #book-event .payment-option-choice .payment-option-amount {
+            color: #ffc107;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
         
         #book-event .card-header h3 {
             font-size: 1.5rem;
@@ -204,6 +231,18 @@
             color: white !important;
             font-weight: 500;
         }
+
+        #book-event .event-payment-info-card,
+        #book-event .event-confirmation-card {
+            background-color: #d9f3ff !important;
+            border: 1px solid #7fcde6 !important;
+            color: #000 !important;
+        }
+
+        #book-event .event-payment-info-card *,
+        #book-event .event-confirmation-card * {
+            color: #000 !important;
+        }
         
         /* Better visibility for placeholders */
         #book-event ::placeholder {
@@ -223,7 +262,7 @@
     <div class="container">
         <div class="row">
             <div class="col-lg-12 text-center mb-5">
-                <h2 class="display-4 font-weight-bold mb-3" style="color: white !important;">📅 Book Your Special Event</h2>
+                <h2 id="book-event-title" class="display-4 font-weight-bold mb-3" style="color: white !important;">📅 Book Your Special Event</h2>
                 <p class="lead">Create unforgettable memories with us for birthdays, weddings, anniversaries, and more!</p>
             </div>
         </div>
@@ -486,6 +525,14 @@
                                     <td><span id="summary_notes"></span></td>
                                 </tr>
                                 <tr>
+                                    <th scope="row">Required Downpayment</th>
+                                    <td><span id="summary_down_payment"></span></td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Full Payment Price</th>
+                                    <td><span id="summary_total_price"></span></td>
+                                </tr>
+                                <tr>
                                     <th scope="row">Food Package</th>
                                     <td><span id="summary_food_package"></span></td>
                                 </tr>
@@ -506,6 +553,7 @@
                 <div class="mb-3">
                     <h6 class="text-white">💰 PAYMENT TERMS</h6>
                     <ul class="text-white">
+                        <li>A required 50% downpayment is needed to secure the event booking, but full payment is also allowed.</li>
                         <li>All payment recieved shall be considered non-refundable & non-consumable but transferrablesubject for Management Approval.</li>
                     </ul>
                 </div>
@@ -514,7 +562,7 @@
                 <div class="mb-3">
                     <h6 class="text-white">❌ CANCELLATION POLICY</h6>
                     <ul class="text-white">
-                        <li>Cancellation of event 60days (2months)before the evenet, shall be charged 10% of the total contract value or total amount of down payment which ever is higher. </li>
+                        <li>Cancellation of event 60days (2months)before the event, shall be charged 10% of the total contract value or total amount of down payment which ever is higher. </li>
                         <li>Cancellation of event less than 45days before the event shall be charged 50% of the full contract value.</li>
                         <li>Cancellation of event less than 30days before the event shall be charged full amount of the full contract value.</li>
                         <li>This charge is to cover the opportunity loss incurred by the Management during the time of the slot date was reserved for the Client.</li>
@@ -569,7 +617,7 @@
                 <div class="mb-3">
                     <h6 class="text-white">💰 Payment Terms</h6>
                     <ul class="text-white">
-                        <li>Full payment required to confirm your booking</li>
+                        <li>A required 50% downpayment is needed to proceed, but you may also choose full payment.</li>
                         <li>Payment must be made via GCash only</li>
                         <li>Payment must be completed before the event date</li>
                     </ul>
@@ -630,6 +678,37 @@
             </div>
             <div class="modal-body text-center text-white">
                 <h4 class="text-white">Pay via GCash</h4>
+                <p class="mb-3">Choose whether you want to pay the required 50% downpayment or settle the full amount now.</p>
+                <div class="row g-3 text-start mb-4">
+                    <div class="col-md-6">
+                        <label class="payment-option-choice d-block active" id="payment-option-choice-down" for="payment_option_down">
+                            <div class="d-flex align-items-start">
+                                <input type="radio" id="payment_option_down" name="event_payment_choice" value="down_payment" checked>
+                                <div>
+                                    <div class="fw-bold">50% Downpayment</div>
+                                    <div class="payment-option-amount" id="payment_down_amount">₱0.00</div>
+                                    <small class="text-muted">Required minimum payment to reserve your event.</small>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="payment-option-choice d-block" id="payment-option-choice-full" for="payment_option_full">
+                            <div class="d-flex align-items-start">
+                                <input type="radio" id="payment_option_full" name="event_payment_choice" value="full_payment">
+                                <div>
+                                    <div class="fw-bold">Full Payment</div>
+                                    <div class="payment-option-amount" id="payment_full_amount">₱0.00</div>
+                                    <small class="text-muted">Pay the entire event amount in one transaction.</small>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <div class="alert alert-info text-start event-payment-info-card">
+                    <div><strong>Selected Payment:</strong> <span id="payment_selected_label">50% Downpayment</span></div>
+                    <div><strong>Amount to Send:</strong> <span id="payment_selected_amount">₱0.00</span></div>
+                </div>
                 <div class="my-4">
                     @if(isset($adminQrCode) && $adminQrCode && $adminQrCode->is_active)
                         <img src="{{ $adminQrCode->image_url }}" alt="GCash QR Code" class="img-fluid" style="max-width: 300px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
@@ -666,7 +745,11 @@
                 <form id="proofUploadForm" enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" id="booking_id" name="booking_id">
-                    <input type="hidden" name="payment_option" value="full_payment">
+                    <input type="hidden" id="selected_payment_option" name="payment_option" value="down_payment">
+                    <div class="alert alert-info event-payment-info-card">
+                        <div><strong>Chosen Payment:</strong> <span id="proof_payment_option_label">50% Downpayment</span></div>
+                        <div><strong>Expected Amount:</strong> <span id="proof_payment_amount">₱0.00</span></div>
+                    </div>
                     <div class="mb-3">
                         <label for="payment_proof" class="form-label text-white">Upload GCash Transaction Receipt * <small class="text-warning">(can only upload legit GCash receipt)</small></label>
                         <input type="file" class="form-control" id="payment_proof" name="payment_proof" accept="image/jpeg,image/png,image/jpg" required style="background-color: #3c3c3c; border: 1px solid #555; color: white;">
@@ -706,11 +789,11 @@
                     <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
                 </div>
                 <h4>Payment Sent!</h4>
-                <div class="alert alert-info" style="background-color: #1f1f1f; border: 1px solid #555; color: #ffffff;">
-                    <strong>Booking ID:</strong> <span id="confirmed_booking_id" style="color: #00ff7f; font-weight: 600;"></span><br>
-                    <strong>Event Date:</strong> <span id="confirmed_event_date" style="color: #00ff7f; font-weight: 600;"></span><br>
-                    <strong>Time:</strong> <span id="confirmed_event_time" style="color: #00ff7f; font-weight: 600;"></span><br>
-                    <strong>Event Type:</strong> <span id="confirmed_event_type" style="color: #00ff7f; font-weight: 600;"></span>
+                <div class="alert alert-info event-confirmation-card">
+                    <strong>Booking ID:</strong> <span id="confirmed_booking_id" style="font-weight: 600;"></span><br>
+                    <strong>Event Date:</strong> <span id="confirmed_event_date" style="font-weight: 600;"></span><br>
+                    <strong>Time:</strong> <span id="confirmed_event_time" style="font-weight: 600;"></span><br>
+                    <strong>Event Type:</strong> <span id="confirmed_event_type" style="font-weight: 600;"></span>
                 </div>
                 <p class="small">We'll contact you soon to confirm the final details of your event.</p>
             </div>
@@ -756,6 +839,7 @@ let currentBooking = null;
 let bookingCleanupPending = false;
 let navigatingToProofUpload = false;
 let bookingFinalized = false;
+let currentBookingPricing = { down: 0, full: 0 };
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 BOOK EVENT SECTION - Loading...');
@@ -785,6 +869,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const paymentModalElement = document.getElementById('paymentModal');
     const proofUploadModalElement = document.getElementById('proofUploadModal');
     const paymentModalCancelBtnSection = document.getElementById('paymentModalCancelBtnSection');
+    const paymentOptionInput = document.getElementById('selected_payment_option');
+    const paymentOptionDownRadio = document.getElementById('payment_option_down');
+    const paymentOptionFullRadio = document.getElementById('payment_option_full');
     
     console.log('Elements found:', {
         form: !!form,
@@ -1007,17 +1094,59 @@ document.addEventListener('DOMContentLoaded', function() {
         const evtDown = evtOpt ? parseMoney(evtOpt.getAttribute('data-down-payment')) : null;
         const evtFull = evtOpt ? parseMoney(evtOpt.getAttribute('data-price')) : null;
 
-        // Use package inclusion price as full amount when selected; down payment PHP 10,000 per terms or event type
+        let fullAmount = null;
         if (packagePrice !== null && Number.isFinite(packagePrice) && packagePrice > 0) {
-            return {
-                down: evtDown ?? 10000,
-                full: packagePrice,
-            };
+            fullAmount = packagePrice;
         }
+
+        if (fullAmount === null && evtFull !== null && Number.isFinite(evtFull) && evtFull > 0) {
+            fullAmount = evtFull;
+        }
+
+        if (fullAmount === null && evtDown !== null && Number.isFinite(evtDown) && evtDown > 0) {
+            fullAmount = evtDown * 2;
+        }
+
+        fullAmount = Number.isFinite(fullAmount) ? fullAmount : 0;
+
         return {
-            down: evtDown ?? 2000,
-            full: evtFull ?? 4000,
+            down: fullAmount / 2,
+            full: fullAmount,
         };
+    }
+
+    function getCurrentSelectedPaymentOption() {
+        return paymentOptionFullRadio && paymentOptionFullRadio.checked ? 'full_payment' : 'down_payment';
+    }
+
+    function syncPaymentSelectionUi() {
+        const option = getCurrentSelectedPaymentOption();
+        const isFull = option === 'full_payment';
+        const selectedAmount = isFull ? currentBookingPricing.full : currentBookingPricing.down;
+        const selectedLabel = isFull ? 'Full Payment' : '50% Downpayment';
+
+        if (paymentOptionInput) {
+            paymentOptionInput.value = option;
+        }
+
+        const downChoice = document.getElementById('payment-option-choice-down');
+        const fullChoice = document.getElementById('payment-option-choice-full');
+        if (downChoice) downChoice.classList.toggle('active', !isFull);
+        if (fullChoice) fullChoice.classList.toggle('active', isFull);
+
+        const paymentDownAmount = document.getElementById('payment_down_amount');
+        const paymentFullAmount = document.getElementById('payment_full_amount');
+        const paymentSelectedLabel = document.getElementById('payment_selected_label');
+        const paymentSelectedAmount = document.getElementById('payment_selected_amount');
+        const proofPaymentLabel = document.getElementById('proof_payment_option_label');
+        const proofPaymentAmount = document.getElementById('proof_payment_amount');
+
+        if (paymentDownAmount) paymentDownAmount.textContent = formatCurrency(currentBookingPricing.down);
+        if (paymentFullAmount) paymentFullAmount.textContent = formatCurrency(currentBookingPricing.full);
+        if (paymentSelectedLabel) paymentSelectedLabel.textContent = selectedLabel;
+        if (paymentSelectedAmount) paymentSelectedAmount.textContent = formatCurrency(selectedAmount);
+        if (proofPaymentLabel) proofPaymentLabel.textContent = selectedLabel;
+        if (proofPaymentAmount) proofPaymentAmount.textContent = formatCurrency(selectedAmount);
     }
 
     if (confirmationCloseBtnSection) {
@@ -1406,6 +1535,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const summaryTotalEl = document.getElementById('summary_total_price');
                 if (summaryDownEl) summaryDownEl.textContent = formattedDownPayment;
                 if (summaryTotalEl) summaryTotalEl.textContent = formattedTotalPrice;
+                currentBookingPricing = {
+                    down: pricing.down,
+                    full: pricing.full
+                };
+                if (paymentOptionDownRadio) paymentOptionDownRadio.checked = true;
+                if (paymentOptionFullRadio) paymentOptionFullRadio.checked = false;
+                syncPaymentSelectionUi();
                 
                 // Show summary modal
                 const summaryModalElement = document.getElementById('bookingSummaryModal');
@@ -1589,6 +1725,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     bookingCleanupPending = true;
                     bookingFinalized = false;
                     document.getElementById('booking_id').value = data.booking.id;
+                    currentBookingPricing.down = parseMoney(data.booking.down_payment_amount) ?? currentBookingPricing.down;
+                    syncPaymentSelectionUi();
                     
                     // Close summary modal
                     const summaryModalElement = document.getElementById('bookingSummaryModal');
@@ -1627,6 +1765,7 @@ document.addEventListener('DOMContentLoaded', function() {
         uploadProofBtn.addEventListener('click', function(e) {
             e.preventDefault();
             console.log('Upload Proof button clicked');
+            syncPaymentSelectionUi();
             navigatingToProofUpload = true;
             
             // Close payment modal
@@ -1644,6 +1783,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    [paymentOptionDownRadio, paymentOptionFullRadio].forEach(function(radio) {
+        if (radio) {
+            radio.addEventListener('change', syncPaymentSelectionUi);
+        }
+    });
+    syncPaymentSelectionUi();
     
     // GCash Receipt Validation
     const paymentProofInput = document.getElementById('payment_proof');
@@ -1682,7 +1828,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // 3) Basic filename heuristic – strongly discourage non‑GCash photos
         const originalName = (file.name || '').toLowerCase();
         if (!originalName.includes('gcash') && !originalName.includes('receipt')) {
-            if (errorText) errorText.textContent = 'File name must clearly indicate it is a GCash receipt (include "gcash" or "receipt"). Please rename and upload your actual GCash receipt.';
+            if (errorText) errorText.textContent = 'File name must clearly indicate it is a GCash receipt (include "gcash" or "receipt").';
             if (errorMessage) errorMessage.style.display = 'block';
             return false;
         }

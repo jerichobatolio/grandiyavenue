@@ -464,6 +464,18 @@
                                     <span class="info-value">₱{{ number_format($totalEventCost, 2) }}</span>
                                 </div>
                                 @endif
+                                @if($booking->payment_option_label)
+                                <div class="info-item">
+                                    <span class="info-label">Payment Option:</span>
+                                    <span class="info-value">{{ $booking->payment_option_label }}</span>
+                                </div>
+                                @endif
+                                @if(!is_null($booking->down_payment_amount))
+                                <div class="info-item">
+                                    <span class="info-label">Required Downpayment:</span>
+                                    <span class="info-value">₱{{ number_format($booking->down_payment_amount, 2) }}</span>
+                                </div>
+                                @endif
                                 @if(!is_null($booking->amount_paid))
                                 <div class="info-item">
                                     <span class="info-label">Amount Paid:</span>

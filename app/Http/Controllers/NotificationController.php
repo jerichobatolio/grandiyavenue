@@ -29,6 +29,7 @@ class NotificationController extends Controller
             if ($notification->type === 'event_booking' && $notification->eventBooking) {
                 $booking = $notification->eventBooking;
                 $package = optional($booking->packageInclusion);
+                $data = $notification->data ?? [];
 
                 $timeInFormatted = $booking->time_in instanceof \Carbon\Carbon
                     ? $booking->time_in->format('g:i A')
@@ -45,7 +46,6 @@ class NotificationController extends Controller
                     $timeSlot = $timeInFormatted;
                 }
 
-                $data = $notification->data ?? [];
                 $data['booking_id'] = $booking->id;
                 $data['status'] = $booking->status;
                 $data['event_date'] = $booking->event_date
@@ -71,8 +71,12 @@ class NotificationController extends Controller
 
                 $data['package_inclusion'] = $packageDisplayName ?? ($data['package_inclusion'] ?? null);
                 $data['time_slot'] = $timeSlot ?? ($data['time_slot'] ?? null);
-                $data['amount'] = $package->price
-                    ?? ($data['amount'] ?? $booking->down_payment_amount);
+                $data['payment_option'] = $booking->payment_option ?? ($data['payment_option'] ?? null);
+                $data['amount'] = !is_null($booking->amount_paid)
+                    ? (float) $booking->amount_paid
+                    : ($booking->payment_option === 'full_payment'
+                        ? (float) ($package->price ?? optional($booking->eventType)->price ?? ($data['amount'] ?? 0))
+                        : (float) ($booking->down_payment_amount ?? ($data['amount'] ?? 0)));
 
                 $notification->data = $data;
             }

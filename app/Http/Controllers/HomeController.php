@@ -480,7 +480,8 @@ class HomeController extends Controller
                         'time_out' => $timeOutFormatted,
                         'table' => $data->table_number,
                         'guests' => $data->guest,
-                        'status' => 'Pending'
+                        'status' => 'Pending',
+                        'amount' => (float) ($data->down_payment_amount ?: $this->getTableBookingDownPaymentAmount()),
                     ]
                 ]);
             }
@@ -1286,8 +1287,12 @@ class HomeController extends Controller
             'payment_proof_url' => $booking->payment_proof_path ? Storage::url($booking->payment_proof_path) : null,
             'gcash_reference_number' => $booking->gcash_reference_number,
             'gcash_transaction_id' => $booking->gcash_transaction_id,
-            'gcash_payment_date' => $booking->gcash_payment_date ? $booking->gcash_payment_date->format('Y-m-d H:i:s') : null,
-            'gcash_payment_date_display' => $booking->gcash_payment_date ? $booking->gcash_payment_date->format('F d, Y h:i A') : null,
+            'gcash_payment_date' => $booking->gcash_payment_date
+                ? $booking->gcash_payment_date->copy()->timezone('Asia/Manila')->format('Y-m-d H:i:s')
+                : null,
+            'gcash_payment_date_display' => $booking->gcash_payment_date
+                ? $booking->gcash_payment_date->copy()->timezone('Asia/Manila')->format('F d, Y h:i A')
+                : null,
             'redirect_url' => url('/home'),
             'receipt_url' => route('booking.receipt', ['id' => $booking->id]),
         ];

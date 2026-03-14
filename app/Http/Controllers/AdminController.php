@@ -812,7 +812,8 @@ class AdminController extends Controller
                         'time' => $timeFormatted,
                         'time_out' => $timeOutFormatted,
                         'table' => $reservation->table_number,
-                        'guests' => $reservation->guest
+                        'guests' => $reservation->guest,
+                        'amount' => (float) ($reservation->amount_paid ?: $reservation->down_payment_amount ?: 1000),
                     ]
                 ]);
             }
@@ -876,7 +877,8 @@ class AdminController extends Controller
                         'time' => $timeFormatted,
                         'time_out' => $timeOutFormatted,
                         'table' => $reservation->table_number,
-                        'guests' => $reservation->guest
+                        'guests' => $reservation->guest,
+                        'amount' => (float) ($reservation->amount_paid ?: $reservation->down_payment_amount ?: 1000),
                     ]
                 ]);
             }
@@ -1271,11 +1273,15 @@ class AdminController extends Controller
             $timeSlot = $timeInFormatted;
         }
 
-        // Amount to display in notifications:
-        // Always show the selected package price so customer clearly sees
-        // the package cost, regardless of payment option or status.
+        // Show the actual amount chosen by the customer:
+        // full payment uses amount_paid/full package price, while
+        // down payment uses the stored down_payment_amount.
         $packagePrice = optional($booking->packageInclusion)->price;
-        $amountForNotification = $packagePrice ?? $booking->down_payment_amount;
+        $amountForNotification = !is_null($booking->amount_paid)
+            ? (float) $booking->amount_paid
+            : ($booking->payment_option === 'full_payment'
+                ? (float) ($packagePrice ?? optional($booking->eventType)->price ?? 0)
+                : (float) ($booking->down_payment_amount ?? 0));
 
         // Build readable details for the notification message
         $detailsParts = ["Event on {$eventDateFormatted}"];
@@ -1305,7 +1311,7 @@ class AdminController extends Controller
                     // New preferred fields for frontend display
                     'package_inclusion' => $packageDisplayName,
                     'time_slot' => $timeSlot,
-                    // Amount based on selected package (fallback to down payment if needed)
+                    'payment_option' => $booking->payment_option,
                     'amount' => $amountForNotification
                 ]
             ]);

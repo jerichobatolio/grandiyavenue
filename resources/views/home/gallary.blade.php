@@ -1,11 +1,11 @@
-<div id="gallary" class="container-fluid bg-dark text-light py-5 text-center wow fadeIn" style="padding-top: 1.5rem;">
+<div id="gallary" class="container-fluid bg-dark text-light py-3 text-center wow fadeIn" style="padding-top: 1.35rem; padding-bottom: 0.9rem; margin-top: 0.9rem;">
     <style>
         #gallary .section-title {
             color: white !important;
             font-size: 2.6rem;
             font-weight: 700;
             letter-spacing: 0.5px;
-            margin: 0 0 1.75rem;
+            margin: 0;
         }
     </style>
     <h2 class="section-title mb-0">Our Menu</h2>

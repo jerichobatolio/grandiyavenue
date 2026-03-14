@@ -10,6 +10,7 @@ use App\Models\AdminQrCode;
 use App\Models\VenueType;
 use App\Models\FoodPackageItem; // ✅ Simple food package items for events
 use App\Models\PaxOption; // ✅ Pax-based pricing from admin pax management
+use App\Models\PackageInclusion;
 use App\Models\Notification; // ✅ Add Notification model
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -265,12 +266,13 @@ class EventBookingController extends Controller
         }
 
         try {
-            // Pricing priority: Pax Management (pax_options) -> Event Type (legacy) -> 0
             $eventType = EventType::findOrFail($request->event_type_id);
-            $downPaymentAmount = null;
-            
-            // Pax-based down payment removed; use event type or safe default
-            $downPaymentAmount = $eventType->down_payment ?? 0;
+            $pricing = $this->resolveBookingPricing(
+                $eventType,
+                $request->input('package_inclusion_id'),
+                $request->filled('number_of_guests') ? (int) $request->number_of_guests : null
+            );
+            $downPaymentAmount = $pricing['down_payment'];
             
             // Normalize selected food items (array of non-empty strings or null)
             $selectedFoodItems = $request->input('selected_food_items', []);
@@ -302,6 +304,7 @@ class EventBookingController extends Controller
                 'selected_food_items' => !empty($selectedFoodItems) ? $selectedFoodItems : null,
                 'status' => 'Pending',
                 'down_payment_amount' => $downPaymentAmount,
+                'payment_option' => 'down_payment',
                 'event_type_id' => $request->event_type_id,
                 'venue_type_id' => $request->venue_type_id,
                 'package_inclusion_id' => $request->package_inclusion_id ?: null
@@ -360,8 +363,7 @@ class EventBookingController extends Controller
         $validator = Validator::make($request->all(), [
             'booking_id' => 'required|exists:event_bookings,id',
             'payment_proof' => 'required|image|mimes:jpeg,png,jpg|max:2048',
-            // Only full payment is accepted now; keep nullable to ignore legacy values safely
-            'payment_option' => 'nullable|in:full_payment'
+            'payment_option' => 'nullable|in:down_payment,full_payment'
         ]);
         
         // Additional GCash receipt validation
@@ -389,28 +391,15 @@ class EventBookingController extends Controller
 
         try {
             $booking = EventBooking::with(['eventType', 'packageInclusion'])->findOrFail($request->booking_id);
-            // Only full payment is accepted in the current flow
-            $paymentOption = 'full_payment';
-            
-            // Amount determination:
-            // - If a Package Inclusion with a price is selected, ALWAYS use that as the full event price
-            // - Otherwise, fall back to pax_options full_price, then to the Event Type price, then to down_payment_amount
-            $packagePrice = optional($booking->packageInclusion)->price;
-            if (!is_null($packagePrice)) {
-                $fullPaymentAmount = $packagePrice;
-            } else {
-                $paxFullPrice = null;
-                if (Schema::hasTable('pax_options')) {
-                    $pax = PaxOption::where('value', (int) $booking->number_of_guests)->first();
-                    if ($pax && $pax->full_price !== null) {
-                        $paxFullPrice = $pax->full_price;
-                    }
-                }
-                $fullPaymentAmount = $paxFullPrice ?? optional($booking->eventType)->price ?? $booking->down_payment_amount;
-            }
-
-            // Always record the full payment amount; down payments are no longer accepted
-            $amountPaid = $fullPaymentAmount;
+            $paymentOption = $request->input('payment_option') ?: ($booking->payment_option ?: 'down_payment');
+            $pricing = $this->resolveBookingPricing(
+                $booking->eventType,
+                $booking->package_inclusion_id,
+                $booking->number_of_guests
+            );
+            $fullPaymentAmount = $pricing['full_payment'];
+            $downPaymentAmount = $pricing['down_payment'];
+            $amountPaid = $paymentOption === 'full_payment' ? $fullPaymentAmount : $downPaymentAmount;
 
             // Store the GCash payment proof image
             $path = $request->file('payment_proof')->store('gcash_payment_proofs', 'public');
@@ -420,6 +409,7 @@ class EventBookingController extends Controller
             $gcashTransactionId = $request->gcash_transaction_id ?? 'TXN-' . time() . '-' . $booking->id;
 
             $booking->update([
+                'down_payment_amount' => $downPaymentAmount,
                 'payment_proof_path' => $path,
                 'gcash_reference_number' => $gcashReferenceNumber,
                 'gcash_transaction_id' => $gcashTransactionId,
@@ -498,7 +488,7 @@ class EventBookingController extends Controller
      */
     public function downloadReceipt($id)
     {
-        $booking = EventBooking::with(['eventType', 'venueType'])->findOrFail($id);
+        $booking = EventBooking::with(['eventType', 'venueType', 'packageInclusion'])->findOrFail($id);
         
         // Check if user is authorized to view this receipt
         if (auth()->check() && $booking->user_id && $booking->user_id !== auth()->id()) {
@@ -506,6 +496,41 @@ class EventBookingController extends Controller
         }
         
         return view('receipts.event_booking_receipt', compact('booking'));
+    }
+
+    private function resolveBookingPricing(?EventType $eventType, $packageInclusionId = null, ?int $numberOfGuests = null): array
+    {
+        $fullPaymentAmount = null;
+
+        if ($packageInclusionId) {
+            $packageInclusion = PackageInclusion::find($packageInclusionId);
+            if ($packageInclusion && !is_null($packageInclusion->price)) {
+                $fullPaymentAmount = (float) $packageInclusion->price;
+            }
+        }
+
+        if ($fullPaymentAmount === null && Schema::hasTable('pax_options') && !is_null($numberOfGuests)) {
+            $pax = PaxOption::where('value', (int) $numberOfGuests)->first();
+            if ($pax && $pax->full_price !== null) {
+                $fullPaymentAmount = (float) $pax->full_price;
+            }
+        }
+
+        if ($fullPaymentAmount === null && $eventType && !is_null($eventType->price)) {
+            $fullPaymentAmount = (float) $eventType->price;
+        }
+
+        if ($fullPaymentAmount === null && $eventType && !is_null($eventType->down_payment)) {
+            $fullPaymentAmount = (float) $eventType->down_payment * 2;
+        }
+
+        $fullPaymentAmount = round((float) ($fullPaymentAmount ?? 0), 2);
+        $downPaymentAmount = round($fullPaymentAmount / 2, 2);
+
+        return [
+            'full_payment' => $fullPaymentAmount,
+            'down_payment' => $downPaymentAmount,
+        ];
     }
 
     /**

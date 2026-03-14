@@ -239,6 +239,12 @@
         </div>
         
         <!-- Content that will be downloaded -->
+        @php
+            $proofUploadedAt = $booking->gcash_payment_date
+                ? $booking->gcash_payment_date->copy()->timezone('Asia/Manila')
+                : null;
+            $generatedAt = now()->timezone('Asia/Manila');
+        @endphp
         <div id="download-content">
         <div class="booking-details">
             <h3>📅 Reservation Details</h3>
@@ -301,13 +307,7 @@
             </div>
             <div class="info-row">
                 <span class="info-label">Proof Uploaded:</span>
-                <span class="info-value"><strong>{{ $booking->gcash_payment_date ? $booking->gcash_payment_date->format('F d, Y h:i A') : 'Yes' }}</strong></span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Proof Status:</span>
-                <span class="info-value">
-                    <strong>{{ $booking->payment_proof_path ? 'Uploaded' : 'Pending Upload' }}</strong>
-                </span>
+                <span class="info-value"><strong>{{ $proofUploadedAt ? $proofUploadedAt->format('F d, Y h:i A') : 'Yes' }}</strong></span>
             </div>
         </div>
         
@@ -315,7 +315,7 @@
             <p><strong>Thank you for your reservation!</strong></p>
             <p>Please arrive on time for your booking. If you need to make changes, please contact us.</p>
             <p style="margin-top: 15px;">This is a computer-generated receipt. No signature required.</p>
-            <p style="margin-top: 10px; font-size: 11px;">Generated on {{ now()->format('F d, Y \a\t h:i A') }}</p>
+            <p style="margin-top: 10px; font-size: 11px;">Generated on {{ $generatedAt->format('F d, Y \a\t h:i A') }}</p>
         </div>
         </div>
         <!-- End of download content -->

@@ -81,24 +81,26 @@
             top: 0;
             right: 0;
             font-size: 10px;
-            background-color: yellow !important;
-            color: black !important;
+            background-color: #dc3545 !important;
+            color: white !important;
         }
         
         #notifCount {
-            background-color: yellow !important;
-            color: black !important;
+            background-color: #dc3545 !important;
+            color: white !important;
         }
 
         .nav-link .fa-bell {
             font-size: 20px;
-            color: white;
+            color: #ffc107;
         }
         
         /* Cart emoji styling */
         .nav-link[href*="my_cart"] {
             font-size: 1.5rem;
             line-height: 1;
+            color: #f8f9fa !important;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.18);
         }
         
         /* Return/Refund button styling */
@@ -186,6 +188,7 @@
 
         .fa-bell {
             pointer-events: none;
+            color: #ffc107 !important;
         }
 
         /* Ensure the nav item is clickable */
@@ -226,7 +229,22 @@
             margin-top: 0;
         }
         .dropdown-menu .dropdown-item { cursor: pointer; }
-        .custom-navbar { z-index: 2600; }
+        .custom-navbar {
+            z-index: 2600;
+            padding: 0.5rem 0.95rem;
+            min-height: 58px;
+        }
+
+        .custom-navbar .navbar-brand {
+            margin-right: 0.85rem;
+            line-height: 1.1;
+        }
+
+        .custom-navbar .navbar-nav .nav-link,
+        .custom-navbar .navbar-nav .dropdown-toggle {
+            padding-top: 0.45rem;
+            padding-bottom: 0.45rem;
+        }
         
         /* Notification dropdown specific positioning */
         .nav-item.dropdown .dropdown-menu {
@@ -286,9 +304,9 @@
         
         .delete-notification-btn {
             padding: 4px 8px;
-            border: 1px solid #dc3545;
-            background: transparent;
-            color: #dc3545;
+            border: 1px solid #e85d6a;
+            background: #e85d6a;
+            color: #fff;
             border-radius: 4px;
             transition: all 0.2s ease;
             opacity: 1;
@@ -304,9 +322,10 @@
         
         .delete-notification-btn:hover {
             background-color: #dc3545;
+            border-color: #dc3545;
             color: white;
             opacity: 1;
-            transform: scale(1.1);
+            transform: none;
         }
         
         .delete-notification-btn:active {
@@ -792,6 +811,7 @@
                                             $timeOut = $data['time_out'] ?? null;
                                             $table = $data['table'] ?? 'N/A';
                                             $guests = $data['guests'] ?? 'N/A';
+                                            $amount = $data['amount'] ?? 1000;
                                             $status = 'Pending';
                                             $badgeClass = 'warning';
                                         } elseif ($type === 'reservation_approved' || $type === 'reservation_cancelled') {
@@ -801,6 +821,7 @@
                                             $timeOut = $data['time_out'] ?? null;
                                             $table = $data['table'] ?? 'N/A';
                                             $guests = $data['guests'] ?? 'N/A';
+                                            $amount = $data['amount'] ?? 1000;
                                             $status = $type === 'reservation_approved' ? 'Approved' : 'Cancelled';
                                             $badgeClass = $type === 'reservation_approved' ? 'success' : 'danger';
                                         } elseif (
@@ -902,6 +923,9 @@
                                                             @endif
                                                         </small><br>
                                                         <small class="text-muted">Table: {{ $table }} | Guests: {{ $guests }}</small>
+                                                        @if(!is_null($amount))
+                                                            <br><small class="text-muted">Amount: ₱{{ number_format((float) $amount, 2) }}</small>
+                                                        @endif
                                                     @elseif(
                                                         $type === 'return_refund_request' ||
                                                         $type === 'return_refund_approved' ||
@@ -1045,7 +1069,7 @@
     <div class="overlay text-white text-center" style="padding-top: 18vh; padding-bottom: 12vh;">
         <h1 class="display-2 font-weight-bold my-3">Grandiya Venue And Restaurant</h1>
         <h2 class="display-4 mb-5 text-white">Booking and Reservation System</h2>
-        <a class="btn btn-lg btn-primary" href="#gallary">View Our Menu</a>
+        <a class="btn btn-lg btn-primary" href="#gallary" onclick="scrollToSection('gallary'); return false;">View Our Menu</a>
     </div>
 </header>
 
@@ -1482,6 +1506,7 @@
             const timeOut = data.time_out || null;
             const table = data.table || 'N/A';
             const guests = data.guests || 'N/A';
+            const amount = data.amount !== undefined && data.amount !== null ? data.amount : 1000;
             const status = 'Pending';
             const badgeClass = 'warning';
             
@@ -1493,6 +1518,7 @@
                     Date: ${date} | Time In: ${time}${timeOut ? ' | Time Out: ' + timeOut : ''}
                 </small><br>
                 <small class="text-muted">Table: ${table} | Guests: ${guests}</small>
+                <br><small class="text-muted">Amount: ₱${parseFloat(amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</small>
             `;
         } else if (type === 'reservation_approved' || type === 'reservation_cancelled') {
             const reservationId = data.reservation_id || 'N/A';
@@ -1501,6 +1527,7 @@
             const timeOut = data.time_out || null;
             const table = data.table || 'N/A';
             const guests = data.guests || 'N/A';
+            const amount = data.amount !== undefined && data.amount !== null ? data.amount : 1000;
             const status = type === 'reservation_approved' ? 'Approved' : 'Cancelled';
             const badgeClass = type === 'reservation_approved' ? 'success' : 'danger';
             
@@ -1512,6 +1539,7 @@
                     Date: ${date} | Time In: ${time}${timeOut ? ' | Time Out: ' + timeOut : ''}
                 </small><br>
                 <small class="text-muted">Table: ${table} | Guests: ${guests}</small>
+                <br><small class="text-muted">Amount: ₱${parseFloat(amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</small>
             `;
         } else if (
             type === 'return_refund_request' ||
@@ -1795,21 +1823,48 @@
     // Navigation scroll function
     function scrollToSection(sectionId) {
         console.log('Scrolling to section:', sectionId);
+
+        function getPreferredScrollTarget(sectionKey) {
+            if (sectionKey === 'book-table') {
+                return document.getElementById('book-table-title') || document.getElementById('book-table');
+            }
+            if (sectionKey === 'book-event') {
+                return document.getElementById('book-event-title') || document.getElementById('book-event');
+            }
+            if (sectionKey === 'gallary') {
+                return document.querySelector('#gallary .section-title') || document.getElementById('gallary');
+            }
+            return sectionKey === 'home'
+                ? (document.querySelector('header#home') || document.getElementById('home'))
+                : document.getElementById(sectionKey);
+        }
+
+        function getSectionScrollGap(sectionKey) {
+            if (sectionKey === 'book-table') {
+                return 95;
+            }
+            if (sectionKey === 'book-event') {
+                return 70;
+            }
+            if (sectionKey === 'gallary') {
+                return 55;
+            }
+            return 20;
+        }
         
         // Function to perform the actual scrolling
         function performScroll() {
-            var element = sectionId === 'home' ? (document.querySelector('header#home') || document.getElementById('home')) : document.getElementById(sectionId);
+            var element = getPreferredScrollTarget(sectionId);
             if (!element) {
                 element = document.querySelector('[id="' + sectionId + '"]');
             }
             if (element) {
                 var navbar = document.querySelector('.custom-navbar');
                 var navbarHeight = navbar ? navbar.offsetHeight : 0;
-                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                setTimeout(function() {
-                    var top = element.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop);
-                    window.scrollTo({ top: top - navbarHeight - 20, behavior: 'smooth' });
-                }, 100);
+                var sectionGap = getSectionScrollGap(sectionId);
+                var top = element.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop);
+                var destination = Math.max(top - navbarHeight - sectionGap, 0);
+                window.scrollTo({ top: destination, behavior: 'smooth' });
                 setActiveNav(sectionId);
                 if (window.history && window.history.replaceState) {
                     var newHash = sectionId === 'home' ? '' : '#' + sectionId;
