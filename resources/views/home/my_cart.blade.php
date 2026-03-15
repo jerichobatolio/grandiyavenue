@@ -871,8 +871,7 @@
                     @endif
                 </div>
                 
-                <p style="color: #ccc; margin-bottom: 10px;">Scan the QR code to pay, or</p>
-                <a href="#" class="btn btn-outline-primary btn-sm mb-3" onclick="return openGCashApp(event)">Open GCash</a>
+                <p style="color: #ccc; margin-bottom: 20px;">Scan the QR code to pay via GCash.</p>
                 
                 <div style="background-color: #4d3a00; color: white; padding: 15px; border-radius: 8px; margin: 20px 0;">
                     <strong>Important:</strong> Please keep your GCash transaction receipt as proof of payment. 
@@ -889,12 +888,6 @@
 
 
     <script>
-        window.openGCashApp = function(e) {
-            if (e) e.preventDefault();
-            window.location.href = 'gcash://';
-            return false;
-        };
-
         const hasCartItems = @json($hasCartItems);
         let cartPaymentProofValid = false;
 

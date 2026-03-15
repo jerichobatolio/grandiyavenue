@@ -2064,11 +2064,4 @@
             });
         }
     });
-
-    // Open GCash app via deep link (intent caused Chrome to open Play Store)
-    window.openGCashApp = function(e) {
-        if (e) e.preventDefault();
-        window.location.href = 'gcash://';
-        return false;
-    };
 </script>

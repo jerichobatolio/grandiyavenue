@@ -575,8 +575,7 @@
                         </div>
                     @endif
                 </div>
-                <p class="text-muted mb-2">Scan the QR code to pay, or</p>
-                <a href="#" class="btn btn-outline-primary btn-sm" onclick="return openGCashApp(event)">Open GCash</a>
+                <p class="text-muted mb-2">Scan the QR code to pay via GCash.</p>
                 <div class="alert alert-warning">
                     <strong>Important:</strong> Please keep your GCash transaction receipt as proof of payment. Only GCash receipts are accepted.
                 </div>
@@ -674,12 +673,6 @@
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
 <script>
-window.openGCashApp = function(e) {
-    if (e) e.preventDefault();
-    window.location.href = 'gcash://';
-    return false;
-};
-
 let currentBooking = null;
 let eventPaymentProofValid = false;
 let bookingCleanupPending = false;
