@@ -880,7 +880,6 @@
                 </div>
 
                 <div style="margin-top: 30px; text-align: center;">
-                    <button onclick="closeGCashModal()" class="btn btn-more btn-custom" style="margin-right: 10px;">I'll Pay Later</button>
                     <button onclick="markAsPaid()" class="btn btn-checkout btn-custom">I've Already Paid</button>
                 </div>
             </div>
@@ -892,7 +891,12 @@
     <script>
         window.openGCashApp = function(e) {
             if (e) e.preventDefault();
-            window.location.href = 'gcash://';
+            var ua = navigator.userAgent;
+            var isAndroid = /Android/i.test(ua);
+            var url = isAndroid
+                ? 'intent://#Intent;scheme=gcash;package=com.globe.gcash.android;end;'
+                : 'gcash://';
+            window.location.href = url;
             return false;
         };
 

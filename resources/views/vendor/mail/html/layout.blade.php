@@ -42,7 +42,6 @@ width: 100% !important;
 <td class="content-cell">
 {!! Illuminate\Mail\Markdown::parse($slot) !!}
 
-{!! $subcopy ?? '' !!}
 </td>
 </tr>
 </table>
