@@ -7,9 +7,17 @@
         </h2>
         
         <style>
-            .announcements-carousel {
+            /* Fixed height so footer does not move when carousel slides change */
+            #announcements .announcements-carousel {
                 max-width: 900px;
                 margin: 0 auto;
+                min-height: 320px;
+            }
+            #announcements .carousel-inner {
+                min-height: 280px;
+            }
+            #announcements .carousel-item {
+                min-height: 280px;
             }
             
             .announcement-card {
