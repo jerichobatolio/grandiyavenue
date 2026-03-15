@@ -575,7 +575,11 @@
                         </div>
                     @endif
                 </div>
-                <p class="text-muted">Scan the QR code using your GCash app to complete payment</p>
+                <p class="text-muted mb-1">Scan the QR code to pay via GCash:</p>
+                <ul class="text-muted small mb-0" style="text-align: left; list-style: none; padding-left: 0;">
+                    <li><strong>On laptop:</strong> Use your phone—scan this QR with your camera or GCash app.</li>
+                    <li><strong>On mobile:</strong> Scan with your camera or open the GCash app; it may open GCash automatically.</li>
+                </ul>
                 <div class="alert alert-warning">
                     <strong>Important:</strong> Please keep your GCash transaction receipt as proof of payment. Only GCash receipts are accepted.
                 </div>
@@ -611,8 +615,8 @@
                             <br>• File size must be less than 2MB
                             <br>• Only JPG, PNG, and JPEG formats are allowed
                         </div>
-                        <div id="gcash-validation-message" class="alert alert-danger mt-2" style="display: none;">
-                            <i class="fas fa-exclamation-triangle"></i> <span id="gcash-error-text"></span>
+                        <div id="gcash-validation-message" class="alert alert-danger mt-2" style="display: none; background-color: #f8d7da !important; border: 1px solid #f5c6cb; color: #721c24 !important;">
+                            <i class="fas fa-exclamation-triangle" style="color: #721c24;"></i> <span id="gcash-error-text" style="color: #721c24 !important;"></span>
                         </div>
                         <div id="gcash-success-message" class="alert alert-success mt-2" style="display: none;">
                             <i class="fas fa-check-circle"></i> Valid GCash receipt detected. You may proceed.

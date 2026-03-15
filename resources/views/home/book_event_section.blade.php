@@ -727,7 +727,11 @@
                         </div>
                     @endif
                 </div>
-                <p class="text-muted">Scan the QR code using your GCash app to complete payment</p>
+                <p class="text-muted mb-1">Scan the QR code to pay via GCash:</p>
+                <ul class="text-muted small mb-0" style="text-align: left; list-style: none; padding-left: 0;">
+                    <li><strong>On laptop:</strong> Use your phone—scan this QR with your camera or GCash app.</li>
+                    <li><strong>On mobile:</strong> Scan with your camera or open the GCash app; it may open GCash automatically.</li>
+                </ul>
                 <div class="alert alert-warning" style="background-color: #4d3a00; border-color: #ffc107; color: white;">
                     <strong>Important:</strong> Please keep your payment receipt as proof of transaction
                 </div>
@@ -763,8 +767,8 @@
                         <div class="form-text" style="color: #c8d0d8 !important;">
                             <strong>Important:</strong> We cannot accept other photos (selfies, IDs, random images, etc.). Only official GCash transaction receipts are accepted.
                         </div>
-                        <div id="gcash-validation-message" class="alert alert-danger mt-2" style="display: none; background-color: #721c24; border-color: #f5c6cb;">
-                            <i class="fas fa-exclamation-triangle" style="color: #fff;"></i> <span id="gcash-error-text" style="color: #ffffff !important;"></span>
+                        <div id="gcash-validation-message" class="alert alert-danger mt-2" style="display: none; background-color: #f8d7da !important; border: 1px solid #f5c6cb; color: #721c24 !important;">
+                            <i class="fas fa-exclamation-triangle" style="color: #721c24;"></i> <span id="gcash-error-text" style="color: #721c24 !important;"></span>
                         </div>
                         <div id="gcash-success-message" class="alert alert-success mt-2" style="display: none; background-color: #155724; border-color: #c3e6cb; color: white;">
                             <i class="fas fa-check-circle"></i> Valid GCash receipt detected!

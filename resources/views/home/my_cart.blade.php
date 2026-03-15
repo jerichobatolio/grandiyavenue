@@ -763,7 +763,7 @@
                             <label for="payment_proof">Upload Payment Receipt (Required for GCash)</label>
                             <input type="file" name="payment_proof" id="payment_proof" accept="image/jpeg,image/png,image/jpg,image/webp">
                             <small style="color: #ccc; display: block; margin-top: 5px;">Only GCash receipts are accepted. JPG, PNG, WEBP. Max 2MB.</small>
-                            <div id="cart-gcash-error" style="display: none; margin-top: 8px; padding: 10px; border-radius: 6px; background-color: #721c24; color: #fff; font-size: 0.9rem;"></div>
+                            <div id="cart-gcash-error" style="display: none; margin-top: 8px; padding: 10px; border-radius: 6px; background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; font-size: 0.9rem;"></div>
                             <div id="cart-gcash-valid" style="display: none; margin-top: 8px; padding: 10px; border-radius: 6px; background-color: #155724; color: #fff; font-size: 0.9rem;"><span style="margin-right: 6px;">✓</span> Valid GCash receipt detected. You may proceed.</div>
                             @error('payment_proof')
                                 <div style="color: #dc3545; font-size: 0.875rem; margin-top: 5px;">{{ $message }}</div>
@@ -871,9 +871,11 @@
                     @endif
                 </div>
                 
-                <p style="color: #ccc; margin-bottom: 20px;">
-                    Scan the QR code using your GCash app to complete payment
-                </p>
+                <p style="color: #ccc; margin-bottom: 8px;">Scan the QR code to pay via GCash:</p>
+                <ul style="color: #aaa; font-size: 0.9rem; margin-bottom: 20px; text-align: left; list-style: none; padding-left: 0;">
+                    <li><strong>On laptop:</strong> Use your phone—scan this QR with your camera or GCash app.</li>
+                    <li><strong>On mobile:</strong> Scan with your camera or open the GCash app; it may open GCash automatically.</li>
+                </ul>
                 
                 <div style="background-color: #4d3a00; color: white; padding: 15px; border-radius: 8px; margin: 20px 0;">
                     <strong>Important:</strong> Please keep your GCash transaction receipt as proof of payment. 

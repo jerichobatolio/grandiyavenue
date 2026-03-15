@@ -362,7 +362,11 @@
                     <div class="table-payment-qr-wrap text-center">
                         @if(isset($adminQrCode) && $adminQrCode && $adminQrCode->is_active)
                             <img id="table-payment-qr-image" src="{{ $adminQrCode->image_url }}" alt="GCash QR Code" class="img-fluid">
-                            <p class="small table-payment-helper-text mt-2 mb-0">Scan this QR code, pay the fixed downpayment, then upload your proof below.</p>
+                            <p class="small table-payment-helper-text mt-2 mb-1">Scan this QR to pay, then upload your proof below.</p>
+                            <ul class="small table-payment-helper-text mb-0" style="list-style: none; padding-left: 0;">
+                                <li><strong>Laptop:</strong> Use your phone—scan with camera or GCash app.</li>
+                                <li><strong>Mobile:</strong> Scan with camera or open GCash app; it may open automatically.</li>
+                            </ul>
                         @else
                             <div class="alert alert-warning mb-0">
                                 No active payment QR code is available right now. You can still continue once the admin QR has been set.
@@ -376,7 +380,7 @@
                             <label for="table-payment-proof" class="text-dark mb-1">Upload Proof of Payment (GCash Receipt Only)</label>
                             <input type="file" id="table-payment-proof" name="payment_proof" class="form-control custom-form-control" accept="image/png,image/jpeg,image/jpg,image/webp" required>
                             <small class="table-payment-helper-text d-block mt-1">Only GCash receipts are accepted.</small>
-                            <div id="table-payment-gcash-error" class="alert alert-danger mt-2 py-2 small" style="display: none;" role="alert"></div>
+                            <div id="table-payment-gcash-error" class="alert alert-danger mt-2 py-2 small" style="display: none; background-color: #f8d7da !important; border: 1px solid #f5c6cb; color: #721c24 !important;" role="alert"></div>
                             <div id="table-payment-gcash-valid" class="alert alert-success mt-2 py-2 small" style="display: none;" role="alert"><i class="fas fa-check-circle me-1"></i> Valid GCash receipt detected. You may proceed.</div>
                         </div>
                         <div id="table-payment-proof-preview" class="table-payment-proof-preview" style="display: none;"></div>

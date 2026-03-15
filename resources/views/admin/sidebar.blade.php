@@ -191,6 +191,7 @@
         
       </nav>
       <!-- Sidebar Navigation end-->
+      <div id="sidebar-backdrop" aria-hidden="true"></div>
 
       <!-- Logout Section - Fixed at Bottom -->
       <div class="logout-section" style="position: fixed; bottom: 0; left: 0; width: 280px; padding: 10px; background: #2c2c2c; border-top: 1px solid #444; z-index: 1001;">
@@ -381,6 +382,86 @@
           margin-left: auto;
           flex-shrink: 0;
         }
+
+        /* Mobile/tablet: sidebar as full-width overlay, all labels visible */
+        @media (max-width: 1199px) {
+          .header .sidebar-toggle {
+            min-width: 44px;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+          }
+          nav#sidebar {
+            width: 280px !important;
+            margin-left: 0 !important;
+            transform: translateX(-100%);
+            transition: transform 0.25s ease;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+          }
+          nav#sidebar.shrinked {
+            transform: translateX(0);
+            margin-left: 0 !important;
+            width: 280px !important;
+          }
+          nav#sidebar ul a,
+          nav#sidebar.shrinked ul a {
+            padding: 14px 20px !important;
+            text-align: left !important;
+            font-size: 0.95rem !important;
+            display: flex !important;
+            align-items: center;
+          }
+          nav#sidebar ul i,
+          nav#sidebar.shrinked ul i {
+            display: inline-block !important;
+            width: auto !important;
+            text-align: left !important;
+            margin-right: 10px !important;
+          }
+          nav#sidebar .sidebar-header .title,
+          nav#sidebar.shrinked .sidebar-header .title {
+            display: block !important;
+          }
+          nav#sidebar span.heading,
+          nav#sidebar.shrinked span.heading {
+            text-align: left !important;
+            margin-left: 20px !important;
+            font-size: 1.2rem !important;
+          }
+          .page-content,
+          .page-content.active {
+            margin-left: 0 !important;
+            width: 100% !important;
+          }
+          .header {
+            margin-left: 0 !important;
+            width: 100% !important;
+          }
+          .logout-section {
+            width: 280px !important;
+            transform: translateX(-100%);
+            transition: transform 0.25s ease;
+            z-index: 1001;
+          }
+          nav#sidebar.shrinked ~ .logout-section {
+            transform: translateX(0);
+          }
+          /* Backdrop when sidebar open on mobile */
+          #sidebar-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+          }
+          nav#sidebar.shrinked ~ #sidebar-backdrop {
+            display: block;
+          }
+        }
       </style>
 
       <!-- Profile Management JavaScript -->
@@ -569,6 +650,31 @@
           }, 3000);
         }
         
+        // Mobile: close sidebar when backdrop is clicked
+        document.addEventListener('DOMContentLoaded', function() {
+          var backdrop = document.getElementById('sidebar-backdrop');
+          if (backdrop) {
+            backdrop.addEventListener('click', function() {
+              var sidebar = document.getElementById('sidebar');
+              var pageContent = document.querySelector('.page-content');
+              var toggle = document.querySelector('.sidebar-toggle');
+              if (sidebar && sidebar.classList.contains('shrinked')) {
+                sidebar.classList.remove('shrinked');
+                if (pageContent) pageContent.classList.remove('active');
+                if (toggle) {
+                  toggle.classList.remove('active');
+                  var icon = toggle.querySelector('i');
+                  if (icon) icon.setAttribute('class', 'fa fa-long-arrow-left');
+                }
+                var brandSm = document.querySelector('.navbar-brand .brand-sm');
+                var brandBig = document.querySelector('.navbar-brand .brand-big');
+                if (brandSm) brandSm.classList.remove('visible');
+                if (brandBig) brandBig.classList.add('visible');
+              }
+            });
+          }
+        });
+
         // Initialize dropdown functionality
         document.addEventListener('DOMContentLoaded', function() {
           // Handle dropdown toggle
