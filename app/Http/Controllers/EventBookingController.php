@@ -366,16 +366,23 @@ class EventBookingController extends Controller
             'payment_option' => 'nullable|in:down_payment,full_payment'
         ]);
         
-        // Additional GCash receipt validation
+        // Additional GCash receipt validation (size, type, dimensions)
         if ($request->hasFile('payment_proof')) {
             $file = $request->file('payment_proof');
             $gcashValidation = $this->validateGCashReceipt($file);
-            
             if (!$gcashValidation['valid']) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Invalid GCash receipt: ' . $gcashValidation['message'],
                     'errors' => ['payment_proof' => [$gcashValidation['message']]]
+                ], 422)->header('Content-Type', 'application/json');
+            }
+            // OCR: only allow images that look like GCash receipts
+            if (!$this->validateImageIsGCashReceipt($file)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only GCash receipts are accepted. The uploaded image does not appear to be a GCash transaction receipt.',
+                    'errors' => ['payment_proof' => ['Please upload a screenshot of your GCash transaction confirmation only.']]
                 ], 422)->header('Content-Type', 'application/json');
             }
         }
@@ -534,7 +541,42 @@ class EventBookingController extends Controller
     }
 
     /**
-     * Validate if uploaded file is a GCash receipt
+     * Validate that the uploaded image appears to be a GCash receipt using OCR if available.
+     * Returns true if valid or if OCR cannot run. Returns false only when OCR runs and no GCash text is found.
+     */
+    private function validateImageIsGCashReceipt($file): bool
+    {
+        if (! $file || ! $file->getRealPath()) {
+            return false;
+        }
+        $path = $file->getRealPath();
+        $keywords = ['gcash', 'successfully sent', 'successfully paid', 'ref. no', 'ref no', 'express send', 'send money', 'amount due', 'gcash scan'];
+        if (PHP_OS_FAMILY === 'Windows') {
+            $tesseract = 'tesseract';
+        } else {
+            $tesseract = trim((string) shell_exec('which tesseract 2>/dev/null') ?: '');
+            if ($tesseract === '') {
+                return true;
+            }
+        }
+        $outFile = sys_get_temp_dir().'/gcash_ocr_'.uniqid();
+        @exec(escapeshellarg($tesseract).' '.escapeshellarg($path).' '.escapeshellarg($outFile).' 2>/dev/null', $out, $exit);
+        $text = @file_get_contents($outFile.'.txt');
+        @unlink($outFile.'.txt');
+        if ($exit !== 0 || $text === false || $text === '') {
+            return true;
+        }
+        $lower = mb_strtolower(preg_replace('/\s+/', ' ', $text));
+        foreach ($keywords as $kw) {
+            if (str_contains($lower, $kw)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Validate if uploaded file is a GCash receipt (size, type, dimensions)
      */
     private function validateGCashReceipt($file)
     {

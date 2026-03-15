@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     @include('home.css')
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <title>Checkout | Grandiya Venue & Restaurant</title>
     <style>
         body {
@@ -688,14 +689,14 @@
                         <div class="empty-cart-icon">🛒</div>
                         <h3>Your cart is empty</h3>
                         <p>Add delicious meals to see them listed here.</p>
-                        <a href="{{ route('home') }}#blog" class="btn btn-more btn-custom">Browse Menu</a>
+                        <a href="{{ url(route('home') . '#blog') }}" class="btn btn-more btn-custom">Browse Menu</a>
                     </div>
                 @endif
             </div>
 
             <!-- Buttons -->
             <div class="div_center">
-                <a href="{{ route('home') }}#blog" class="btn btn-more btn-custom">Add More Items to Cart</a>
+                <a href="{{ url(route('home') . '#blog') }}" class="btn btn-more btn-custom">Add More Items to Cart</a>
                 @if($hasCartItems)
                     <button onclick="openOrderSummary()" class="btn btn-checkout btn-custom">Review Order & Checkout</button>
                 @endif
@@ -725,7 +726,8 @@
                         
                         <div class="form-group">
                             <label for="contact">Contact Number</label>
-                            <input type="tel" name="contact" id="contact" placeholder="Enter your mobile/cell number" required value="{{ old('contact') }}">
+                            <input type="tel" name="contact" id="contact" placeholder="09XXXXXXXXX (11 digits only)" maxlength="11" pattern="\d{11}" title="Enter exactly 11 digits" required value="{{ old('contact') }}">
+                            <small style="color: #ccc; display: block; margin-top: 5px;">11 digits only (e.g. 09171234567)</small>
                             @error('contact')
                                 <div style="color: #dc3545; font-size: 0.875rem; margin-top: 5px;">{{ $message }}</div>
                             @enderror
@@ -756,11 +758,13 @@
                             @enderror
                         </div>
 
-                        <!-- Payment Proof Upload (only visible when GCash is selected) -->
+                        <!-- Payment Proof Upload (only visible when GCash is selected) - GCash receipt only, same as Book Event -->
                         <div class="form-group" id="payment-proof-group" style="display: none;">
                             <label for="payment_proof">Upload Payment Receipt (Required for GCash)</label>
-                            <input type="file" name="payment_proof" id="payment_proof" accept="image/*,application/pdf">
-                            <small style="color: #ccc; display: block; margin-top: 5px;">Upload screenshot or photo of your GCash payment receipt</small>
+                            <input type="file" name="payment_proof" id="payment_proof" accept="image/jpeg,image/png,image/jpg,image/webp">
+                            <small style="color: #ccc; display: block; margin-top: 5px;">Only GCash receipts are accepted. JPG, PNG, WEBP. Max 2MB.</small>
+                            <div id="cart-gcash-error" style="display: none; margin-top: 8px; padding: 10px; border-radius: 6px; background-color: #721c24; color: #fff; font-size: 0.9rem;"></div>
+                            <div id="cart-gcash-valid" style="display: none; margin-top: 8px; padding: 10px; border-radius: 6px; background-color: #155724; color: #fff; font-size: 0.9rem;"><span style="margin-right: 6px;">✓</span> Valid GCash receipt detected. You may proceed.</div>
                             @error('payment_proof')
                                 <div style="color: #dc3545; font-size: 0.875rem; margin-top: 5px;">{{ $message }}</div>
                             @enderror
@@ -888,6 +892,7 @@
 
     <script>
         const hasCartItems = @json($hasCartItems);
+        let cartPaymentProofValid = false;
 
         // Auto-show modal when page loads
         document.addEventListener('DOMContentLoaded', function() {
@@ -908,6 +913,19 @@
                 paymentProof.setAttribute('required', 'required');
             }
             
+            // Contact number: 11 digits only
+            var contactInput = document.getElementById('contact');
+            if (contactInput) {
+                contactInput.addEventListener('input', function() {
+                    this.value = this.value.replace(/\D/g, '').slice(0, 11);
+                });
+                contactInput.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    var pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 11);
+                    this.value = pasted;
+                });
+            }
+
             if (paymentSelect && paymentProofGroup && paymentProof && hasCartItems) {
                 paymentSelect.addEventListener('change', function() {
                     if (this.value === 'GCash') {
@@ -920,7 +938,72 @@
                         // Hide payment proof upload for COD
                         paymentProofGroup.style.display = 'none';
                         paymentProof.removeAttribute('required');
-                        paymentProof.value = ''; // Clear the file input
+                        paymentProof.value = '';
+                        cartPaymentProofValid = false;
+                        var errEl = document.getElementById('cart-gcash-error');
+                        var okEl = document.getElementById('cart-gcash-valid');
+                        if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+                        if (okEl) okEl.style.display = 'none';
+                    }
+                });
+            }
+
+            // GCash receipt validation (OCR - same as Book Event)
+            const GCASH_RECEIPT_KEYWORDS = ['gcash', 'successfully sent', 'successfully paid', 'ref. no', 'ref no', 'express send', 'send money', 'payment', 'amount due', 'gcash scan'];
+            function checkIsGCashReceiptText(ocrText) {
+                if (!ocrText || typeof ocrText !== 'string') return false;
+                var lower = ocrText.toLowerCase().replace(/\s+/g, ' ');
+                return GCASH_RECEIPT_KEYWORDS.some(function(kw) { return lower.includes(kw); });
+            }
+            if (paymentProof) {
+                paymentProof.addEventListener('change', async function(e) {
+                    var file = e.target.files[0];
+                    var errEl = document.getElementById('cart-gcash-error');
+                    var okEl = document.getElementById('cart-gcash-valid');
+                    if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+                    if (okEl) okEl.style.display = 'none';
+                    cartPaymentProofValid = false;
+                    if (!file) return;
+                    var allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+                    if (!allowedTypes.includes(file.type)) {
+                        if (errEl) { errEl.textContent = 'Only JPG, PNG, or WEBP images are allowed. Please upload a GCash receipt.'; errEl.style.display = 'block'; }
+                        this.value = '';
+                        return;
+                    }
+                    if (file.size > 2 * 1024 * 1024) {
+                        if (errEl) { errEl.textContent = 'File size must be less than 2MB. Please use a smaller image.'; errEl.style.display = 'block'; }
+                        this.value = '';
+                        return;
+                    }
+                    if (errEl) { errEl.textContent = 'Verifying GCash receipt...'; errEl.style.display = 'block'; errEl.style.backgroundColor = '#0c5460'; }
+                    try {
+                        var Tesseract = window.Tesseract;
+                        if (!Tesseract || !Tesseract.recognize) {
+                            if (errEl) { errEl.textContent = 'Verification unavailable. Please ensure only a GCash receipt image is uploaded.'; errEl.style.backgroundColor = '#721c24'; }
+                            cartPaymentProofValid = true;
+                            if (okEl) okEl.style.display = 'block';
+                            if (errEl) errEl.style.display = 'none';
+                            return;
+                        }
+                        var dataUrl = await new Promise(function(resolve) {
+                            var r = new FileReader();
+                            r.onload = function() { resolve(r.result); };
+                            r.readAsDataURL(file);
+                        });
+                        var result = await Tesseract.recognize(dataUrl, 'eng', { logger: function() {} });
+                        var text = (result && result.data && result.data.text) ? result.data.text : '';
+                        if (errEl) errEl.style.backgroundColor = '#721c24';
+                        if (checkIsGCashReceiptText(text)) {
+                            cartPaymentProofValid = true;
+                            if (okEl) okEl.style.display = 'block';
+                            if (errEl) errEl.style.display = 'none';
+                        } else {
+                            if (errEl) { errEl.textContent = 'This image does not appear to be a GCash receipt. Please upload a screenshot of your GCash transaction.'; errEl.style.display = 'block'; }
+                            this.value = '';
+                        }
+                    } catch (err) {
+                        if (errEl) { errEl.textContent = 'Could not verify image. Please upload a clear screenshot of your GCash receipt only.'; errEl.style.display = 'block'; }
+                        this.value = '';
                     }
                 });
             }
@@ -929,13 +1012,24 @@
             const checkoutForm = document.querySelector('.checkout-container form');
             if (hasCartItems && checkoutForm && paymentSelect && paymentProof) {
                 checkoutForm.addEventListener('submit', function(e) {
-                    const paymentMethod = paymentSelect.value;
-                    const hasProof = paymentProof.files.length > 0;
-                    
+                    var paymentMethod = paymentSelect.value;
+                    var hasProof = paymentProof.files.length > 0;
+                    var contactVal = (contactInput && contactInput.value) ? contactInput.value.replace(/\D/g, '') : '';
+                    if (contactVal.length !== 11) {
+                        e.preventDefault();
+                        alert('Contact number must be exactly 11 digits.');
+                        if (contactInput) contactInput.focus();
+                        return false;
+                    }
                     if (paymentMethod === 'GCash' && !hasProof) {
                         e.preventDefault();
                         alert('Please upload your GCash payment receipt before submitting the order.');
                         paymentProof.focus();
+                        return false;
+                    }
+                    if (paymentMethod === 'GCash' && hasProof && !cartPaymentProofValid) {
+                        e.preventDefault();
+                        alert('Only GCash receipts are accepted. Please select a screenshot of your GCash transaction.');
                         return false;
                     }
                 });
@@ -981,7 +1075,7 @@
         function addMoreItems() {
             closeOrderSummary();
             // Redirect to Homepage Food Categories
-            window.location.href = "{{ route('home') }}#blog";
+            window.location.href = "{{ url(route('home') . '#blog') }}";
         }
 
         // GCash QR Modal functionality

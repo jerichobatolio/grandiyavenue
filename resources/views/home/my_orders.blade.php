@@ -315,7 +315,7 @@
                     <div class="empty-orders-icon">📦</div>
                     <h3>No orders yet</h3>
                     <p>Your order history will appear here once you place an order.</p>
-                    <a href="{{ url('/#blog') }}" class="btn btn-more btn-custom" style="background-color: gold; color: black; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; margin-top: 15px;">Browse Menu</a>
+                    <a href="{{ route('home') }}#blog" class="btn btn-more btn-custom" style="background-color: gold; color: black; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; margin-top: 15px;">Browse Menu</a>
                 </div>
             @endif
         </div>

@@ -258,6 +258,13 @@
             color: #fff !important;
         }
 
+        /* Push modals down so title and close button are not covered by header */
+        #bookingSummaryModal .modal-dialog,
+        #paymentModal .modal-dialog,
+        #proofUploadModal .modal-dialog {
+            margin-top: 80px;
+        }
+
     </style>
     <div class="container">
         <div class="row">
@@ -476,7 +483,7 @@
 
 <!-- Booking Summary Modal -->
 <div class="modal fade" id="bookingSummaryModal" tabindex="-1" aria-labelledby="bookingSummaryModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg" style="margin-top: 80px;">
         <div class="modal-content" style="background-color: #2c2c2c; border: 1px solid skyblue;">
             <div class="modal-header" style="background: linear-gradient(135deg, #28a745, #1e7e34); border-bottom: 1px solid #555;">
                 <h5 class="modal-title text-white" id="bookingSummaryModalLabel">📋 Booking Summary</h5>
@@ -670,7 +677,7 @@
 
 <!-- Payment Modal -->
 <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg" style="margin-top: 80px;">
         <div class="modal-content" style="background-color: #2c2c2c; border: 1px solid skyblue;">
             <div class="modal-header" style="background: linear-gradient(135deg, #17a2b8, #138496); border-bottom: 1px solid #555;">
                 <h5 class="modal-title text-white" id="paymentModalLabel">💳 GCash Payment</h5>
@@ -705,9 +712,9 @@
                         </label>
                     </div>
                 </div>
-                <div class="alert alert-info text-start event-payment-info-card">
-                    <div><strong>Selected Payment:</strong> <span id="payment_selected_label">50% Downpayment</span></div>
-                    <div><strong>Amount to Send:</strong> <span id="payment_selected_amount">₱0.00</span></div>
+                <div class="alert alert-info text-start event-payment-info-card" style="background-color: #d9f3ff !important; border: 1px solid #7fcde6 !important; color: #111 !important;">
+                    <div style="color: #111 !important;"><strong>Selected Payment:</strong> <span id="payment_selected_label" style="color: #111 !important;">50% Downpayment</span></div>
+                    <div style="color: #111 !important;"><strong>Amount to Send:</strong> <span id="payment_selected_amount" style="color: #111 !important; font-weight: 700;">₱0.00</span></div>
                 </div>
                 <div class="my-4">
                     @if(isset($adminQrCode) && $adminQrCode && $adminQrCode->is_active)
@@ -735,7 +742,7 @@
 
 <!-- Payment Proof Upload Modal -->
 <div class="modal fade" id="proofUploadModal" tabindex="-1" aria-labelledby="proofUploadModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog" style="margin-top: 80px;">
         <div class="modal-content" style="background-color: #2c2c2c; border: 1px solid skyblue;">
             <div class="modal-header" style="background: linear-gradient(135deg, #28a745, #1e7e34); border-bottom: 1px solid #555;">
                 <h5 class="modal-title text-white" id="proofUploadModalLabel">📸 Upload Payment Proof</h5>
@@ -746,22 +753,18 @@
                     @csrf
                     <input type="hidden" id="booking_id" name="booking_id">
                     <input type="hidden" id="selected_payment_option" name="payment_option" value="down_payment">
-                    <div class="alert alert-info event-payment-info-card">
-                        <div><strong>Chosen Payment:</strong> <span id="proof_payment_option_label">50% Downpayment</span></div>
-                        <div><strong>Expected Amount:</strong> <span id="proof_payment_amount">₱0.00</span></div>
+                    <div class="alert alert-info event-payment-info-card" style="background-color: #d9f3ff !important; border: 1px solid #7fcde6 !important; color: #111 !important;">
+                        <div style="color: #111 !important;"><strong>Chosen Payment:</strong> <span id="proof_payment_option_label" style="color: #111 !important;">50% Downpayment</span></div>
+                        <div style="color: #111 !important;"><strong>Expected Amount:</strong> <span id="proof_payment_amount" style="color: #111 !important; font-weight: 700;">₱0.00</span></div>
                     </div>
                     <div class="mb-3">
                         <label for="payment_proof" class="form-label text-white">Upload GCash Transaction Receipt * <small class="text-warning">(can only upload legit GCash receipt)</small></label>
                         <input type="file" class="form-control" id="payment_proof" name="payment_proof" accept="image/jpeg,image/png,image/jpg" required style="background-color: #3c3c3c; border: 1px solid #555; color: white;">
-                        <div class="form-text text-muted">
+                        <div class="form-text" style="color: #c8d0d8 !important;">
                             <strong>Important:</strong> We cannot accept other photos (selfies, IDs, random images, etc.). Only official GCash transaction receipts are accepted.
-                            <br>• Upload a clear screenshot or photo of your GCash payment confirmation
-                            <br>• Image must be at least 200x200 pixels
-                            <br>• File size must be less than 2MB
-                            <br>• Only JPG and PNG formats are allowed
                         </div>
-                        <div id="gcash-validation-message" class="alert alert-danger mt-2" style="display: none; background-color: #721c24; border-color: #f5c6cb; color: white;">
-                            <i class="fas fa-exclamation-triangle"></i> <span id="gcash-error-text"></span>
+                        <div id="gcash-validation-message" class="alert alert-danger mt-2" style="display: none; background-color: #721c24; border-color: #f5c6cb;">
+                            <i class="fas fa-exclamation-triangle" style="color: #fff;"></i> <span id="gcash-error-text" style="color: #ffffff !important;"></span>
                         </div>
                         <div id="gcash-success-message" class="alert alert-success mt-2" style="display: none; background-color: #155724; border-color: #c3e6cb; color: white;">
                             <i class="fas fa-check-circle"></i> Valid GCash receipt detected!
@@ -832,10 +835,12 @@ try {
     $bookingTimeSlotsList = [];
 }
 @endphp
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script>
 window.bookingTimeSlots = @json($bookingTimeSlotsList);
 
 let currentBooking = null;
+let eventPaymentProofValid = false;
 let bookingCleanupPending = false;
 let navigatingToProofUpload = false;
 let bookingFinalized = false;
@@ -845,10 +850,22 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 BOOK EVENT SECTION - Loading...');
     
     // Set minimum date to tomorrow
-    const eventDateField = document.getElementById('event_date');
-    if (eventDateField) {
-        eventDateField.min = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-    }
+        const eventDateField = document.getElementById('event_date');
+        if (eventDateField) {
+            eventDateField.min = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+        }
+        // Contact number: 11 digits only
+        const contactNumberField = document.getElementById('contact_number');
+        if (contactNumberField) {
+            contactNumberField.addEventListener('input', function() {
+                this.value = this.value.replace(/\D/g, '').slice(0, 11);
+            });
+            contactNumberField.addEventListener('paste', function(e) {
+                e.preventDefault();
+                var pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 11);
+                this.value = pasted;
+            });
+        }
     
     // Get elements
     const form = document.getElementById('eventBookingForm');
@@ -1172,6 +1189,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (proofUploadModalElement) {
         proofUploadModalElement.addEventListener('shown.bs.modal', function() {
             navigatingToProofUpload = false;
+            eventPaymentProofValid = false;
         });
 
         proofUploadModalElement.addEventListener('hidden.bs.modal', function() {
@@ -1791,89 +1809,89 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     syncPaymentSelectionUi();
     
-    // GCash Receipt Validation
+    // GCash Receipt Validation (OCR like book table)
+    const GCASH_RECEIPT_KEYWORDS = ['gcash', 'successfully sent', 'successfully paid', 'ref. no', 'ref no', 'express send', 'send money', 'payment', 'amount due', 'gcash scan'];
+    function checkIsGCashReceiptText(ocrText) {
+        if (!ocrText || typeof ocrText !== 'string') return false;
+        const lower = ocrText.toLowerCase().replace(/\s+/g, ' ');
+        return GCASH_RECEIPT_KEYWORDS.some(function(kw) { return lower.includes(kw); });
+    }
+
     const paymentProofInput = document.getElementById('payment_proof');
     if (paymentProofInput) {
-        paymentProofInput.addEventListener('change', function(e) {
+        paymentProofInput.addEventListener('change', async function(e) {
             const file = e.target.files[0];
-            if (file) {
-                validateGCashReceipt(file);
-            }
-        });
-    }
-    
-    function validateGCashReceipt(file) {
-        const errorMessage = document.getElementById('gcash-validation-message');
-        const successMessage = document.getElementById('gcash-success-message');
-        const errorText = document.getElementById('gcash-error-text');
+            const errorMessage = document.getElementById('gcash-validation-message');
+            const successMessage = document.getElementById('gcash-success-message');
+            const errorText = document.getElementById('gcash-error-text');
+            if (errorMessage) errorMessage.style.display = 'none';
+            if (successMessage) successMessage.style.display = 'none';
+            if (errorText) errorText.textContent = '';
+            eventPaymentProofValid = false;
 
-        if (errorMessage) errorMessage.style.display = 'none';
-        if (successMessage) successMessage.style.display = 'none';
-
-        // 1) Validate file type (only images)
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-        if (!allowedTypes.includes(file.type)) {
-            if (errorText) errorText.textContent = 'Only JPG, PNG, and JPEG images are allowed. Please upload a GCash receipt image.';
-            if (errorMessage) errorMessage.style.display = 'block';
-            return false;
-        }
-
-        // 2) Validate file size (<= 2MB)
-        if (file.size > 2 * 1024 * 1024) {
-            if (errorText) errorText.textContent = 'File size must be less than 2MB. Please compress your GCash receipt image.';
-            if (errorMessage) errorMessage.style.display = 'block';
-            return false;
-        }
-
-        // 3) Basic filename heuristic – strongly discourage non‑GCash photos
-        const originalName = (file.name || '').toLowerCase();
-        if (!originalName.includes('gcash') && !originalName.includes('receipt')) {
-            if (errorText) errorText.textContent = 'File name must clearly indicate it is a GCash receipt (include "gcash" or "receipt").';
-            if (errorMessage) errorMessage.style.display = 'block';
-            return false;
-        }
-
-        // 4) Light-weight image validity check via Image decode and dimensions (async, for UX only)
-        const img = new Image();
-        img.onload = function() {
-            if (img.width < 200 || img.height < 200) {
-                if (errorText) errorText.textContent = 'Image is too small. Please upload a clear, high-resolution GCash receipt (minimum 200x200 pixels).';
+            if (!file) return;
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+            if (!allowedTypes.includes(file.type)) {
+                if (errorText) errorText.textContent = 'Only JPG, PNG, or WEBP images are allowed. Please upload a GCash receipt.';
                 if (errorMessage) errorMessage.style.display = 'block';
+                this.value = '';
                 return;
             }
-            if (successMessage) successMessage.style.display = 'block';
-        };
-        img.onerror = function() {
-            if (errorText) errorText.textContent = 'Invalid image file. Please upload a valid GCash receipt image.';
-            if (errorMessage) errorMessage.style.display = 'block';
-        };
+            if (file.size > 2 * 1024 * 1024) {
+                if (errorText) errorText.textContent = 'File size must be less than 2MB. Please use a smaller image.';
+                if (errorMessage) errorMessage.style.display = 'block';
+                this.value = '';
+                return;
+            }
+            if (errorText) errorText.textContent = 'Verifying GCash receipt...';
+            if (errorMessage) { errorMessage.classList.remove('alert-danger'); errorMessage.classList.add('alert-info'); errorMessage.style.display = 'block'; }
 
-        const reader = new FileReader();
-        reader.onload = function(e) { img.src = e.target.result; };
-        reader.readAsDataURL(file);
-
-        // Synchronous checks passed
-        return true;
+            try {
+                const Tesseract = window.Tesseract;
+                if (!Tesseract || !Tesseract.recognize) {
+                    if (errorText) errorText.textContent = 'Verification unavailable. Please ensure only a GCash receipt image is uploaded.';
+                    if (errorMessage) { errorMessage.classList.remove('alert-info'); errorMessage.classList.add('alert-danger'); }
+                    eventPaymentProofValid = true;
+                    if (successMessage) successMessage.style.display = 'block';
+                    if (errorMessage) errorMessage.style.display = 'none';
+                    return;
+                }
+                const dataUrl = await new Promise(function(resolve) {
+                    const r = new FileReader();
+                    r.onload = function() { resolve(r.result); };
+                    r.readAsDataURL(file);
+                });
+                const result = await Tesseract.recognize(dataUrl, 'eng', { logger: function() {} });
+                const text = (result && result.data && result.data.text) ? result.data.text : '';
+                if (errorMessage) { errorMessage.classList.remove('alert-info'); errorMessage.classList.add('alert-danger'); }
+                if (checkIsGCashReceiptText(text)) {
+                    eventPaymentProofValid = true;
+                    if (successMessage) successMessage.style.display = 'block';
+                    if (errorMessage) errorMessage.style.display = 'none';
+                } else {
+                    if (errorText) errorText.textContent = 'This image does not appear to be a GCash receipt. Please upload a screenshot of your GCash transaction.';
+                    if (errorMessage) errorMessage.style.display = 'block';
+                    this.value = '';
+                }
+            } catch (err) {
+                if (errorText) errorText.textContent = 'Could not verify image. Please upload a clear screenshot of your GCash receipt only.';
+                if (errorMessage) { errorMessage.classList.remove('alert-info'); errorMessage.classList.add('alert-danger'); errorMessage.style.display = 'block'; }
+                this.value = '';
+            }
+        });
     }
 
     // Proof Upload Form
     if (proofUploadForm) {
         proofUploadForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            console.log('Proof upload form submitted');
-            
-            // Validate file before submission
             const fileInput = document.getElementById('payment_proof');
             if (fileInput.files.length === 0) {
                 alert('Please select a GCash receipt file to upload.');
                 return;
             }
-            
-            const file = fileInput.files[0];
-
-            // Run basic GCash validation (type/size/name) before submitting
-            if (!validateGCashReceipt(file)) {
-                alert('Please upload a valid GCash receipt image (correct file name, JPG/PNG only, max 2MB, minimum 200x200px).');
+            if (fileInput.files.length > 0 && !eventPaymentProofValid) {
+                alert('Only GCash receipts are accepted. Please select a screenshot of your GCash transaction.');
                 return;
             }
 

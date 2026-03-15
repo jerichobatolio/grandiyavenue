@@ -255,6 +255,10 @@
             padding: 15px;
             border-radius: 5px;
             margin-bottom: 20px;
+            transition: opacity 0.3s ease;
+        }
+        .alert.alert-fade-out {
+            opacity: 0;
         }
 
         .alert-success {
@@ -357,11 +361,11 @@
         <h1 class="page-title">Customer Reviews Management</h1>
 
         @if(session('message'))
-            <div class="alert alert-success">{{ session('message') }}</div>
+            <div class="alert alert-success alert-auto-dismiss">{{ session('message') }}</div>
         @endif
 
         @if(session('error'))
-            <div class="alert alert-danger">{{ session('error') }}</div>
+            <div class="alert alert-danger alert-auto-dismiss">{{ session('error') }}</div>
         @endif
 
         <!-- Statistics Cards -->
@@ -499,6 +503,16 @@
 
     @include('admin.js')
     <script>
+        // Auto-dismiss session flash alerts (e.g. "Review deleted successfully!") after 3 seconds
+        (function() {
+            document.querySelectorAll('.alert-auto-dismiss').forEach(function(el) {
+                setTimeout(function() {
+                    el.classList.add('alert-fade-out');
+                    setTimeout(function() { el.remove(); }, 300);
+                }, 3000);
+            });
+        })();
+
         function toggleEdit(reviewId) {
             const reviewItem = document.getElementById('review-' + reviewId);
             reviewItem.classList.add('editing');
@@ -547,9 +561,9 @@
                     // Update view mode with new values
                     const customerName = document.getElementById('customer_name_' + reviewId).value;
                     const description = document.getElementById('description_' + reviewId).value;
-                    
+
                     document.getElementById('view-name-' + reviewId).textContent = customerName;
-                    
+
                     const descElement = document.getElementById('view-description-' + reviewId);
                     if (description.trim()) {
                         descElement.innerHTML = '"' + description + '"';

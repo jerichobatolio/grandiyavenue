@@ -1596,21 +1596,22 @@
                 <small class="text-muted">Amount: ₱${parseFloat(amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</small>
             `;
         } else {
-            // Order notification
+            // Order notification – use total_price/total_items when present (grouped order) so total matches admin
             const statusRaw = data.status || 'pending';
             const status = statusRaw.charAt(0).toUpperCase() + statusRaw.slice(1).toLowerCase();
             const orderId = data.order_id || notification.order_id || 'N/A';
-            const title = data.title || 'Order';
-            const price = data.price || 0;
-            const quantity = data.quantity || 1;
+            const hasTotalData = typeof data.total_price !== 'undefined' && typeof data.total_items !== 'undefined';
+            const displayQty = hasTotalData ? data.total_items : (data.quantity || 1);
+            const displayTotal = hasTotalData ? parseFloat(data.total_price) : (parseFloat(data.price || 0) * parseInt(data.quantity || 1));
+            const title = hasTotalData ? (data.title || (displayQty + ' items')) : (data.title || 'Order');
             const badgeClass = status === 'Delivered' ? 'success' : (status === 'On the Way' ? 'warning' : (status === 'Cancelled' ? 'danger' : (status === 'Pending' ? 'warning' : 'primary')));
             
             badgeHtml = `<span class="badge badge-${badgeClass} mr-2">${status}</span>`;
             contentHtml = `
                 <strong>Order #${orderId}</strong>
-                <p class="mb-1 text-dark">${title} (Qty: ${quantity})</p>
+                <p class="mb-1 text-dark">${title} (Qty: ${displayQty})</p>
                 <small class="text-muted">Customer: ${data.customer_name || 'N/A'}</small><br>
-                <small class="text-muted">Total: ₱${(parseFloat(price) * parseInt(quantity)).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</small>
+                <small class="text-muted">Total: ₱${displayTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</small>
             `;
         }
         
@@ -1853,6 +1854,9 @@
             if (sectionKey === 'gallary') {
                 return 55;
             }
+            if (sectionKey === 'blog') {
+                return 70;
+            }
             return 20;
         }
 
@@ -1982,8 +1986,8 @@
             });
         });
 
-        // Scroll-spy: update active nav and URL hash based on scroll position
-        var sectionIds = ['home', 'about', 'gallary', 'book-table', 'book-event'];
+        // Scroll-spy: update active nav and URL hash based on scroll position (include blog so #blog is not replaced by #book-event)
+        var sectionIds = ['home', 'about', 'gallary', 'book-table', 'book-event', 'blog'];
         var scrollSpyTicking = false;
 
         function getSectionTop(el) {
@@ -2033,7 +2037,7 @@
         updateActiveFromScroll();
         window.addEventListener('scroll', onScrollSpy, { passive: true });
 
-        // On load, if URL has hash (e.g. #about), set active and ensure scroll position matches
+        // On load, if URL has hash (e.g. #about, #blog), set active and scroll to section
         var hash = window.location.hash.slice(1);
         if (hash && sectionIds.indexOf(hash) !== -1) {
             var linkByHash = document.querySelector('.navbar-nav .nav-link[data-section="' + hash + '"]');
@@ -2041,6 +2045,23 @@
                 document.querySelectorAll('.navbar-nav .nav-link[data-section]').forEach(function(l) { l.classList.remove('active'); });
                 linkByHash.classList.add('active');
             }
+        }
+        // When landing with #blog (e.g. from Cart "Browse Menu"), scroll to blog section
+        function scrollToBlogSection() {
+            var blogEl = document.getElementById('blog');
+            if (!blogEl) return;
+            var navbar = document.querySelector('.custom-navbar');
+            var navbarHeight = navbar ? navbar.offsetHeight : 0;
+            var top = blogEl.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop);
+            var destination = Math.max(top - navbarHeight - 70, 0);
+            window.scrollTo({ top: destination, behavior: 'smooth' });
+        }
+        if (hash === 'blog') {
+            setTimeout(scrollToBlogSection, 200);
+            window.addEventListener('load', function onLoad() {
+                window.removeEventListener('load', onLoad);
+                setTimeout(scrollToBlogSection, 100);
+            });
         }
     });
 </script>

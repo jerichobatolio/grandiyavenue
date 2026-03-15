@@ -35,5 +35,33 @@
    
     @include('home.footer')
 
+    {{-- Scroll to blog section when URL has #blog (e.g. from Cart "Browse Menu" / "Add More Items") --}}
+    <script>
+    (function() {
+        if (window.location.hash !== '#blog') return;
+        if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+        function scrollToBlog() {
+            var el = document.getElementById('blog');
+            if (!el) return;
+            var navbar = document.querySelector('.custom-navbar');
+            var offset = (navbar && navbar.offsetHeight) ? navbar.offsetHeight + 20 : 80;
+            var y = el.getBoundingClientRect().top + window.pageYOffset - offset;
+            window.scrollTo(0, Math.max(0, y));
+        }
+        scrollToBlog();
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                scrollToBlog();
+                setTimeout(scrollToBlog, 250);
+                setTimeout(scrollToBlog, 600);
+            });
+        }
+        window.addEventListener('load', function() {
+            setTimeout(scrollToBlog, 100);
+            setTimeout(scrollToBlog, 500);
+        });
+    })();
+    </script>
+
 </body>
 </html>

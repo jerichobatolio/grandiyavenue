@@ -161,7 +161,10 @@
                   <span id="return-refund-badge" class="reservation-badge" style="display: {{ $pendingReturnRefundsCount > 0 ? 'inline-block' : 'none' }};">{{ $pendingReturnRefundsCount }}</span>
                 </a></li>
 
-                <li><a href="{{route('admin.reviews')}}"> <i class="icon-star"></i>⭐ Customer Reviews</a></li>
+                <li><a href="{{route('admin.reviews')}}"> <i class="icon-star"></i>⭐ Customer Reviews
+                  @php $pendingReviewsCount = \App\Models\Review::where('status', 'pending')->count(); @endphp
+                  <span id="reviews-badge" class="reservation-badge" style="display: {{ $pendingReviewsCount > 0 ? 'inline-block' : 'none' }};">{{ $pendingReviewsCount }}</span>
+                </a></li>
 
                 <li><a href="{{route('admin.announcements')}}"> <i class="icon-bullhorn"></i>📢 Announcements</a></li>
 
@@ -370,6 +373,13 @@
         
         #sidebar li a {
           position: relative;
+          display: flex;
+          align-items: center;
+          flex-wrap: nowrap;
+        }
+        #sidebar li a .reservation-badge {
+          margin-left: auto;
+          flex-shrink: 0;
         }
       </style>
 

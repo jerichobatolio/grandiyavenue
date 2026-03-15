@@ -529,6 +529,49 @@ class HomeController extends Controller
         }
     }
 
+    /**
+     * Validate that the uploaded image appears to be a GCash receipt using OCR if available.
+     * Returns true if valid or if OCR cannot run (rely on client-side). Returns false only when OCR runs and no GCash text is found.
+     */
+    private function validateImageIsGCashReceipt($file): bool
+    {
+        if (! $file || ! $file->getRealPath()) {
+            return false;
+        }
+
+        $path = $file->getRealPath();
+        $keywords = ['gcash', 'successfully sent', 'successfully paid', 'ref. no', 'ref no', 'express send', 'send money', 'amount due', 'gcash scan'];
+
+        if (PHP_OS_FAMILY === 'Windows') {
+            $tesseract = 'tesseract';
+        } else {
+            $tesseract = trim((string) shell_exec('which tesseract 2>/dev/null') ?: '');
+            if ($tesseract === '') {
+                return true;
+            }
+        }
+
+        $out = null;
+        $exit = -1;
+        $outFile = sys_get_temp_dir().'/gcash_ocr_'.uniqid();
+        @exec(escapeshellarg($tesseract).' '.escapeshellarg($path).' '.escapeshellarg($outFile).' 2>/dev/null', $out, $exit);
+        $text = @file_get_contents($outFile.'.txt');
+        @unlink($outFile.'.txt');
+
+        if ($exit !== 0 || $text === false || $text === '') {
+            return true;
+        }
+
+        $lower = mb_strtolower(preg_replace('/\s+/', ' ', $text));
+        foreach ($keywords as $kw) {
+            if (str_contains($lower, $kw)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function uploadTablePaymentProof(Request $request)
     {
         if (!Auth::check()) {
@@ -567,8 +610,18 @@ class HomeController extends Controller
                 ], 404);
             }
 
+            $proofFile = $request->file('payment_proof');
+            $gcashCheck = $this->validateImageIsGCashReceipt($proofFile);
+            if ($gcashCheck === false) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only GCash receipts are accepted. The uploaded image does not appear to be a GCash transaction receipt.',
+                    'errors' => ['payment_proof' => ['Please upload a screenshot of your GCash transaction confirmation only.']],
+                ], 422);
+            }
+
             $amountPaid = (float) ($booking->down_payment_amount ?: $this->getTableBookingDownPaymentAmount());
-            $path = $request->file('payment_proof')->store('table_booking_payment_proofs', 'public');
+            $path = $proofFile->store('table_booking_payment_proofs', 'public');
 
             $booking->update([
                 'payment_option' => 'downpayment',
@@ -1217,6 +1270,7 @@ class HomeController extends Controller
             'customer_email' => 'nullable|email|max:255',
             'rating' => 'required|integer|min:1|max:5',
             'description' => 'nullable|string|max:1000',
+            'headcount' => 'nullable|integer|min:0',
         ]);
 
         $review = Review::create([
@@ -1224,17 +1278,18 @@ class HomeController extends Controller
             'customer_email' => $request->customer_email,
             'rating' => $request->rating,
             'description' => $request->description,
+            'headcount' => $request->filled('headcount') ? (int) $request->headcount : null,
             'status' => 'pending', // Reviews need admin approval
         ]);
 
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Thank you for your review! It will be published after admin approval.'
+                'message' => 'Thank you for your review!'
             ]);
         }
 
-        return redirect()->back()->with('message', 'Thank you for your review! It will be published after admin approval.');
+        return redirect()->back()->with('message', 'Thank you for your review!');
     }
 
     /**

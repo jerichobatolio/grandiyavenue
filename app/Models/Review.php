@@ -11,11 +11,13 @@ class Review extends Model
         'customer_email',
         'rating',
         'description',
+        'headcount',
         'status'
     ];
 
     protected $casts = [
         'rating' => 'integer',
+        'headcount' => 'integer',
     ];
 
     // Scope to get only approved reviews

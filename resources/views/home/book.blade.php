@@ -373,9 +373,11 @@
                     <form id="table-payment-proof-form" enctype="multipart/form-data">
                         <input type="hidden" id="table-payment-booking-id" name="booking_id">
                         <div class="mb-3">
-                            <label for="table-payment-proof" class="text-dark mb-1">Upload Proof of Payment</label>
+                            <label for="table-payment-proof" class="text-dark mb-1">Upload Proof of Payment (GCash Receipt Only)</label>
                             <input type="file" id="table-payment-proof" name="payment_proof" class="form-control custom-form-control" accept="image/png,image/jpeg,image/jpg,image/webp" required>
-                            <small class="table-payment-helper-text d-block mt-1">Accepted formats: JPG, PNG, WEBP. Maximum file size: 2MB.</small>
+                            <small class="table-payment-helper-text d-block mt-1">Only GCash receipts are accepted.</small>
+                            <div id="table-payment-gcash-error" class="alert alert-danger mt-2 py-2 small" style="display: none;" role="alert"></div>
+                            <div id="table-payment-gcash-valid" class="alert alert-success mt-2 py-2 small" style="display: none;" role="alert"><i class="fas fa-check-circle me-1"></i> Valid GCash receipt detected. You may proceed.</div>
                         </div>
                         <div id="table-payment-proof-preview" class="table-payment-proof-preview" style="display: none;"></div>
                         <div class="d-flex justify-content-end mt-3">
@@ -1210,6 +1212,7 @@ label, .form-label {
 }
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
             function addHoursToTime(timeStr, hoursToAdd) {
@@ -2262,6 +2265,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     const tablePaymentProofUploadUrl = @json(route('book.table.payment.proof'));
+    let tablePaymentProofValid = false;
     const fixedTableDownpayment = 1000;
     let pendingTableBooking = null;
 
@@ -2307,6 +2311,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (proofForm) {
             proofForm.reset();
         }
+        tablePaymentProofValid = false;
+        var gcashErr = document.getElementById('table-payment-gcash-error');
+        var gcashOk = document.getElementById('table-payment-gcash-valid');
+        if (gcashErr) { gcashErr.style.display = 'none'; gcashErr.textContent = ''; }
+        if (gcashOk) gcashOk.style.display = 'none';
 
         const preview = document.getElementById('table-payment-proof-preview');
         if (preview) {
@@ -2329,21 +2338,91 @@ document.addEventListener('DOMContentLoaded', function() {
         pendingTableBooking = null;
     }
 
+    // Keywords that indicate a GCash receipt (from Express Send, Payment, Send Money screens)
+    const GCASH_RECEIPT_KEYWORDS = ['gcash', 'successfully sent', 'successfully paid', 'ref. no', 'ref no', 'express send', 'send money', 'payment', 'amount due', 'gcash scan'];
+
+    function checkIsGCashReceiptText(ocrText) {
+        if (!ocrText || typeof ocrText !== 'string') return false;
+        const lower = ocrText.toLowerCase().replace(/\s+/g, ' ');
+        return GCASH_RECEIPT_KEYWORDS.some(function (kw) { return lower.includes(kw); });
+    }
+
     const tablePaymentProofInput = document.getElementById('table-payment-proof');
     if (tablePaymentProofInput) {
-        tablePaymentProofInput.addEventListener('change', function () {
+        tablePaymentProofInput.addEventListener('change', async function () {
             const preview = document.getElementById('table-payment-proof-preview');
+            const errEl = document.getElementById('table-payment-gcash-error');
+            const okEl = document.getElementById('table-payment-gcash-valid');
             const file = this.files && this.files[0];
-            if (!preview || !file) {
+
+            if (preview) preview.style.display = 'none';
+            if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+            if (okEl) okEl.style.display = 'none';
+            tablePaymentProofValid = false;
+
+            if (!file) return;
+            if (!preview) return;
+
+            var allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+            if (!allowedTypes.includes(file.type)) {
+                if (errEl) { errEl.textContent = 'Only JPG, PNG, or WEBP images are allowed. Please upload a GCash receipt.'; errEl.style.display = 'block'; }
+                this.value = '';
+                return;
+            }
+            if (file.size > 2 * 1024 * 1024) {
+                if (errEl) { errEl.textContent = 'File size must be less than 2MB. Please use a smaller image.'; errEl.style.display = 'block'; }
+                this.value = '';
                 return;
             }
 
-            const reader = new FileReader();
-            reader.onload = function (event) {
-                preview.innerHTML = `<img src="${event.target?.result || ''}" alt="Payment proof preview">`;
-                preview.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
+            if (errEl) { errEl.textContent = 'Verifying GCash receipt...'; errEl.classList.remove('alert-danger'); errEl.classList.add('alert-info'); errEl.style.display = 'block'; }
+
+            try {
+                var Tesseract = window.Tesseract;
+                if (!Tesseract || !Tesseract.recognize) {
+                    if (errEl) { errEl.textContent = 'Verification unavailable. Please ensure only a GCash receipt image is uploaded.'; errEl.classList.remove('alert-info'); errEl.classList.add('alert-danger'); }
+                    tablePaymentProofValid = true;
+                    var reader = new FileReader();
+                    reader.onload = function (ev) {
+                        preview.innerHTML = '<img src="' + (ev.target && ev.target.result) + '" alt="Payment proof preview">';
+                        preview.style.display = 'block';
+                        if (okEl) okEl.style.display = 'block';
+                        if (errEl) errEl.style.display = 'none';
+                    };
+                    reader.readAsDataURL(file);
+                    return;
+                }
+                var dataUrl = await new Promise(function (resolve) {
+                    var r = new FileReader();
+                    r.onload = function () { resolve(r.result); };
+                    r.readAsDataURL(file);
+                });
+                var result = await Tesseract.recognize(dataUrl, 'eng', { logger: function () {} });
+                var text = result && result.data && result.data.text ? result.data.text : '';
+
+                if (errEl) { errEl.classList.remove('alert-info'); errEl.classList.add('alert-danger'); }
+
+                if (checkIsGCashReceiptText(text)) {
+                    tablePaymentProofValid = true;
+                    preview.innerHTML = '<img src="' + dataUrl + '" alt="Payment proof preview">';
+                    preview.style.display = 'block';
+                    if (okEl) okEl.style.display = 'block';
+                    if (errEl) errEl.style.display = 'none';
+                } else {
+                    if (errEl) {
+                        errEl.textContent = 'This image does not appear to be a GCash receipt. Please upload a screenshot of your GCash transaction.';
+                        errEl.style.display = 'block';
+                    }
+                    this.value = '';
+                }
+            } catch (e) {
+                if (errEl) {
+                    errEl.textContent = 'Could not verify image. Please upload a clear screenshot of your GCash receipt only.';
+                    errEl.classList.remove('alert-info'); errEl.classList.add('alert-danger');
+                    errEl.style.display = 'block';
+                }
+                this.value = '';
+            }
         });
     }
 
@@ -2354,6 +2433,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (!pendingTableBooking || !pendingTableBooking.id) {
                 alert('Reservation not found. Please try booking again.');
+                return;
+            }
+
+            const proofInput = document.getElementById('table-payment-proof');
+            if (proofInput && proofInput.files && proofInput.files.length > 0 && !tablePaymentProofValid) {
+                alert('Only GCash receipts are accepted. Please select a screenshot of your GCash transaction.');
                 return;
             }
 

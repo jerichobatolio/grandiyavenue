@@ -1,5 +1,5 @@
 <!-- Food Categories -->
-<div id="blog" class="container-fluid bg-dark text-light py-5 text-center wow fadeIn">
+<div id="blog" class="container-fluid bg-dark text-light py-5 text-center wow fadeIn" style="scroll-margin-top: 100px;">
     <style>
         #blog .section-title {
             color: white !important;

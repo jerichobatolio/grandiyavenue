@@ -1815,6 +1815,7 @@ class AdminController extends Controller
         $request->validate([
             'description' => 'nullable|string|max:1000',
             'customer_name' => 'required|string|max:255',
+            'headcount' => 'nullable|integer|min:0',
         ]);
 
         $review = Review::find($id);
@@ -1827,6 +1828,9 @@ class AdminController extends Controller
 
         $review->description = $request->description;
         $review->customer_name = $request->customer_name;
+        $review->headcount = $request->has('headcount') && $request->headcount !== '' && $request->headcount !== null
+            ? (int) $request->headcount
+            : null;
         $review->save();
 
         if ($request->expectsJson() || $request->ajax()) {

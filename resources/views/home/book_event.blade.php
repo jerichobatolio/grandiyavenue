@@ -615,7 +615,7 @@
                             <i class="fas fa-exclamation-triangle"></i> <span id="gcash-error-text"></span>
                         </div>
                         <div id="gcash-success-message" class="alert alert-success mt-2" style="display: none;">
-                            <i class="fas fa-check-circle"></i> Image accepted. Admin will verify if this is a valid GCash receipt.
+                            <i class="fas fa-check-circle"></i> Valid GCash receipt detected. You may proceed.
                         </div>
                     </div>
                     <div class="mb-3">
@@ -670,9 +670,11 @@
 
 <!-- Bootstrap 5 JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
 <script>
 let currentBooking = null;
+let eventPaymentProofValid = false;
 let bookingCleanupPending = false;
 let navigatingToProofUpload = false;
 let bookingFinalized = false;
@@ -685,6 +687,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const eventDateField = document.getElementById('event_date');
     if (eventDateField) {
         eventDateField.min = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    }
+    // Contact number: 11 digits only
+    const contactNumberField = document.getElementById('contact_number');
+    if (contactNumberField) {
+        contactNumberField.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '').slice(0, 11);
+        });
+        contactNumberField.addEventListener('paste', function(e) {
+            e.preventDefault();
+            var pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 11);
+            this.value = pasted;
+        });
     }
     
     // Get all form elements
@@ -789,6 +803,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (proofUploadModalElement) {
         proofUploadModalElement.addEventListener('shown.bs.modal', function() {
             navigatingToProofUpload = false;
+            eventPaymentProofValid = false;
         });
 
         proofUploadModalElement.addEventListener('hidden.bs.modal', function() {
@@ -1142,100 +1157,89 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // GCash Receipt Validation
+    // GCash Receipt Validation (OCR like book table)
+    const GCASH_RECEIPT_KEYWORDS = ['gcash', 'successfully sent', 'successfully paid', 'ref. no', 'ref no', 'express send', 'send money', 'payment', 'amount due', 'gcash scan'];
+    function checkIsGCashReceiptText(ocrText) {
+        if (!ocrText || typeof ocrText !== 'string') return false;
+        const lower = ocrText.toLowerCase().replace(/\s+/g, ' ');
+        return GCASH_RECEIPT_KEYWORDS.some(function(kw) { return lower.includes(kw); });
+    }
+
     const paymentProofInput = document.getElementById('payment_proof');
     if (paymentProofInput) {
-        paymentProofInput.addEventListener('change', function(e) {
+        paymentProofInput.addEventListener('change', async function(e) {
             const file = e.target.files[0];
-            if (file) {
-                validateGCashReceipt(file);
+            const errorMessage = document.getElementById('gcash-validation-message');
+            const successMessage = document.getElementById('gcash-success-message');
+            const errorText = document.getElementById('gcash-error-text');
+            if (errorMessage) errorMessage.style.display = 'none';
+            if (successMessage) successMessage.style.display = 'none';
+            if (errorText) errorText.textContent = '';
+            eventPaymentProofValid = false;
+
+            if (!file) return;
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+            if (!allowedTypes.includes(file.type)) {
+                if (errorText) errorText.textContent = 'Only JPG, PNG, or WEBP images are allowed. Please upload a GCash receipt.';
+                if (errorMessage) errorMessage.style.display = 'block';
+                this.value = '';
+                return;
+            }
+            if (file.size > 2 * 1024 * 1024) {
+                if (errorText) errorText.textContent = 'File size must be less than 2MB. Please use a smaller image.';
+                if (errorMessage) errorMessage.style.display = 'block';
+                this.value = '';
+                return;
+            }
+            if (errorText) errorText.textContent = 'Verifying GCash receipt...';
+            if (errorMessage) { errorMessage.classList.remove('alert-danger'); errorMessage.classList.add('alert-info'); errorMessage.style.display = 'block'; }
+
+            try {
+                const Tesseract = window.Tesseract;
+                if (!Tesseract || !Tesseract.recognize) {
+                    if (errorText) errorText.textContent = 'Verification unavailable. Please ensure only a GCash receipt image is uploaded.';
+                    if (errorMessage) { errorMessage.classList.remove('alert-info'); errorMessage.classList.add('alert-danger'); }
+                    eventPaymentProofValid = true;
+                    if (successMessage) successMessage.style.display = 'block';
+                    if (errorMessage) errorMessage.style.display = 'none';
+                    return;
+                }
+                const dataUrl = await new Promise(function(resolve) {
+                    const r = new FileReader();
+                    r.onload = function() { resolve(r.result); };
+                    r.readAsDataURL(file);
+                });
+                const result = await Tesseract.recognize(dataUrl, 'eng', { logger: function() {} });
+                const text = (result && result.data && result.data.text) ? result.data.text : '';
+                if (errorMessage) { errorMessage.classList.remove('alert-info'); errorMessage.classList.add('alert-danger'); }
+                if (checkIsGCashReceiptText(text)) {
+                    eventPaymentProofValid = true;
+                    if (successMessage) successMessage.style.display = 'block';
+                    if (errorMessage) errorMessage.style.display = 'none';
+                } else {
+                    if (errorText) errorText.textContent = 'This image does not appear to be a GCash receipt. Please upload a screenshot of your GCash transaction.';
+                    if (errorMessage) errorMessage.style.display = 'block';
+                    this.value = '';
+                }
+            } catch (err) {
+                if (errorText) errorText.textContent = 'Could not verify image. Please upload a clear screenshot of your GCash receipt only.';
+                if (errorMessage) { errorMessage.classList.remove('alert-info'); errorMessage.classList.add('alert-danger'); errorMessage.style.display = 'block'; }
+                this.value = '';
             }
         });
-    }
-    
-    function validateGCashReceipt(file) {
-        const errorMessage = document.getElementById('gcash-validation-message');
-        const successMessage = document.getElementById('gcash-success-message');
-        const errorText = document.getElementById('gcash-error-text');
-        
-        // Hide previous messages
-        errorMessage.style.display = 'none';
-        successMessage.style.display = 'none';
-        
-        // Check file type
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-        if (!allowedTypes.includes(file.type)) {
-            errorText.textContent = 'Only JPG, PNG, and JPEG images are allowed. Please upload a GCash receipt in one of these formats.';
-            errorMessage.style.display = 'block';
-            return false;
-        }
-        
-        // Check file size (max 2MB)
-        if (file.size > 2 * 1024 * 1024) {
-            errorText.textContent = 'File size must be less than 2MB. Please compress your GCash receipt image.';
-            errorMessage.style.display = 'block';
-            return false;
-        }
-        
-        // Create image element to analyze
-        const img = new Image();
-        img.onload = function() {
-            // Create canvas to extract text (basic validation)
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            ctx.drawImage(img, 0, 0);
-            
-            // Basic validation - check if image has reasonable dimensions
-            if (img.width < 200 || img.height < 200) {
-                errorText.textContent = 'Image is too small. Please upload a clear, high-resolution GCash receipt (minimum 200x200 pixels).';
-                errorMessage.style.display = 'block';
-                return false;
-            }
-            
-            // Check if image is too large
-            if (img.width > 4000 || img.height > 4000) {
-                errorText.textContent = 'Image is too large. Please upload a smaller GCash receipt image (maximum 4000x4000 pixels).';
-                errorMessage.style.display = 'block';
-                return false;
-            }
-            
-            // For now, we'll do basic validation and let the backend handle detailed validation
-            // In a real implementation, you might use OCR libraries like Tesseract.js
-            successMessage.style.display = 'block';
-            return true;
-        };
-        
-        img.onerror = function() {
-            errorText.textContent = 'Invalid image file. Please upload a valid image.';
-            errorMessage.style.display = 'block';
-            return false;
-        };
-        
-        // Load the image
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
     }
 
     // Proof Upload Form
     if (proofUploadForm) {
         proofUploadForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            // Validate file before submission
             const fileInput = document.getElementById('payment_proof');
             if (fileInput.files.length === 0) {
                 alert('Please select a GCash receipt file to upload.');
                 return;
             }
-            
-            const file = fileInput.files[0];
-            if (!validateGCashReceipt(file)) {
-                alert('Please upload a valid GCash receipt before submitting.');
+            if (fileInput.files.length > 0 && !eventPaymentProofValid) {
+                alert('Only GCash receipts are accepted. Please select a screenshot of your GCash transaction.');
                 return;
             }
             
