@@ -676,12 +676,7 @@
 <script>
 window.openGCashApp = function(e) {
     if (e) e.preventDefault();
-    var ua = navigator.userAgent;
-    var isAndroid = /Android/i.test(ua);
-    var url = isAndroid
-        ? 'intent://#Intent;scheme=gcash;package=com.globe.gcash.android;end;'
-        : 'gcash://';
-    window.location.href = url;
+    window.location.href = 'gcash://';
     return false;
 };
 

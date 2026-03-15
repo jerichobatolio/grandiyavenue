@@ -762,7 +762,7 @@
                         <div class="form-group" id="payment-proof-group" style="display: none;">
                             <label for="payment_proof">Upload Payment Receipt (Required for GCash)</label>
                             <input type="file" name="payment_proof" id="payment_proof" accept="image/jpeg,image/png,image/jpg,image/webp">
-                            <small style="color: #ccc; display: block; margin-top: 5px;">Only GCash receipts are accepted. JPG, PNG, WEBP. Max 2MB.</small>
+                            <small style="color: #ccc; display: block; margin-top: 5px;">Only GCash receipts are accepted.</small>
                             <div id="cart-gcash-error" style="display: none; margin-top: 8px; padding: 10px; border-radius: 6px; background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; font-size: 0.9rem;"></div>
                             <div id="cart-gcash-valid" style="display: none; margin-top: 8px; padding: 10px; border-radius: 6px; background-color: #155724; color: #fff; font-size: 0.9rem;"><span style="margin-right: 6px;">✓</span> Valid GCash receipt detected. You may proceed.</div>
                             @error('payment_proof')
@@ -891,12 +891,7 @@
     <script>
         window.openGCashApp = function(e) {
             if (e) e.preventDefault();
-            var ua = navigator.userAgent;
-            var isAndroid = /Android/i.test(ua);
-            var url = isAndroid
-                ? 'intent://#Intent;scheme=gcash;package=com.globe.gcash.android;end;'
-                : 'gcash://';
-            window.location.href = url;
+            window.location.href = 'gcash://';
             return false;
         };
 
