@@ -9,14 +9,7 @@
 {{-- Body --}}
 {!! $slot !!}
 
-{{-- Subcopy --}}
-@isset($subcopy)
-<x-slot:subcopy>
-<x-mail::subcopy>
-{!! $subcopy !!}
-</x-mail::subcopy>
-</x-slot:subcopy>
-@endisset
+{{-- Subcopy removed (no "copy URL" fallback text) --}}
 
 {{-- Footer --}}
 <x-slot:footer>

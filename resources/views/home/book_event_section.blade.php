@@ -728,7 +728,7 @@
                     @endif
                 </div>
                 <p class="text-muted mb-2">Scan the QR code to pay, or</p>
-                <a href="gcash://" class="btn btn-outline-primary btn-sm">Open GCash</a>
+                <a href="#" class="btn btn-outline-primary btn-sm" onclick="return openGCashApp(event)">Open GCash</a>
                 <div class="alert alert-warning" style="background-color: #4d3a00; border-color: #ffc107; color: white;">
                     <strong>Important:</strong> Please keep your payment receipt as proof of transaction
                 </div>

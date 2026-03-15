@@ -2064,4 +2064,22 @@
             });
         }
     });
+
+    // Open GCash app: try deep link first, then fallback to app store if still on page
+    window.openGCashApp = function(e) {
+        if (e) e.preventDefault();
+        window.location.href = 'gcash://';
+        setTimeout(function() {
+            if (!document.hidden) {
+                var ua = navigator.userAgent;
+                var url = /Android/i.test(ua)
+                    ? 'https://play.google.com/store/apps/details?id=com.globe.gcash.android'
+                    : /iPhone|iPad|iPod/i.test(ua)
+                        ? 'https://apps.apple.com/ph/app/gcash/id515739349'
+                        : 'https://www.gcash.com';
+                window.location.href = url;
+            }
+        }, 1800);
+        return false;
+    };
 </script>

@@ -363,7 +363,7 @@
                         @if(isset($adminQrCode) && $adminQrCode && $adminQrCode->is_active)
                             <img id="table-payment-qr-image" src="{{ $adminQrCode->image_url }}" alt="GCash QR Code" class="img-fluid">
                             <p class="small table-payment-helper-text mt-2 mb-2">Scan this QR to pay, then upload your proof below.</p>
-                            <a href="gcash://" id="table-payment-open-gcash" class="btn btn-outline-primary btn-sm">Open GCash</a>
+                            <a href="#" id="table-payment-open-gcash" class="btn btn-outline-primary btn-sm" onclick="return openGCashApp(event)">Open GCash</a>
                         @else
                             <div class="alert alert-warning mb-0">
                                 No active payment QR code is available right now. You can still continue once the admin QR has been set.

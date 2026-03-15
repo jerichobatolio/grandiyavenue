@@ -872,7 +872,7 @@
                 </div>
                 
                 <p style="color: #ccc; margin-bottom: 10px;">Scan the QR code to pay, or</p>
-                <a href="gcash://" class="btn btn-outline-primary btn-sm mb-3">Open GCash</a>
+                <a href="#" class="btn btn-outline-primary btn-sm mb-3" onclick="return openGCashApp(event)">Open GCash</a>
                 
                 <div style="background-color: #4d3a00; color: white; padding: 15px; border-radius: 8px; margin: 20px 0;">
                     <strong>Important:</strong> Please keep your GCash transaction receipt as proof of payment. 
@@ -890,6 +890,19 @@
 
 
     <script>
+        window.openGCashApp = function(e) {
+            if (e) e.preventDefault();
+            window.location.href = 'gcash://';
+            setTimeout(function() {
+                if (!document.hidden) {
+                    var ua = navigator.userAgent;
+                    var url = /Android/i.test(ua) ? 'https://play.google.com/store/apps/details?id=com.globe.gcash.android' : /iPhone|iPad|iPod/i.test(ua) ? 'https://apps.apple.com/ph/app/gcash/id515739349' : 'https://www.gcash.com';
+                    window.location.href = url;
+                }
+            }, 1800);
+            return false;
+        };
+
         const hasCartItems = @json($hasCartItems);
         let cartPaymentProofValid = false;
 
