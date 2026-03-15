@@ -362,11 +362,8 @@
                     <div class="table-payment-qr-wrap text-center">
                         @if(isset($adminQrCode) && $adminQrCode && $adminQrCode->is_active)
                             <img id="table-payment-qr-image" src="{{ $adminQrCode->image_url }}" alt="GCash QR Code" class="img-fluid">
-                            <p class="small table-payment-helper-text mt-2 mb-1">Scan this QR to pay, then upload your proof below.</p>
-                            <ul class="small table-payment-helper-text mb-0" style="list-style: none; padding-left: 0;">
-                                <li><strong>Laptop:</strong> Use your phone—scan with camera or GCash app.</li>
-                                <li><strong>Mobile:</strong> Scan with camera or open GCash app; it may open automatically.</li>
-                            </ul>
+                            <p class="small table-payment-helper-text mt-2 mb-2">Scan this QR to pay, then upload your proof below.</p>
+                            <a href="gcash://" id="table-payment-open-gcash" class="btn btn-outline-primary btn-sm">Open GCash</a>
                         @else
                             <div class="alert alert-warning mb-0">
                                 No active payment QR code is available right now. You can still continue once the admin QR has been set.
@@ -2494,7 +2491,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     window.addEventListener('hashchange', function () {
-        if ((window.location.hash || '').toLowerCase() === '#home') {
+         if ((window.location.hash || '').toLowerCase() === '#home') {
             resetTableBookingModalState();
         }
     });

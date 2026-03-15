@@ -871,11 +871,8 @@
                     @endif
                 </div>
                 
-                <p style="color: #ccc; margin-bottom: 8px;">Scan the QR code to pay via GCash:</p>
-                <ul style="color: #aaa; font-size: 0.9rem; margin-bottom: 20px; text-align: left; list-style: none; padding-left: 0;">
-                    <li><strong>On laptop:</strong> Use your phone—scan this QR with your camera or GCash app.</li>
-                    <li><strong>On mobile:</strong> Scan with your camera or open the GCash app; it may open GCash automatically.</li>
-                </ul>
+                <p style="color: #ccc; margin-bottom: 10px;">Scan the QR code to pay, or</p>
+                <a href="gcash://" class="btn btn-outline-primary btn-sm mb-3">Open GCash</a>
                 
                 <div style="background-color: #4d3a00; color: white; padding: 15px; border-radius: 8px; margin: 20px 0;">
                     <strong>Important:</strong> Please keep your GCash transaction receipt as proof of payment. 
