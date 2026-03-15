@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
@@ -48,5 +50,20 @@ class AppServiceProvider extends ServiceProvider
                 URL::forceRootUrl(request()->getSchemeAndHttpHost());
             }
         }
+
+        // Password reset email: Grandiya branding (subject + from name via .env MAIL_FROM_NAME / APP_NAME)
+        ResetPassword::toMailUsing(function ($notifiable, $token) {
+            $url = url(route('password.reset', [
+                'token' => $token,
+                'email' => $notifiable->getEmailForPasswordReset(),
+            ], false));
+
+            return (new MailMessage)
+                ->subject(__('Reset Password Notification') . ' - ' . config('app.name'))
+                ->line(__('You are receiving this email because we received a password reset request for your account.'))
+                ->action(__('Reset Password'), $url)
+                ->line(__('This password reset link will expire in :count minutes.', ['count' => config('auth.passwords.'.config('auth.defaults.passwords').'.expire')]))
+                ->line(__('If you did not request a password reset, no further action is required.'));
+        });
     }
 }
