@@ -596,7 +596,7 @@
                                                     <i class="fas fa-chevron-right" aria-hidden="true"></i>
                                                 </div>
                                                 @if($firstOrder->image)
-                                                    <img width="50" height="50" src="{{ asset('food_img/'.$firstOrder->image) }}" alt="Order" class="food-image" style="object-fit: cover; border-radius: 6px;">
+                                                    <img width="50" height="50" src="{{ asset('food_img/'.$firstOrder->image) }}" alt="Order" class="food-image" style="object-fit: cover; border-radius: 6px;" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2250%22 height=%2250%22 viewBox=%220 0 50 50%22%3E%3Crect fill=%22%23e5e7eb%22 width=%2250%22 height=%2250%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%229ca3af%22 font-size=%2220%22 font-family=%22sans-serif%22%3E%F0%9F%8D%94%3C/text%3E%3C/svg%3E';">
                                                 @else
                                                     <div style="width: 50px; height: 50px; background: #e5e7eb; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
                                                         <i class="fas fa-shopping-cart" style="color: #9ca3af;"></i>
@@ -691,7 +691,11 @@
                                                 @foreach($customerOrders as $order)
                                                     <div class="group-item-card">
                                                         <div>
-                                                            <img width="60" height="60" src="{{ asset('food_img/'.$order->image) }}" alt="{{ $order->title }}" class="food-image" style="object-fit: cover; border-radius: 8px;">
+                                                            @if(!empty($order->image))
+                                                                <img width="60" height="60" src="{{ asset('food_img/'.$order->image) }}" alt="{{ $order->title }}" class="food-image" style="object-fit: cover; border-radius: 8px;" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22%3E%3Crect fill=%22%23e5e7eb%22 width=%2260%22 height=%2260%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%229ca3af%22 font-size=%2224%22%3E%F0%9F%8D%94%3C/text%3E%3C/svg%3E';">
+                                                            @else
+                                                                <div style="width: 60px; height: 60px; background: #e5e7eb; border-radius: 8px; display: flex; align-items: center; justify-content: center;"><i class="fas fa-utensils" style="color: #9ca3af;"></i></div>
+                                                            @endif
                                                         </div>
                                                         <div class="group-item-card-main">
                                                             <div class="group-item-title">{{ $order->title }}</div>
@@ -717,7 +721,11 @@
                                     @foreach($customerOrders as $order)
                                         <tr>
                                             <td>
-                                                <img width="70" height="70" src="{{ asset('food_img/'.$order->image) }}" alt="{{ $order->title }}" class="food-image" style="object-fit: cover;">
+                                                @if(!empty($order->image))
+                                                    <img width="70" height="70" src="{{ asset('food_img/'.$order->image) }}" alt="{{ $order->title }}" class="food-image" style="object-fit: cover;" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2270%22 height=%2270%22 viewBox=%220 0 70 70%22%3E%3Crect fill=%22%23e5e7eb%22 width=%2270%22 height=%2270%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%229ca3af%22 font-size=%2228%22%3E%F0%9F%8D%94%3C/text%3E%3C/svg%3E';">
+                                                @else
+                                                    <div style="width: 70px; height: 70px; background: #e5e7eb; border-radius: 8px; display: flex; align-items: center; justify-content: center;"><i class="fas fa-utensils" style="color: #9ca3af; font-size: 1.5rem;"></i></div>
+                                                @endif
                                             </td>
                                             <td>
                                                 <div style="font-weight: 600; color: #111827;">{{ $order->name }}</div>
@@ -815,7 +823,11 @@
                 <h2 style="color: gold; margin-bottom: 20px; font-size: 24px;">Payment Proof Receipt</h2>
                 <p style="color: #ccc; margin-bottom: 25px; font-size: 14px;">Customer's uploaded payment proof</p>
             </div>
-            <img id="proof-image" class="proof-image" src="" alt="Payment Proof">
+            <img id="proof-image" class="proof-image" src="" alt="Payment Proof" onerror="this.style.display='none'; document.getElementById('proof-fallback').style.display='block';">
+            <div id="proof-fallback" style="display: none; text-align: center; padding: 40px 20px; background: #1f2937; border-radius: 12px; margin: 0 auto 20px; max-width: 400px;">
+                <i class="fas fa-image" style="font-size: 48px; color: #6b7280; margin-bottom: 12px;"></i>
+                <p style="color: #9ca3af; margin: 0; font-size: 15px;">Proof image is not available (e.g. file not on server).</p>
+            </div>
             <div style="text-align: center; margin-top: 25px;">
                 <button onclick="closeProofModal()" class="view-proof-btn" style="min-width: 120px;">
                     <i class="fas fa-times"></i> Close
@@ -826,7 +838,11 @@
 
     <script>
         function viewPaymentProof(imageSrc) {
-            document.getElementById('proof-image').src = imageSrc;
+            var img = document.getElementById('proof-image');
+            var fallback = document.getElementById('proof-fallback');
+            img.style.display = 'block';
+            fallback.style.display = 'none';
+            img.src = imageSrc;
             document.getElementById('payment-proof-modal').classList.add('show');
             document.body.style.overflow = 'hidden';
         }
