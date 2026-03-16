@@ -63,7 +63,11 @@ Route::get('/admin/payment-proof/{path}', function (string $path) {
         abort(404);
     }
 
-    return Storage::disk('public')->response($path);
+    $url = Storage::disk('public')->url($path);
+
+    return view('admin.payment_proof_view', [
+        'imageUrl' => $url,
+    ]);
 })->where('path', '.*')->name('admin.payment_proof');
 
 // Frontend/Home routes - moved to /home
