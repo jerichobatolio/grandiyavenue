@@ -120,10 +120,13 @@
          .table-header {
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           color: white;
-          padding: 20px;
-          text-align: center;
+          padding: 16px 20px;
           font-size: 1.2em;
           font-weight: bold;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
          }
 
          table {
@@ -244,6 +247,16 @@
 
          .btn-delete:hover {
           background-color: #5a6268;
+          transform: translateY(-1px);
+         }
+
+         .btn-delete-permanent {
+          background: linear-gradient(135deg, #b91c1c, #991b1b);
+          color: white;
+         }
+
+         .btn-delete-permanent:hover {
+          background: linear-gradient(135deg, #dc2626, #b91c1c);
           transform: translateY(-1px);
          }
 
@@ -657,11 +670,34 @@
             <!-- All Reservations Section -->
             <div id="all-section" class="reservations-section active">
               <div class="reservations-table">
-                <div class="table-header">📊 All Table Reservations</div>
+                  <div class="table-header">
+                  <span>📊 All Table Reservations</span>
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <button type="button"
+                            class="btn-delete-permanent"
+                            id="toggleReservationDeleteMode"
+                            onclick="toggleReservationDeleteMode()">
+                      🗑 Select to delete
+                    </button>
+                    <span class="delete-mode-actions-res" style="display:none; align-items:center; gap:8px;">
+                      <button type="button"
+                              class="btn-delete"
+                              onclick="bulkDeleteReservations()">
+                        🗑 Delete Selected
+                      </button>
+                      <button type="button"
+                              class="btn-cancel"
+                              onclick="toggleReservationDeleteMode()">
+                        Cancel
+                      </button>
+                    </span>
+                  </div>
+                </div>
                 <div class="table-wrapper">
          <table>
                   <thead>
                     <tr>
+                      <th class="th-checkbox" style="display:none;"><input type="checkbox" id="select-all-reservations"></th>
                       <th>👤 Name</th>
                       <th>👤 Last Name</th>
                       <th>🪑 Table</th>
@@ -679,7 +715,8 @@
                   </thead>
                   <tbody>
                     @forelse($book as $reservation)
-                    <tr>
+                    <tr data-reservation-id="{{ $reservation->id }}">
+                      <td class="td-checkbox" style="display:none;"><input type="checkbox" class="reservation-select" value="{{ $reservation->id }}"></td>
                       <td>{{ $reservation->name ?? 'N/A' }}</td>
                       <td>{{ (!empty($reservation->last_name) && $reservation->last_name !== 'N/A') ? $reservation->last_name : '' }}</td>
                       <td>
@@ -762,9 +799,6 @@
                           <button class="btn-delete" onclick="archiveReservation({{ $reservation->id }})" title="Archive Reservation">
                             📦 Archive
                           </button>
-                          <button class="btn-delete" onclick="forceDeleteReservation({{ $reservation->id }})" title="Delete Reservation (Permanent)">
-                            🗑 Delete
-                          </button>
                         </div>
                       </td>
                     </tr>
@@ -789,6 +823,7 @@
                 <table>
                   <thead>
                     <tr>
+                      <th></th>
                       <th>👤 Name</th>
                       <th>👤 Last Name</th>
                       <th>🪑 Table</th>
@@ -810,7 +845,8 @@
                       });
                     @endphp
                     @forelse($pendingReservations as $reservation)
-                    <tr>
+                    <tr data-reservation-id="{{ $reservation->id }}">
+                      <td><input type="checkbox" class="reservation-select" value="{{ $reservation->id }}"></td>
                       <td>{{ $reservation->name ?? 'N/A' }}</td>
                       <td>{{ (!empty($reservation->last_name) && $reservation->last_name !== 'N/A') ? $reservation->last_name : '' }}</td>
                       <td>
@@ -1753,6 +1789,52 @@
            showNotification('Error deleting reservation: ' + error.message, 'error');
        });
    }
+
+  function bulkDeleteReservations() {
+      const checkboxes = document.querySelectorAll('.reservation-select:checked');
+      if (!checkboxes.length) {
+          alert('Please select at least one reservation.');
+          return;
+      }
+      if (!confirm('Permanently delete selected reservations? This cannot be undone.')) {
+          return;
+      }
+      checkboxes.forEach(cb => {
+          const id = cb.value;
+          forceDeleteReservation(id);
+      });
+  }
+
+  function toggleReservationDeleteMode() {
+      const on = document.body.classList.toggle('reservations-delete-mode');
+      const ths = document.querySelectorAll('th.th-checkbox');
+      const tds = document.querySelectorAll('td.td-checkbox');
+      const toggleBtn = document.getElementById('toggleReservationDeleteMode');
+      const actions = document.querySelector('.delete-mode-actions-res');
+
+      ths.forEach(el => el.style.display = on ? 'table-cell' : 'none');
+      tds.forEach(el => el.style.display = on ? 'table-cell' : 'none');
+
+      if (toggleBtn) toggleBtn.style.display = on ? 'none' : 'inline-flex';
+      if (actions) actions.style.display = on ? 'inline-flex' : 'none';
+
+      if (!on) {
+          document.querySelectorAll('.reservation-select').forEach(cb => cb.checked = false);
+          const selectAllRes = document.getElementById('select-all-reservations');
+          if (selectAllRes) selectAllRes.checked = false;
+      }
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+      const selectAllRes = document.getElementById('select-all-reservations');
+      if (selectAllRes) {
+          selectAllRes.addEventListener('change', function () {
+              document.querySelectorAll('.reservation-select').forEach(cb => {
+                  cb.checked = selectAllRes.checked;
+              });
+          });
+      }
+  });
 
    function deleteEventBooking(eventReservationId) {
        const reservation = findAdminReservationById(eventReservationId);

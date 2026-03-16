@@ -60,6 +60,18 @@
             border-radius: 10px;
             overflow-x: auto;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 10px 12px 0 12px;
+        }
+
+        .orders-container table {
+            min-width: 1100px;
+        }
+
+        .proof-cell {
+            min-width: 120px;
+            max-width: 180px;
+            white-space: normal;
+            word-break: break-word;
         }
 
         table {
@@ -555,9 +567,35 @@
                     </div>
                 @else
                     <div class="orders-container">
+                        <div style="display:flex; justify-content: flex-end; align-items:center; gap:8px; margin-bottom:10px;">
+                            <button type="button"
+                                    class="action-btn btn-delete-permanent"
+                                    id="toggleOrderDeleteMode"
+                                    onclick="toggleOrderDeleteMode()"
+                                    style="padding:6px 12px;">
+                                🗑 Select to delete
+                            </button>
+                            <span class="delete-mode-actions-orders" style="display:none; align-items:center; gap:8px;">
+                                <button type="button"
+                                        class="action-btn btn-delete-permanent"
+                                        onclick="deleteSelectedOrders()"
+                                        style="padding:6px 12px;">
+                                    🗑 Delete Selected
+                                </button>
+                                <button type="button"
+                                        class="action-btn btn-cancel"
+                                        onclick="toggleOrderDeleteMode()"
+                                        style="padding:6px 12px;">
+                                    Cancel
+                                </button>
+                            </span>
+                        </div>
                         <table>
                             <thead>
                                 <tr>
+                                    <th class="th-checkbox" style="display:none;">
+                                        <input type="checkbox" id="select-all-orders">
+                                    </th>
                                     <th>Image</th>
                                     <th>Customer</th>
                                     <th>Contact</th>
@@ -589,7 +627,10 @@
                                     
                                     @if($isMultipleOrders)
                                     <!-- Summary Row (for multiple orders) -->
-                                    <tr class="summary-row" onclick="toggleOrderDetails('{{ $groupKey }}')" data-group="{{ $groupKey }}">
+                                    <tr class="summary-row" onclick="toggleOrderDetails('{{ $groupKey }}')" data-group="{{ $groupKey }}" data-order-ids="{{ implode(',', $orderIds) }}">
+                                        <td class="td-checkbox" style="display:none;">
+                                            <input type="checkbox" class="order-select" value="{{ implode(',', $orderIds) }}" onclick="event.stopPropagation();">
+                                        </td>
                                         <td>
                                             <div class="summary-info">
                                                 <div class="expand-toggle">
@@ -634,7 +675,7 @@
                                                 <span class="no-proof">Not specified</span>
                                             @endif
                                         </td>
-                                        <td>
+                                        <td class="proof-cell">
                                             @if($hasProof && $proofOrder)
                                                 <a href="javascript:void(0);"
                                                    onclick="event.stopPropagation(); viewPaymentProof('{{ route('orders.payment_proof', $proofOrder->id) }}');"
@@ -719,7 +760,10 @@
                                     @else
                                     <!-- Single Order Row (show all actions) -->
                                     @foreach($customerOrders as $order)
-                                        <tr>
+                                        <tr data-order-id="{{ $order->id }}">
+                                            <td class="td-checkbox" style="display:none;">
+                                                <input type="checkbox" class="order-select" value="{{ $order->id }}">
+                                            </td>
                                             <td>
                                                 @if(!empty($order->image))
                                                     <img width="70" height="70" src="{{ asset('food_img/'.$order->image) }}" alt="{{ $order->title }}" class="food-image" style="object-fit: cover;" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2270%22 height=%2270%22 viewBox=%220 0 70 70%22%3E%3Crect fill=%22%23e5e7eb%22 width=%2270%22 height=%2270%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%229ca3af%22 font-size=%2228%22%3E%F0%9F%8D%94%3C/text%3E%3C/svg%3E';">
@@ -753,7 +797,7 @@
                                                     <span class="no-proof">Not specified</span>
                                                 @endif
                                             </td>
-                                            <td>
+                                            <td class="proof-cell">
                                                 @if($order->payment_proof_path)
                                                     <a href="javascript:void(0);"
                                                        onclick="viewPaymentProof('{{ route('orders.payment_proof', $order->id) }}');"
@@ -795,9 +839,6 @@
                                                     </a>
                                                     <a onclick="return confirm('Are you sure you want to archive this order?')" class="action-btn btn-archive" href="{{ route('order.delete', $order->id) }}">
                                                         <i class="fas fa-archive"></i> Archive
-                                                    </a>
-                                                    <a onclick="return confirm('Permanently delete this order? This cannot be undone.')" class="action-btn btn-delete-permanent" href="{{ route('order.force_delete', $order->id) }}">
-                                                        <i class="fas fa-trash-alt"></i> Delete
                                                     </a>
                                                 </div>
                                             </td>
@@ -919,7 +960,7 @@
             return false; // Prevent default link behavior
         }
 
-        // Permanently delete all orders in a group
+        // Permanently delete all orders in a group (existing helper)
         function deleteAllOrders(orderIds, confirmMessage) {
             if (!confirm(confirmMessage)) {
                 return false;
@@ -928,6 +969,64 @@
             window.location.href = '{{ url("orders/force-delete-group") }}?ids=' + encodeURIComponent(ids);
             return false;
         }
+
+        function toggleOrderDeleteMode() {
+            const on = document.body.classList.toggle('orders-delete-mode');
+            const ths = document.querySelectorAll('th.th-checkbox');
+            const tds = document.querySelectorAll('td.td-checkbox');
+            const toggleBtn = document.getElementById('toggleOrderDeleteMode');
+            const actions = document.querySelector('.delete-mode-actions-orders');
+
+            ths.forEach(el => el.style.display = on ? 'table-cell' : 'none');
+            tds.forEach(el => el.style.display = on ? 'table-cell' : 'none');
+
+            if (toggleBtn) toggleBtn.style.display = on ? 'none' : 'inline-flex';
+            if (actions) actions.style.display = on ? 'inline-flex' : 'none';
+
+            if (!on) {
+                document.querySelectorAll('.order-select').forEach(cb => cb.checked = false);
+                const selectAll = document.getElementById('select-all-orders');
+                if (selectAll) selectAll.checked = false;
+            }
+        }
+
+        // Bulk delete selected orders (summary rows + single rows)
+        function deleteSelectedOrders() {
+            const checkboxes = document.querySelectorAll('.order-select:checked');
+            if (!checkboxes.length) {
+                alert('Please select at least one order.');
+                return;
+            }
+            if (!confirm('Permanently delete selected orders? This cannot be undone.')) {
+                return;
+            }
+            const allIds = [];
+            checkboxes.forEach(cb => {
+                const parts = String(cb.value).split(',');
+                parts.forEach(id => {
+                    const trimmed = id.trim();
+                    if (trimmed && !allIds.includes(trimmed)) {
+                        allIds.push(trimmed);
+                    }
+                });
+            });
+            if (!allIds.length) {
+                alert('No valid order IDs selected.');
+                return;
+            }
+            window.location.href = '{{ url("orders/force-delete-group") }}?ids=' + encodeURIComponent(allIds.join(','));
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const selectAll = document.getElementById('select-all-orders');
+            if (selectAll) {
+                selectAll.addEventListener('change', function () {
+                    document.querySelectorAll('.order-select').forEach(cb => {
+                        cb.checked = selectAll.checked;
+                    });
+                });
+            }
+        });
 
         // Archive all orders in a group
         function archiveAllOrders(orderIds, confirmMessage) {

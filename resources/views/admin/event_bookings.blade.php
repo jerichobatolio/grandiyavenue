@@ -127,6 +127,12 @@
             background: white;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .orders-container table {
+            min-width: 1100px;
         }
 
         table {
@@ -144,10 +150,13 @@
             font-weight: 600;
             font-size: 12px;
             text-align: left;
-            padding: 10px 6px;
-            white-space: nowrap;
+            padding: 10px 8px;
             color: white;
             border-bottom: 2px solid #5a6fd8;
+        }
+
+        th:not(.col-package-inclusion) {
+            white-space: nowrap;
         }
 
         tbody tr {
@@ -206,6 +215,13 @@
         }
 
         /* Make Package Inclusion column wrap nicely so full text is visible */
+        th.col-package-inclusion {
+            white-space: normal;
+            min-width: 120px;
+            max-width: 220px;
+            line-height: 1.3;
+        }
+
         .col-package-inclusion {
             white-space: normal;
             max-width: 220px;
@@ -213,8 +229,17 @@
 
         .package-inclusion-cell {
             max-width: 220px;
+            min-width: 100px;
             white-space: normal;
             word-break: break-word;
+        }
+
+        /* Proof column: avoid overflow with GCash ref */
+        .proof-cell {
+            min-width: 100px;
+            max-width: 160px;
+            word-break: break-word;
+            white-space: normal;
         }
 
         .action-buttons {
@@ -399,13 +424,19 @@
                 grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             }
 
-            .search-filter {
-                flex-direction: column;
-            }
+        .search-filter {
+            flex-direction: column;
+        }
 
-            .search-input, .filter-select {
-                min-width: 100%;
-            }
+        .search-input, .filter-select {
+            min-width: 100%;
+        }
+
+        .delete-mode-actions {
+            display: inline-flex;
+            gap: 8px;
+            align-items: center;
+        }
             
             th, td {
                 padding: 4px 2px;
@@ -505,6 +536,13 @@
                             <option value="week">This Week</option>
                             <option value="month">This Month</option>
                         </select>
+                        <button type="button" class="btn-action btn-delete-permanent delete-mode-toggle" id="toggleDeleteMode" onclick="toggleEventBookingDeleteMode()">
+                            🗑 Select to delete
+                        </button>
+                        <span class="delete-mode-actions" style="display:none;">
+                            <button type="button" class="btn-action btn-delete-permanent" onclick="deleteSelectedBookings()">🗑 Delete Selected</button>
+                            <button type="button" class="btn-action btn-archive" onclick="toggleEventBookingDeleteMode()">Cancel</button>
+                        </span>
                     </div>
 
                     <!-- All Bookings Section -->
@@ -512,7 +550,8 @@
                         <div class="orders-container">
                             <table>
                                 <thead>
-                                    <tr>
+                                <tr>
+                                        <th class="th-checkbox" style="display:none;"><input type="checkbox" id="select-all-bookings"></th>
                                         <th>👤 Customer</th>
                                         <th>📧 Email</th>
                                         <th>📱 Contact</th>
@@ -531,7 +570,10 @@
                                 </thead>
                                 <tbody>
                                     @forelse($eventBookings as $booking)
-                                    <tr>
+                                    <tr data-booking-id="{{ $booking->id }}">
+                                        <td class="td-checkbox" style="display:none;">
+                                            <input type="checkbox" class="booking-select" value="{{ $booking->id }}">
+                                        </td>
                                         <td class="package-inclusion-cell">
                                             <strong>{{ $booking->full_name }}</strong>
                                         </td>
@@ -644,7 +686,7 @@
                                                 {{ $booking->status }}
                                             </span>
                                         </td>
-                                        <td>
+                                        <td class="proof-cell">
                                             @if($booking->payment_proof_path)
                                                 <button class="payment-proof-btn"
                                                         onclick="viewPaymentProof('{{ route('event_bookings.payment_proof', $booking->id) }}', '{{ $booking->full_name }}')">
@@ -681,17 +723,12 @@
                                                    onclick="return confirm('Are you sure you want to archive this event booking?')">
                                                     <i class="fas fa-archive"></i> Archive
                                                 </a>
-                                                <a href="{{ route('admin.event_booking.force_delete', $booking->id) }}" 
-                                                   class="btn-action btn-delete-permanent"
-                                                   onclick="return confirm('Permanently delete this event booking? This cannot be undone.')">
-                                                    <i class="fas fa-trash-alt"></i> Delete
-                                                </a>
                                             </div>
                                         </td>
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="14" class="no-data">
+                                        <td colspan="15" class="no-data">
                                             <i class="fas fa-calendar-times"></i>
                                             <h4>No Event Bookings Found</h4>
                                             <p>There are no event bookings to display at the moment.</p>
@@ -710,6 +747,7 @@
                             <table>
                                 <thead>
                                     <tr>
+                                        <th class="th-checkbox" style="display:none;"></th>
                                         <th>👤 Customer</th>
                                         <th>📧 Email</th>
                                         <th>📱 Contact</th>
@@ -731,7 +769,10 @@
                                         $filteredBookings = $eventBookings->where('status', ucfirst($status));
                                     @endphp
                                     @forelse($filteredBookings as $booking)
-                                    <tr>
+                                    <tr data-booking-id="{{ $booking->id }}">
+                                        <td class="td-checkbox" style="display:none;">
+                                            <input type="checkbox" class="booking-select" value="{{ $booking->id }}">
+                                        </td>
                                         <td>
                                             <strong>{{ $booking->full_name }}</strong>
                                         </td>
@@ -844,7 +885,7 @@
                                                 {{ $booking->status }}
                                             </span>
                                         </td>
-                                        <td>
+                                        <td class="proof-cell">
                                             @if($booking->payment_proof_path)
                                                 <button class="payment-proof-btn"
                                                         onclick="viewPaymentProof('{{ route('event_bookings.payment_proof', $booking->id) }}', '{{ $booking->full_name }}')">
@@ -881,17 +922,12 @@
                                                    onclick="return confirm('Are you sure you want to archive this event booking?')">
                                                     <i class="fas fa-archive"></i> Archive
                                                 </a>
-                                                <a href="{{ route('admin.event_booking.force_delete', $booking->id) }}" 
-                                                   class="btn-action btn-delete-permanent"
-                                                   onclick="return confirm('Permanently delete this event booking? This cannot be undone.')">
-                                                    <i class="fas fa-trash-alt"></i> Delete
-                                                </a>
                                             </div>
                                         </td>
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="14" class="no-data">
+                                        <td colspan="15" class="no-data">
                                             <i class="fas fa-calendar-times"></i>
                                             <h4>No {{ ucfirst($status) }} Bookings</h4>
                                             <p>There are no {{ $status }} event bookings at the moment.</p>
@@ -1005,6 +1041,72 @@
 
     @include('admin.js')
     <script>
+        function toggleEventBookingDeleteMode() {
+            const on = document.body.classList.toggle('event-booking-delete-mode');
+            const ths = document.querySelectorAll('.event-bookings-section th.th-checkbox');
+            const tds = document.querySelectorAll('.event-bookings-section td.td-checkbox');
+            const toggleBtn = document.getElementById('toggleDeleteMode');
+            const actions = document.querySelector('.delete-mode-actions');
+            ths.forEach(el => el.style.display = on ? 'table-cell' : 'none');
+            tds.forEach(el => el.style.display = on ? 'table-cell' : 'none');
+            if (toggleBtn) toggleBtn.style.display = on ? 'none' : 'inline-flex';
+            if (actions) actions.style.display = on ? 'inline-flex' : 'none';
+            if (!on) document.querySelectorAll('.booking-select').forEach(cb => cb.checked = false);
+            const selectAll = document.getElementById('select-all-bookings');
+            if (selectAll) selectAll.checked = false;
+        }
+
+        function getSelectedBookingIds() {
+            return Array.from(document.querySelectorAll('.booking-select:checked')).map(cb => cb.value);
+        }
+
+        function deleteSelectedBookings() {
+            const ids = getSelectedBookingIds();
+            if (!ids.length) {
+                alert('Please select at least one booking to delete.');
+                return;
+            }
+            if (!confirm('Permanently delete selected bookings? This cannot be undone.')) {
+                return;
+            }
+
+            fetch('{{ route('admin.event_booking.force_delete_bulk') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ ids })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    ids.forEach(id => {
+                        document.querySelectorAll('tr[data-booking-id=\"' + id + '\"]').forEach(tr => tr.remove());
+                    });
+                    alert('Deleted ' + data.deleted + ' booking(s).');
+                    toggleEventBookingDeleteMode();
+                } else {
+                    alert(data.message || 'Error deleting bookings.');
+                }
+            })
+            .catch(() => {
+                alert('Error deleting bookings.');
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const selectAll = document.getElementById('select-all-bookings');
+            if (selectAll) {
+                selectAll.addEventListener('change', function () {
+                    document.querySelectorAll('.booking-select').forEach(cb => {
+                        cb.checked = selectAll.checked;
+                    });
+                });
+            }
+        });
+
         // Tab switching functionality
         document.querySelectorAll('.section-tab').forEach(tab => {
             tab.addEventListener('click', function() {

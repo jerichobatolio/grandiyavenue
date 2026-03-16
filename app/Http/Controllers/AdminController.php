@@ -1248,6 +1248,32 @@ class AdminController extends Controller
         }
     }
 
+    /** Permanently delete multiple event bookings */
+    public function forceDeleteEventBookingsBulk(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        if (!is_array($ids) || empty($ids)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No bookings selected.',
+            ], 400);
+        }
+
+        try {
+            $deleted = EventBooking::whereIn('id', $ids)->delete();
+            return response()->json([
+                'success' => true,
+                'deleted' => $deleted,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error bulk deleting event bookings: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting bookings.',
+            ], 500);
+        }
+    }
+
     /**
      * View event booking details
      */
