@@ -434,6 +434,34 @@ class AdminController extends Controller
         }
     }
 
+    /** Permanently delete a single order */
+    public function forceDeleteOrder($id)
+    {
+        try {
+            $order = Order::find($id);
+            if (!$order) {
+                return redirect()->back()->with('error', 'Order not found');
+            }
+            $order->delete();
+            return redirect()->back()->with('message', 'Order deleted successfully');
+        } catch (\Exception $e) {
+            \Log::error('Error deleting order: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error deleting order');
+        }
+    }
+
+    /** Permanently delete multiple orders (e.g. grouped) */
+    public function forceDeleteOrderGroup(Request $request)
+    {
+        $ids = $request->query('ids');
+        if (!$ids) {
+            return redirect()->back()->with('error', 'No orders specified');
+        }
+        $idArray = array_map('intval', explode(',', $ids));
+        $deleted = Order::whereIn('id', $idArray)->delete();
+        return redirect()->back()->with('message', $deleted . ' order(s) deleted successfully');
+    }
+
     // -------------------- RESERVATION MANAGEMENT --------------------
     public function reservations()
     {
@@ -1202,6 +1230,19 @@ class AdminController extends Controller
         } catch (\Exception $e) {
             \Log::error('Error archiving event booking: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Error archiving event booking');
+        }
+    }
+
+    /** Permanently delete an event booking */
+    public function forceDeleteEventBooking($id)
+    {
+        try {
+            $booking = EventBooking::findOrFail($id);
+            $booking->delete();
+            return redirect()->back()->with('message', 'Event booking deleted successfully');
+        } catch (\Exception $e) {
+            \Log::error('Error deleting event booking: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error deleting event booking');
         }
     }
 

@@ -762,6 +762,9 @@
                           <button class="btn-delete" onclick="archiveReservation({{ $reservation->id }})" title="Archive Reservation">
                             📦 Archive
                           </button>
+                          <button class="btn-delete" onclick="forceDeleteReservation({{ $reservation->id }})" title="Delete Reservation (Permanent)">
+                            🗑 Delete
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -879,6 +882,9 @@
                           </button>
                           <button class="btn-delete" onclick="archiveReservation({{ $reservation->id }})" title="Archive Reservation">
                             📦 Archive
+                          </button>
+                          <button class="btn-delete" onclick="forceDeleteReservation({{ $reservation->id }})" title="Delete Reservation (Permanent)">
+                            🗑 Delete
                           </button>
                         </div>
                       </td>

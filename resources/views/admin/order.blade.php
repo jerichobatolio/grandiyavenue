@@ -290,6 +290,11 @@
             color: white;
         }
 
+        .btn-delete-permanent {
+            background: linear-gradient(135deg, #b91c1c, #991b1b);
+            color: white;
+        }
+
         .action-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
@@ -373,19 +378,34 @@
             background-color: #e3f2fd;
         }
 
-        .expand-icon {
-            display: inline-block;
-            transition: transform 0.3s ease;
-            margin-right: 8px;
+        .expand-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 999px;
+            margin-right: 10px;
+            background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+            color: #f9fafb;
+            box-shadow: 0 6px 15px rgba(37, 99, 235, 0.35);
+            transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+            font-size: 11px;
         }
 
-        .summary-row.expanded .expand-icon {
+        .summary-row:hover .expand-toggle {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.45);
+        }
+
+        .summary-row.expanded .expand-toggle {
+            background: linear-gradient(135deg, #059669, #10b981);
             transform: rotate(90deg);
         }
 
         .order-details-row {
             display: none;
-            background-color: #fafafa;
+            background-color: transparent;
         }
 
         .order-details-row.expanded {
@@ -399,18 +419,75 @@
         }
 
         .item-count-badge {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: #f9fafb;
+            padding: 6px 14px;
+            border-radius: 999px;
             font-size: 12px;
             font-weight: 600;
+            box-shadow: 0 4px 10px rgba(124, 58, 237, 0.35);
+        }
+
+        .item-count-badge i {
+            font-size: 11px;
         }
 
         .summary-total {
             color: #10b981;
             font-weight: 700;
             font-size: 16px;
+        }
+
+        /* Card-style layout for items inside a grouped order */
+        .group-items-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding: 12px 4px 4px;
+        }
+
+        .group-item-card {
+            flex: 1 1 260px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 10px 12px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+        }
+
+        .group-item-card-main {
+            flex: 1;
+        }
+
+        .group-item-title {
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 2px;
+        }
+
+        .group-item-meta {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .group-item-price {
+            font-size: 14px;
+            font-weight: 600;
+            color: #10b981;
+            margin-top: 4px;
+        }
+
+        .group-item-notes {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 6px;
+            word-wrap: break-word;
         }
     </style>
 </head>
@@ -515,7 +592,9 @@
                                     <tr class="summary-row" onclick="toggleOrderDetails('{{ $groupKey }}')" data-group="{{ $groupKey }}">
                                         <td>
                                             <div class="summary-info">
-                                                <i class="fas fa-caret-right expand-icon" aria-hidden="true"></i>
+                                                <div class="expand-toggle">
+                                                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                                                </div>
                                                 @if($firstOrder->image)
                                                     <img width="50" height="50" src="{{ asset('food_img/'.$firstOrder->image) }}" alt="Order" class="food-image" style="object-fit: cover; border-radius: 6px;">
                                                 @else
@@ -535,7 +614,10 @@
                                         </td>
                                         <td>
                                             <div class="summary-info">
-                                                <span class="item-count-badge">{{ $totalItems }} {{ $totalItems == 1 ? 'item' : 'items' }}</span>
+                                                <span class="item-count-badge">
+                                                    <i class="fas fa-layer-group"></i>
+                                                    {{ $totalItems }} {{ $totalItems == 1 ? 'item' : 'items' }}
+                                                </span>
                                                 <span class="summary-total">Total: PHP {{ number_format($totalPrice, 2) }}</span>
                                             </div>
                                         </td>
@@ -595,40 +677,41 @@
                                                 <a onclick="return archiveAllOrders([{{ implode(',', $orderIds) }}], 'Are you sure you want to archive all {{ $totalItems }} items?')" class="action-btn btn-archive" href="javascript:void(0);">
                                                     <i class="fas fa-archive"></i> Archive
                                                 </a>
+                                                <a onclick="return deleteAllOrders([{{ implode(',', $orderIds) }}], 'Permanently delete all {{ $totalItems }} orders? This cannot be undone.')" class="action-btn btn-delete-permanent" href="javascript:void(0);">
+                                                    <i class="fas fa-trash-alt"></i> Delete
+                                                </a>
                                             </div>
                                         </td>
                                     </tr>
                                     
-                                    <!-- Expanded Details Rows (for multiple orders) -->
-                                    @foreach($customerOrders as $order)
-                                        <tr class="order-details-row" data-group="{{ $groupKey }}">
-                                            <td>
-                                                <img width="70" height="70" src="{{ asset('food_img/'.$order->image) }}" alt="{{ $order->title }}" class="food-image" style="object-fit: cover;">
-                                            </td>
-                                            <td>
-                                                <div style="font-weight: 600; color: #111827;">{{ $order->name }}</div>
-                                                <div style="font-size: 12px; color: #6b7280;">{{ $order->email }}</div>
-                                            </td>
-                                            <td>
-                                                <div style="font-size: 13px;">{{ $order->phone }}</div>
-                                                <div style="font-size: 12px; color: #6b7280; max-width: 150px;">{{ $order->address }}</div>
-                                            </td>
-                                            <td>
-                                                <div style="font-weight: 600;">{{ $order->title }}</div>
-                                                <div style="font-size: 13px; color: #6b7280;">Qty: {{ $order->quantity }}</div>
-                                                <div style="font-size: 14px; color: #10b981; font-weight: 600;">PHP {{ number_format($order->price * $order->quantity, 2) }}</div>
-                                            </td>
-                                            <td></td>
-                                            <td></td>
-                                            <td></td>
-                                            <td style="max-width: 200px;">
-                                                <div style="font-size: 13px; color: #6b7280; word-wrap: break-word;">
-                                                    {{ $order->notes ?: '' }}
-                                                </div>
-                                            </td>
-                                            <td></td>
-                                        </tr>
-                                    @endforeach
+                                    <!-- Expanded Details: show items as cards instead of table rows -->
+                                    <tr class="order-details-row" data-group="{{ $groupKey }}">
+                                        <td colspan="9">
+                                            <div class="group-items-grid">
+                                                @foreach($customerOrders as $order)
+                                                    <div class="group-item-card">
+                                                        <div>
+                                                            <img width="60" height="60" src="{{ asset('food_img/'.$order->image) }}" alt="{{ $order->title }}" class="food-image" style="object-fit: cover; border-radius: 8px;">
+                                                        </div>
+                                                        <div class="group-item-card-main">
+                                                            <div class="group-item-title">{{ $order->title }}</div>
+                                                            <div class="group-item-meta">
+                                                                Qty: {{ $order->quantity }} • PHP {{ number_format($order->price, 2) }} each
+                                                            </div>
+                                                            <div class="group-item-price">
+                                                                PHP {{ number_format($order->price * $order->quantity, 2) }}
+                                                            </div>
+                                                            @if(!empty($order->notes))
+                                                                <div class="group-item-notes">
+                                                                    {{ $order->notes }}
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </td>
+                                    </tr>
                                     @else
                                     <!-- Single Order Row (show all actions) -->
                                     @foreach($customerOrders as $order)
@@ -704,6 +787,9 @@
                                                     </a>
                                                     <a onclick="return confirm('Are you sure you want to archive this order?')" class="action-btn btn-archive" href="{{ route('order.delete', $order->id) }}">
                                                         <i class="fas fa-archive"></i> Archive
+                                                    </a>
+                                                    <a onclick="return confirm('Permanently delete this order? This cannot be undone.')" class="action-btn btn-delete-permanent" href="{{ route('order.force_delete', $order->id) }}">
+                                                        <i class="fas fa-trash-alt"></i> Delete
                                                     </a>
                                                 </div>
                                             </td>
@@ -815,6 +901,16 @@
             });
 
             return false; // Prevent default link behavior
+        }
+
+        // Permanently delete all orders in a group
+        function deleteAllOrders(orderIds, confirmMessage) {
+            if (!confirm(confirmMessage)) {
+                return false;
+            }
+            const ids = orderIds.join(',');
+            window.location.href = '{{ url("orders/force-delete-group") }}?ids=' + encodeURIComponent(ids);
+            return false;
         }
 
         // Archive all orders in a group

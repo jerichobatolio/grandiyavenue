@@ -263,6 +263,11 @@
             color: white;
         }
 
+        .btn-delete-permanent {
+            background: #b91c1c;
+            color: white;
+        }
+
         .btn-mark-paid {
             background: #17a2b8;
             color: white;
@@ -676,6 +681,11 @@
                                                    onclick="return confirm('Are you sure you want to archive this event booking?')">
                                                     <i class="fas fa-archive"></i> Archive
                                                 </a>
+                                                <a href="{{ route('admin.event_booking.force_delete', $booking->id) }}" 
+                                                   class="btn-action btn-delete-permanent"
+                                                   onclick="return confirm('Permanently delete this event booking? This cannot be undone.')">
+                                                    <i class="fas fa-trash-alt"></i> Delete
+                                                </a>
                                             </div>
                                         </td>
                                     </tr>
@@ -870,6 +880,11 @@
                                                    class="btn-action btn-archive"
                                                    onclick="return confirm('Are you sure you want to archive this event booking?')">
                                                     <i class="fas fa-archive"></i> Archive
+                                                </a>
+                                                <a href="{{ route('admin.event_booking.force_delete', $booking->id) }}" 
+                                                   class="btn-action btn-delete-permanent"
+                                                   onclick="return confirm('Permanently delete this event booking? This cannot be undone.')">
+                                                    <i class="fas fa-trash-alt"></i> Delete
                                                 </a>
                                             </div>
                                         </td>

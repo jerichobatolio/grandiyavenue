@@ -216,6 +216,8 @@ Route::get('/create-test-notification', [AdminController::class,'createTestNotif
 // ✅ Single route to handle all status updates dynamically (single order)
 Route::get('/order/status/{id}/{status}', [AdminController::class, 'updateOrderStatus'])->name('order.status');
 Route::get('/order/delete/{id}', [AdminController::class, 'deleteOrder'])->name('order.delete');
+Route::get('/order/force-delete/{id}', [AdminController::class, 'forceDeleteOrder'])->name('order.force_delete');
+Route::get('/orders/force-delete-group', [AdminController::class, 'forceDeleteOrderGroup'])->name('orders.force_delete_group');
 
 // ✅ Group status update route for multiple orders (used by admin/orders bulk actions)
 Route::get('/orders/group-status', [AdminController::class, 'updateGroupOrderStatus'])->name('orders.group_status');
@@ -229,6 +231,7 @@ Route::get('/event_bookings', [AdminController::class,'eventBookings'])->name('a
 Route::get('/archived-event-bookings', [AdminController::class,'archivedEventBookings'])->name('admin.archived_event_bookings');
 Route::post('/event_booking/status/{id}', [AdminController::class,'updateEventBookingStatus'])->name('admin.event_booking.status');
 Route::get('/event_booking/delete/{id}', [AdminController::class,'deleteEventBooking'])->name('admin.event_booking.delete');
+Route::get('/event_booking/force-delete/{id}', [AdminController::class,'forceDeleteEventBooking'])->name('admin.event_booking.force_delete');
 Route::get('/event_booking/view/{id}', [AdminController::class,'viewEventBooking'])->name('admin.event_booking.view');
 Route::get('/event_booking/stats', [AdminController::class,'getEventBookingStats'])->name('admin.event_booking.stats');
 
