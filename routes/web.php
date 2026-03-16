@@ -57,6 +57,42 @@ Route::get('/user-profile-photo/{user}', function (\App\Models\User $user) {
     return Storage::disk('public')->response($user->profile_photo_path);
 })->name('user.profile.photo');
 
+// Serve order payment proof images safely (handles storage paths)
+Route::get('/order-payment-proof/{order}', function (\App\Models\Order $order) {
+    if (! $order->payment_proof_path) {
+        abort(404);
+    }
+
+    $path = ltrim($order->payment_proof_path, '/');
+    if (str_starts_with($path, 'public/')) {
+        $path = substr($path, 7);
+    }
+
+    if (! Storage::disk('public')->exists($path)) {
+        abort(404);
+    }
+
+    return Storage::disk('public')->response($path);
+})->name('orders.payment_proof');
+
+// Serve reservation payment proof images safely (Book model)
+Route::get('/reservation-payment-proof/{reservation}', function (\App\Models\Book $reservation) {
+    if (! $reservation->payment_proof_path) {
+        abort(404);
+    }
+
+    $path = ltrim($reservation->payment_proof_path, '/');
+    if (str_starts_with($path, 'public/')) {
+        $path = substr($path, 7);
+    }
+
+    if (! Storage::disk('public')->exists($path)) {
+        abort(404);
+    }
+
+    return Storage::disk('public')->response($path);
+})->name('reservations.payment_proof');
+
 // Frontend/Home routes - moved to /home
 Route::get('/home', [HomeController::class,'my_home'])->name('home'); 
 Route::get('/dashboard', [HomeController::class,'index']);
@@ -195,6 +231,24 @@ Route::post('/event_booking/status/{id}', [AdminController::class,'updateEventBo
 Route::get('/event_booking/delete/{id}', [AdminController::class,'deleteEventBooking'])->name('admin.event_booking.delete');
 Route::get('/event_booking/view/{id}', [AdminController::class,'viewEventBooking'])->name('admin.event_booking.view');
 Route::get('/event_booking/stats', [AdminController::class,'getEventBookingStats'])->name('admin.event_booking.stats');
+
+// Serve event booking GCash payment proof safely
+Route::get('/event-booking-payment-proof/{booking}', function (\App\Models\EventBooking $booking) {
+    if (! $booking->payment_proof_path) {
+        abort(404);
+    }
+
+    $path = ltrim($booking->payment_proof_path, '/');
+    if (str_starts_with($path, 'public/')) {
+        $path = substr($path, 7);
+    }
+
+    if (! Storage::disk('public')->exists($path)) {
+        abort(404);
+    }
+
+    return Storage::disk('public')->response($path);
+})->name('event_bookings.payment_proof');
 
 // Notification routes
 Route::get('/notifications', [AdminController::class,'notifications'])->name('admin.notifications');

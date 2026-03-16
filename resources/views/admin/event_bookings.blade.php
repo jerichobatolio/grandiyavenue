@@ -641,11 +641,10 @@
                                         </td>
                                         <td>
                                             @if($booking->payment_proof_path)
-                                                <a href="{{ asset('storage/' . ltrim($booking->payment_proof_path, '/')) }}"
-                                                   target="_blank"
-                                                   class="payment-proof-btn">
+                                                <button class="payment-proof-btn"
+                                                        onclick="viewPaymentProof('{{ route('event_bookings.payment_proof', $booking->id) }}', '{{ $booking->full_name }}')">
                                                     <i class="fa fa-eye"></i> View GCash
-                                                </a>
+                                                </button>
                                                 @if($booking->hasGcashPaymentDetails())
                                                     <br><small class="text-muted">Ref: {{ $booking->gcash_reference_number }}</small>
                                                 @endif
@@ -837,7 +836,8 @@
                                         </td>
                                         <td>
                                             @if($booking->payment_proof_path)
-                                                <button class="payment-proof-btn" onclick="viewPaymentProof('{{ Storage::url($booking->payment_proof_path) }}', '{{ $booking->full_name }}')">
+                                                <button class="payment-proof-btn"
+                                                        onclick="viewPaymentProof('{{ route('event_bookings.payment_proof', $booking->id) }}', '{{ $booking->full_name }}')">
                                                     <i class="fa fa-eye"></i> View GCash
                                                 </button>
                                                 @if($booking->hasGcashPaymentDetails())

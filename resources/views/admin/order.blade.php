@@ -502,7 +502,7 @@
                                         });
                                         $groupKey = md5($customerKey);
                                         $hasProof = $customerOrders->whereNotNull('payment_proof_path')->count() > 0;
-                                        $proofPath = $customerOrders->whereNotNull('payment_proof_path')->first();
+                                        $proofOrder = $customerOrders->whereNotNull('payment_proof_path')->first();
                                         $statuses = $customerOrders->pluck('delivery_status')->unique();
                                         $isMultipleOrders = $totalItems > 1;
                                         $orderIds = $customerOrders->pluck('id')->toArray();
@@ -553,10 +553,9 @@
                                             @endif
                                         </td>
                                         <td>
-                                            @if($hasProof && $proofPath)
-                                                <a href="{{ asset('storage/' . ltrim($proofPath->payment_proof_path, '/')) }}"
-                                                   target="_blank"
-                                                   onclick="event.stopPropagation();"
+                                            @if($hasProof && $proofOrder)
+                                                <a href="javascript:void(0);"
+                                                   onclick="event.stopPropagation(); viewPaymentProof('{{ route('orders.payment_proof', $proofOrder->id) }}');"
                                                    class="view-proof-btn">
                                                     <i class="fas fa-eye"></i> View Proof
                                                 </a>
@@ -665,8 +664,8 @@
                                             </td>
                                             <td>
                                                 @if($order->payment_proof_path)
-                                                    <a href="{{ Storage::url($order->payment_proof_path) }}"
-                                                       target="_blank"
+                                                    <a href="javascript:void(0);"
+                                                       onclick="viewPaymentProof('{{ route('orders.payment_proof', $order->id) }}');"
                                                        class="view-proof-btn">
                                                         <i class="fas fa-eye"></i> View Proof
                                                     </a>

@@ -567,13 +567,13 @@
                             <h4><i class="fa fa-receipt"></i> GCash Payment Proof</h4>
                             @if($booking->payment_proof_path)
                                 <div class="payment-proof">
-                                    <img src="{{ Storage::url($booking->payment_proof_path) }}" 
+                                    <img src="{{ route('event_bookings.payment_proof', $booking->id) }}" 
                                          alt="Payment Proof" 
                                          class="img-fluid payment-proof-image" 
                                          style="max-height: 400px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);"
-                                         onclick="viewPaymentProofLarge('{{ Storage::url($booking->payment_proof_path) }}', '{{ $booking->full_name }}')">
+                                         onclick="viewPaymentProofLarge('{{ route('event_bookings.payment_proof', $booking->id) }}', '{{ $booking->full_name }}')">
                                     <div class="payment-proof-buttons">
-                                        <a href="{{ Storage::url($booking->payment_proof_path) }}" 
+                                        <a href="{{ route('event_bookings.payment_proof', $booking->id) }}" 
                                            class="btn btn-primary" 
                                            download="gcash_proof_{{ $booking->id }}.jpg">
                                             <i class="fa fa-download"></i> Download GCash Proof

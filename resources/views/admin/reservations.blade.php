@@ -742,8 +742,8 @@
                       <td>
                         @if($reservation->payment_proof_path)
                           <div style="margin-bottom: 6px;"><strong>Paid:</strong> ₱{{ number_format($reservation->amount_paid ?? 0, 2) }}</div>
-                          <a href="{{ Storage::url($reservation->payment_proof_path) }}"
-                             target="_blank"
+                          <a href="javascript:void(0);"
+                             onclick="showReservationPaymentProof('{{ route('reservations.payment_proof', $reservation->id) }}','{{ $reservation->name }}')"
                              class="btn-proof">
                             View Proof
                           </a>
@@ -860,8 +860,8 @@
                       <td>
                         @if($reservation->payment_proof_path)
                           <div style="margin-bottom: 6px;"><strong>Paid:</strong> ₱{{ number_format($reservation->amount_paid ?? 0, 2) }}</div>
-                          <a href="{{ \Illuminate\Support\Facades\Storage::url($reservation->payment_proof_path) }}"
-                             target="_blank"
+                          <a href="javascript:void(0);"
+                             onclick="showReservationPaymentProof('{{ route('reservations.payment_proof', $reservation->id) }}','{{ $reservation->name }}')"
                              class="btn-proof">
                             View Proof
                           </a>
@@ -1312,6 +1312,16 @@
    @include('admin.js')
 
    <script>
+  function showReservationPaymentProof(imageUrl, customerName) {
+      const img = document.getElementById('reservationPaymentProofImage');
+      const nameSpan = document.getElementById('reservationPaymentProofCustomer');
+      if (img && nameSpan) {
+          img.src = imageUrl;
+          nameSpan.textContent = customerName || '';
+          $('#reservationPaymentProofModal').modal('show');
+      }
+  }
+
   document.addEventListener('DOMContentLoaded', function() {
        // Section tab switching
        const sectionTabs = document.querySelectorAll('.section-tab');
