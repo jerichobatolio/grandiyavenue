@@ -742,7 +742,7 @@
                       <td>
                         @if($reservation->payment_proof_path)
                           <div style="margin-bottom: 6px;"><strong>Paid:</strong> ₱{{ number_format($reservation->amount_paid ?? 0, 2) }}</div>
-                          <a href="{{ route('admin.payment_proof', ['path' => $reservation->payment_proof_path]) }}"
+                          <a href="{{ Storage::url($reservation->payment_proof_path) }}"
                              target="_blank"
                              class="btn-proof">
                             View Proof

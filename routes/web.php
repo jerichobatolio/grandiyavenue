@@ -57,19 +57,6 @@ Route::get('/user-profile-photo/{user}', function (\App\Models\User $user) {
     return Storage::disk('public')->response($user->profile_photo_path);
 })->name('user.profile.photo');
 
-// Serve order payment proofs from the public storage disk (used by admin View Proof)
-Route::get('/admin/payment-proof/{path}', function (string $path) {
-    if (! Storage::disk('public')->exists($path)) {
-        abort(404);
-    }
-
-    $url = Storage::disk('public')->url($path);
-
-    return view('admin.payment_proof_view', [
-        'imageUrl' => $url,
-    ]);
-})->where('path', '.*')->name('admin.payment_proof');
-
 // Frontend/Home routes - moved to /home
 Route::get('/home', [HomeController::class,'my_home'])->name('home'); 
 Route::get('/dashboard', [HomeController::class,'index']);

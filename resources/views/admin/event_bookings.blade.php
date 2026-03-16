@@ -641,7 +641,7 @@
                                         </td>
                                         <td>
                                             @if($booking->payment_proof_path)
-                                                <a href="{{ route('admin.payment_proof', ['path' => $booking->payment_proof_path]) }}"
+                                                <a href="{{ Storage::url($booking->payment_proof_path) }}"
                                                    target="_blank"
                                                    class="payment-proof-btn">
                                                     <i class="fa fa-eye"></i> View GCash
