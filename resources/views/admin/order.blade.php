@@ -718,9 +718,6 @@
                                                 <a onclick="return archiveAllOrders([{{ implode(',', $orderIds) }}], 'Are you sure you want to archive all {{ $totalItems }} items?')" class="action-btn btn-archive" href="javascript:void(0);">
                                                     <i class="fas fa-archive"></i> Archive
                                                 </a>
-                                                <a onclick="return deleteAllOrders([{{ implode(',', $orderIds) }}], 'Permanently delete all {{ $totalItems }} orders? This cannot be undone.')" class="action-btn btn-delete-permanent" href="javascript:void(0);">
-                                                    <i class="fas fa-trash-alt"></i> Delete
-                                                </a>
                                             </div>
                                         </td>
                                     </tr>
