@@ -554,7 +554,7 @@
                                         </td>
                                         <td>
                                             @if($hasProof && $proofPath)
-                                                <a href="{{ Storage::url($proofPath->payment_proof_path) }}"
+                                                <a href="{{ asset('storage/' . ltrim($proofPath->payment_proof_path, '/')) }}"
                                                    target="_blank"
                                                    onclick="event.stopPropagation();"
                                                    class="view-proof-btn">
