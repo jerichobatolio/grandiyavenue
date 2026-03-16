@@ -742,11 +742,11 @@
                       <td>
                         @if($reservation->payment_proof_path)
                           <div style="margin-bottom: 6px;"><strong>Paid:</strong> ₱{{ number_format($reservation->amount_paid ?? 0, 2) }}</div>
-                          <button type="button"
-                                  class="btn-proof"
-                                  onclick="viewReservationPaymentProof('{{ route('admin.payment_proof', ['path' => $reservation->payment_proof_path]) }}', '{{ addslashes(trim(($reservation->name ?? '') . ' ' . ($reservation->last_name ?? ''))) ?: 'Customer' }}')">
+                          <a href="{{ route('admin.payment_proof', ['path' => $reservation->payment_proof_path]) }}"
+                             target="_blank"
+                             class="btn-proof">
                             View Proof
-                          </button>
+                          </a>
                         @else
                           <span class="text-muted">No proof yet</span>
                         @endif
@@ -860,11 +860,11 @@
                       <td>
                         @if($reservation->payment_proof_path)
                           <div style="margin-bottom: 6px;"><strong>Paid:</strong> ₱{{ number_format($reservation->amount_paid ?? 0, 2) }}</div>
-                          <button type="button"
-                                  class="btn-proof"
-                                  onclick="viewReservationPaymentProof('{{ route('admin.payment_proof', ['path' => $reservation->payment_proof_path]) }}', '{{ addslashes(trim(($reservation->name ?? '') . ' ' . ($reservation->last_name ?? ''))) ?: 'Customer' }}')">
+                          <a href="{{ route('admin.payment_proof', ['path' => $reservation->payment_proof_path]) }}"
+                             target="_blank"
+                             class="btn-proof">
                             View Proof
-                          </button>
+                          </a>
                         @else
                           <span class="text-muted">No proof yet</span>
                         @endif

@@ -554,11 +554,12 @@
                                         </td>
                                         <td>
                                             @if($hasProof && $proofPath)
-                                                <button
-                                                    onclick="event.stopPropagation(); viewPaymentProof('{{ route('admin.payment_proof', ['path' => $proofPath->payment_proof_path]) }}')"
-                                                    class="view-proof-btn">
+                                                <a href="{{ route('admin.payment_proof', ['path' => $proofPath->payment_proof_path]) }}"
+                                                   target="_blank"
+                                                   onclick="event.stopPropagation();"
+                                                   class="view-proof-btn">
                                                     <i class="fas fa-eye"></i> View Proof
-                                                </button>
+                                                </a>
                                             @else
                                                 <span class="no-proof">-</span>
                                             @endif
@@ -664,11 +665,11 @@
                                             </td>
                                             <td>
                                                 @if($order->payment_proof_path)
-                                                    <button
-                                                        onclick="viewPaymentProof('{{ route('admin.payment_proof', ['path' => $order->payment_proof_path]) }}')"
-                                                        class="view-proof-btn">
+                                                    <a href="{{ route('admin.payment_proof', ['path' => $order->payment_proof_path]) }}"
+                                                       target="_blank"
+                                                       class="view-proof-btn">
                                                         <i class="fas fa-eye"></i> View Proof
-                                                    </button>
+                                                    </a>
                                                 @else
                                                     <span class="no-proof">-</span>
                                                 @endif

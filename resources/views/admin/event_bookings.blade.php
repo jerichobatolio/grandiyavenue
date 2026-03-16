@@ -641,11 +641,11 @@
                                         </td>
                                         <td>
                                             @if($booking->payment_proof_path)
-                                                <button
-                                                    class="payment-proof-btn"
-                                                    onclick="viewPaymentProof('{{ route('admin.payment_proof', ['path' => $booking->payment_proof_path]) }}', '{{ $booking->full_name }}')">
+                                                <a href="{{ route('admin.payment_proof', ['path' => $booking->payment_proof_path]) }}"
+                                                   target="_blank"
+                                                   class="payment-proof-btn">
                                                     <i class="fa fa-eye"></i> View GCash
-                                                </button>
+                                                </a>
                                                 @if($booking->hasGcashPaymentDetails())
                                                     <br><small class="text-muted">Ref: {{ $booking->gcash_reference_number }}</small>
                                                 @endif
