@@ -641,7 +641,9 @@
                                         </td>
                                         <td>
                                             @if($booking->payment_proof_path)
-                                                <button class="payment-proof-btn" onclick="viewPaymentProof('{{ Storage::url($booking->payment_proof_path) }}', '{{ $booking->full_name }}')">
+                                                <button
+                                                    class="payment-proof-btn"
+                                                    onclick="viewPaymentProof('{{ route('admin.payment_proof', ['path' => $booking->payment_proof_path]) }}', '{{ $booking->full_name }}')">
                                                     <i class="fa fa-eye"></i> View GCash
                                                 </button>
                                                 @if($booking->hasGcashPaymentDetails())
