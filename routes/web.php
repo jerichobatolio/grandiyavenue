@@ -232,6 +232,7 @@ Route::get('/archived-event-bookings', [AdminController::class,'archivedEventBoo
 Route::post('/event_booking/status/{id}', [AdminController::class,'updateEventBookingStatus'])->name('admin.event_booking.status');
 Route::get('/event_booking/delete/{id}', [AdminController::class,'deleteEventBooking'])->name('admin.event_booking.delete');
 Route::get('/event_booking/force-delete/{id}', [AdminController::class,'forceDeleteEventBooking'])->name('admin.event_booking.force_delete');
+Route::post('/event_bookings/force-delete-bulk', [AdminController::class, 'forceDeleteEventBookingsBulk'])->name('admin.event_booking.force_delete_bulk');
 Route::get('/event_booking/view/{id}', [AdminController::class,'viewEventBooking'])->name('admin.event_booking.view');
 Route::get('/event_booking/stats', [AdminController::class,'getEventBookingStats'])->name('admin.event_booking.stats');
 
