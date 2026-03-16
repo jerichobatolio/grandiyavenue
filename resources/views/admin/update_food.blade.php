@@ -190,7 +190,7 @@
                     </div>
 
                     @if(session()->has('message'))
-                        <div class="alert alert-success">
+                        <div class="alert alert-success" id="food-update-success">
                             ✅ {{ session('message') }}
                         </div>
                     @endif
@@ -226,6 +226,17 @@
                                 <label class="form-label" for="price">Price *</label>
                                 <input type="text" name="price" id="price" class="form-input" 
                                        value="{{ old('price', $food->price) }}" required>
+                            </div>
+
+                            <div class="form-group" style="margin-top: 10px;">
+                                <label class="form-label" for="is_best_seller">
+                                    <input type="checkbox"
+                                           id="is_best_seller"
+                                           name="is_best_seller"
+                                           value="1"
+                                           {{ old('is_best_seller', $food->is_best_seller) ? 'checked' : '' }}>
+                                    Mark as Best Seller
+                                </label>
                             </div>
                         </div>
 
@@ -299,6 +310,22 @@
     </div>
 
     @include('admin.js')
+
+    <script>
+        // Auto-hide food update success message after a short delay
+        document.addEventListener('DOMContentLoaded', function () {
+            const successAlert = document.getElementById('food-update-success');
+            if (successAlert) {
+                setTimeout(function () {
+                    successAlert.style.transition = 'opacity 0.5s ease';
+                    successAlert.style.opacity = '0';
+                    setTimeout(function () {
+                        successAlert.remove();
+                    }, 600);
+                }, 2500);
+            }
+        });
+    </script>
 
     <script>
         function updateCategorySelection(radio) {

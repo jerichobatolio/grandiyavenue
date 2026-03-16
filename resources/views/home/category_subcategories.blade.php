@@ -15,58 +15,78 @@
         }
 
         .subcategories-container {
-            max-width: 1000px;
-            margin: 100px auto 50px auto;
+            max-width: 1100px;
+            margin: 96px auto 56px auto;
             padding: 0 20px;
         }
 
         .subcategories-title {
             text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 50px;
+            font-size: 2.4rem;
+            margin-bottom: 40px;
             color: white;
         }
 
         .subcategory-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-bottom: 50px;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 28px;
+            margin-bottom: 48px;
         }
 
         .subcategory-card {
-            background-color: #2c2c2c;
-            border: 2px solid skyblue;
-            border-radius: 15px;
-            padding: 40px;
-            text-align: center;
+            position: relative;
+            background: radial-gradient(circle at top left, #1f2937, #020617);
+            border-radius: 20px;
+            padding: 28px 24px 24px;
+            text-align: left;
             text-decoration: none;
             color: white;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+            box-shadow: 0 18px 40px rgba(0,0,0,0.75);
+            border: 1px solid rgba(56,189,248,0.45);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .subcategory-card::after {
+            content: "→";
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+            font-size: 1.2rem;
+            color: rgba(248, 250, 252, 0.75);
+            transition: transform 0.18s ease, color 0.18s ease;
         }
 
         .subcategory-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
-            border-color: gold;
+            transform: translateY(-4px);
+            box-shadow: 0 24px 52px rgba(0,0,0,0.9);
+            border-color: rgba(250,204,21,0.7);
+            background: radial-gradient(circle at top left, #334155, #020617);
+        }
+
+        .subcategory-card:hover::after {
+            transform: translateX(4px);
+            color: rgba(250,204,21,0.9);
         }
 
         .subcategory-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-        }
-
-        .subcategory-name {
-            font-size: 1.8rem;
-            font-weight: bold;
+            font-size: 2.8rem;
             margin-bottom: 10px;
         }
 
+        .subcategory-name {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
         .subcategory-description {
-            font-size: 1rem;
-            color: #ccc;
-            line-height: 1.5;
+            font-size: 0.98rem;
+            color: #e5e7eb;
+            line-height: 1.55;
         }
 
         .back-link {

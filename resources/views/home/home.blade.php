@@ -26,8 +26,8 @@
 
         .foods-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+            gap: 24px;
             width: 90%;
             margin: 0 auto 50px auto;
         }
@@ -35,30 +35,47 @@
         .food-row {
             display: flex;
             flex-direction: column;
-            background-color: #2c2c2c;
-            border: 1px solid skyblue;
-            border-radius: 10px;
-            padding: 15px;
+            background: radial-gradient(circle at top left, #374151, #111827);
+            border-radius: 16px;
+            padding: 16px 16px 14px;
             color: white;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            transition: transform 0.2s;
+            box-shadow: 0 18px 35px rgba(0,0,0,0.55);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
         }
 
         .food-row:hover {
-            transform: scale(1.02);
+            transform: translateY(-4px);
+            box-shadow: 0 24px 45px rgba(0,0,0,0.75);
+            border-color: rgba(250, 204, 21, 0.7);
+            background: radial-gradient(circle at top left, #4b5563, #020617);
         }
 
         .food-row img {
             width: 100%;
-            max-height: 220px;
+            aspect-ratio: 4 / 3;
             object-fit: contain;
-            background-color: #111;
-            border-radius: 10px;
-            margin-bottom: 12px;
+            background-color: #020617;
+            border-radius: 14px;
+            margin-bottom: 14px;
+            box-shadow: 0 12px 26px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.6);
+            padding: 6px;
+            transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        }
+
+        .food-row:hover img {
+            transform: translateY(-1px);
+            box-shadow: 0 18px 38px rgba(0, 0, 0, 0.8);
+            border-color: rgba(250, 204, 21, 0.8);
         }
 
         .food-details {
             text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-height: 140px;
         }
 
         .food-meta {
@@ -67,39 +84,56 @@
             gap: 10px;
         }
 
-        .food-details h5 {
-            margin: 0;
-            font-size: 1.05rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 65%;
+        .best-seller-badge {
+            background: linear-gradient(135deg, #f59e0b, #f97316);
+            color: #111827;
+            padding: 2px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
-        .food-details p {
-            margin: 8px 0 0 0;
+        .food-header-line {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 2px;
+        }
+
+        .food-details h5 {
+            margin: 0;
+            font-size: 1.08rem;
+            font-weight: 600;
+            color: #f9fafb;
+        }
+
+        .food-details p.food-description {
+            margin: 6px 0 0 0;
             font-size: 0.9rem;
-            color: #ddd;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+            color: #e5e7eb;
+            line-height: 1.35rem;
+            /* no truncation – show full text */
         }
 
         .btn-add {
-            padding: 8px 15px;
-            background-color: gold;
-            color: black;
-            font-weight: bold;
+            padding: 8px 18px;
+            background: linear-gradient(135deg, #facc15, #f97316);
+            color: #111827;
+            font-weight: 700;
             border: none;
-            border-radius: 5px;
+            border-radius: 999px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
         }
 
         .btn-add:hover {
-            background-color: #ffc107;
+            background: linear-gradient(135deg, #fde047, #fb923c);
             transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(234, 179, 8, 0.4);
         }
 
         .add-form {
@@ -231,6 +265,12 @@
                 <img src="{{ asset('food_img/'.$food->image) }}" alt="{{ $food->title }}">
                 <div class="food-details">
                     <div class="food-meta">
+                        <div class="food-header-line">
+                            <h5 title="{{ $food->title }}">{{ $food->title }}</h5>
+                            @if(!empty($food->is_best_seller))
+                                <span class="best-seller-badge">Best Seller</span>
+                            @endif
+                        </div>
                         @if(method_exists($food, 'bundles') && $food->bundles->count() > 0)
                             @php $bundle = $food->bundles->first(); @endphp
                             <span class="badge-bundle">Bundle: {{ $bundle->name }}</span>
@@ -238,18 +278,17 @@
                                 ₱{{ number_format($bundle->bundle_price, 2) }}
                             </span>
                         @endif
-                        <h5 title="{{ $food->title }}">{{ $food->title }}</h5>
                     </div>
-                    <p>{{ $food->detail }}</p>
+                    <p class="food-description">{{ $food->detail ?? $food->description ?? '' }}</p>
                     @if(isset($isBundle) && $isBundle && $food->bundle_price)
                         <p style="color: gold; font-weight: bold; margin: 8px 0;">
-                            Bundle Price: ₱{{ $food->bundle_price }}
+                            Bundle Price: ₱{{ number_format($food->bundle_price, 2) }}
                             @if($food->price != $food->bundle_price)
-                                <br><small style="color: #ccc;">Regular: ₱{{ $food->price }}</small>
+                                <br><small style="color: #ccc;">Regular: ₱{{ number_format($food->price, 2) }}</small>
                             @endif
                         </p>
                     @else
-                        <p style="color: gold; font-weight: bold; margin: 8px 0;">₱{{ $food->price }}</p>
+                        <p style="color: gold; font-weight: bold; margin: 8px 0;">₱{{ number_format($food->price, 2) }}</p>
                     @endif
                     <div class="add-form">
                         <form action="{{ url('cart/add/' . $food->id) }}" method="POST" class="food-form">

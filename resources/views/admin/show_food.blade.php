@@ -269,7 +269,12 @@
                                                         </div>
                                                     @endif
 
-                                                    <h5 class="food-title">{{ $food->title }}</h5>
+                                                    <h5 class="food-title">
+                                                        {{ $food->title }}
+                                                        @if(!empty($food->is_best_seller))
+                                                            <span class="badge badge-warning" style="margin-left:4px;">Best Seller</span>
+                                                        @endif
+                                                    </h5>
 
                                                     @if($food->subcategory)
                                                         <span class="badge-subcategory">{{ $food->subcategory }}</span>
@@ -306,5 +311,21 @@
     </div>
 
     @include('admin.js')
+
+    <script>
+        // Auto-hide success alert (e.g. "Food updated successfully!") after a few seconds
+        document.addEventListener('DOMContentLoaded', function () {
+            const alert = document.querySelector('.alert.alert-success');
+            if (alert) {
+                setTimeout(function () {
+                    alert.style.transition = 'opacity 0.5s ease';
+                    alert.style.opacity = '0';
+                    setTimeout(function () {
+                        alert.remove();
+                    }, 600);
+                }, 2500);
+            }
+        });
+    </script>
 </body>
 </html>

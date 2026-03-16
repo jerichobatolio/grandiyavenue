@@ -50,6 +50,7 @@ class AdminController extends Controller
         $food->price = $request->price;
         $food->category_id = $request->category_id;
         $food->subcategory_id = $request->subcategory_id;
+        $food->is_best_seller = $request->has('is_best_seller');
 
         // Keep the old type and subcategory fields for backward compatibility
         $category = Category::find($request->category_id);
@@ -116,6 +117,7 @@ class AdminController extends Controller
             $data->title = $request->title;
             $data->detail = $request->detail;
             $data->price = $request->price;
+            $data->is_best_seller = $request->has('is_best_seller');
             $data->type = $request->type;
             $data->subcategory = $request->subcategory; // ✅ Handle subcategory
 

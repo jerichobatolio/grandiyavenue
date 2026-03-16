@@ -38,6 +38,11 @@
                         <input type="number" name="price" id="price" class="form-control" min="0" step="0.01" placeholder="0.00" required>
                     </div>
 
+                    <div class="form-group form-check">
+                        <input type="checkbox" name="is_best_seller" id="is_best_seller" class="form-check-input">
+                        <label class="form-check-label" for="is_best_seller">Mark as Best Seller</label>
+                    </div>
+
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
@@ -196,16 +201,6 @@
                 subcategorySelect.value = '';
             }
         }
-
-        // Auto-refresh page after modal form submission
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check if there's a success message and refresh the page after a short delay
-            if (document.querySelector('.alert-success')) {
-                setTimeout(function() {
-                    window.location.reload();
-                }, 2000);
-            }
-        });
     </script>
 </body>
 </html>

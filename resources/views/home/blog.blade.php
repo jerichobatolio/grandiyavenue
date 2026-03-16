@@ -2,51 +2,84 @@
 <div id="blog" class="container-fluid bg-dark text-light py-5 text-center wow fadeIn" style="scroll-margin-top: 100px;">
     <style>
         #blog .section-title {
-            color: white !important;
+            color: #f9fafb !important; /* clean white */
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+            font-weight: 800;
+            font-size: 2.5rem;
+            text-shadow: 0 0 18px rgba(0,0,0,0.6);
         }
     </style>
-    <h2 class="section-title py-5" style="color: white !important;">Grandiya Specialties</h2>
+    <h2 class="section-title py-4">Grandiya Specialties</h2>
     <style>
         .categories-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 24px;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+            gap: 26px;
             width: 92%;
             margin: 0 auto 36px auto;
         }
 
         .category-card {
+            position: relative;
             display: flex;
             flex-direction: column;
-            background-color: #1b1b1b;
-            border: 1px solid skyblue;
-            border-radius: 10px;
+            background: radial-gradient(circle at top left, #1f2937, #020617);
+            border-radius: 18px;
             text-decoration: none;
             color: white;
             overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 18px 40px rgba(0,0,0,0.7);
+            border: 1px solid rgba(56,189,248,0.35);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+        }
+
+        .category-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top, rgba(250, 204, 21, 0.16), transparent 55%);
+            opacity: 0;
+            transition: opacity 0.18s ease;
+            pointer-events: none;
         }
 
         .category-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.35);
+            transform: translateY(-4px);
+            box-shadow: 0 24px 50px rgba(0,0,0,0.9);
+            border-color: rgba(250,204,21,0.7);
+        }
+
+        .category-card:hover::before {
+            opacity: 1;
         }
 
         .category-card img {
             width: 100%;
-            max-height: 200px;
-            object-fit: contain;
-            background: #111;
+            aspect-ratio: 4 / 3;
+            object-fit: cover;
+            background: #020617;
         }
 
         .category-name {
-            padding: 12px 14px;
-            font-weight: 700;
-            font-size: 1.05rem;
+            padding: 12px 16px 14px 16px;
+            font-weight: 600;
+            font-size: 1.02rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .category-name span.label {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+
+        .category-name span.chevron {
+            font-size: 0.9rem;
+            opacity: 0.75;
         }
     </style>
 
@@ -66,7 +99,10 @@
                     <img src="{{ asset('assets/imgs/default.jpg') }}" alt="{{ $category->name }}">
                 @endif
                 <span class="category-name">
-                    {{ strtolower($category->name) === 'bunddle package' ? 'Bundle Package' : $category->name }}
+                    <span class="label">
+                        {{ strtolower($category->name) === 'bunddle package' ? 'Bundle Package' : $category->name }}
+                    </span>
+                    <span class="chevron">View →</span>
                 </span>
             </a>
         @endforeach

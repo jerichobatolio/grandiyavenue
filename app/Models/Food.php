@@ -12,7 +12,7 @@ class Food extends Model
     use HasFactory;
 
     protected $table = 'food'; // make sure this matches your table name
-    protected $fillable = ['title','detail','price','bundle_price','type','subcategory','image','category_id','subcategory_id'];
+    protected $fillable = ['title','detail','price','bundle_price','type','subcategory','image','category_id','subcategory_id','is_best_seller'];
 
     public function category(): BelongsTo
     {
