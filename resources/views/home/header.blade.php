@@ -207,6 +207,17 @@
         /* Chatbot */
         .chatbot-icon { position: fixed; bottom: 90px; right: 20px; z-index: 3100; cursor: pointer; }
         .chatbot-icon img { width: 90px; height: 90px; border-radius: 50%; }
+        .chatbot-icon.assistant-has-unread::after {
+            content: "";
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #ff214f;
+            box-shadow: 0 0 0 3px rgba(0,0,0,0.35);
+        }
         .chatbot-animate { animation: bounce 2s infinite; }
         @keyframes bounce { 0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);} }
         .chatbot-popup { display: none; position: fixed; bottom: 20px; right: 20px; width: 320px; background: #ffe6f0; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 3000; font-family: Arial, sans-serif; }
@@ -1293,6 +1304,13 @@
     chatbotIcon.addEventListener("click", () => {
         chatbotIcon.style.display = "none";
         chatbotPopup.style.display = "block";
+        // Opening the chat counts as seeing any admin replies – clear red dot
+        try {
+            const storageKey = "assistant_last_seen_admin_at";
+            const nowTs = Date.now();
+            localStorage.setItem(storageKey, String(nowTs));
+            chatbotIcon.classList.remove("assistant-has-unread");
+        } catch (e) {}
         if (!document.querySelector(".faq-questions")) {
             let faqDiv = document.createElement("div");
             faqDiv.className = "faq-questions";
@@ -1337,13 +1355,40 @@
             chatbotBody.appendChild(thread);
         }
         thread.innerHTML = "";
+
+        let latestAdminAt = null;
         (messages || []).forEach((m) => {
             const div = document.createElement("div");
             div.className = m.is_from_admin ? "bot-msg" : "user-msg";
             div.innerText = m.body;
             thread.appendChild(div);
+
+            if (m.is_from_admin && m.created_at) {
+                const ts = Date.parse(m.created_at);
+                if (!isNaN(ts)) {
+                    if (latestAdminAt === null || ts > latestAdminAt) {
+                        latestAdminAt = ts;
+                    }
+                }
+            }
         });
         chatbotBody.scrollTop = chatbotBody.scrollHeight;
+
+        // Update red dot on chatbot icon based on unread admin replies
+        try {
+            if (latestAdminAt !== null) {
+                const storageKey = "assistant_last_seen_admin_at";
+                const lastSeenRaw = localStorage.getItem(storageKey);
+                const lastSeen = lastSeenRaw ? parseInt(lastSeenRaw, 10) : 0;
+                const hasUnread = latestAdminAt > lastSeen;
+                const icon = document.getElementById("chatbotIcon");
+                if (icon) {
+                    icon.classList.toggle("assistant-has-unread", hasUnread);
+                }
+            }
+        } catch (e) {
+            // ignore localStorage errors
+        }
     }
 
     function loadAssistantThread() {
@@ -1467,6 +1512,19 @@
 
         chatbotBody.scrollTop = chatbotBody.scrollHeight;
         input.value = "";
+
+        // User just saw the chat; mark latest admin replies as seen (clears red dot)
+        try {
+            const storageKey = "assistant_last_seen_admin_at";
+            const nowTs = Date.now();
+            localStorage.setItem(storageKey, String(nowTs));
+            const icon = document.getElementById("chatbotIcon");
+            if (icon) {
+                icon.classList.remove("assistant-has-unread");
+            }
+        } catch (e) {
+            // ignore storage errors
+        }
     }
 
     // Profile Modal Functions
