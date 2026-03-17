@@ -161,14 +161,37 @@
                   <span id="return-refund-badge" class="reservation-badge" style="display: {{ $pendingReturnRefundsCount > 0 ? 'inline-block' : 'none' }};">{{ $pendingReturnRefundsCount }}</span>
                 </a></li>
 
-                <li><a href="{{route('admin.reviews')}}"> <i class="icon-star"></i>⭐ Customer Reviews
+                <li><a href="{{route('admin.reviews')}}"><i class="icon-star"></i><span class="sidebar-label">⭐ Customer Reviews</span>
                   @php $pendingReviewsCount = \App\Models\Review::where('status', 'pending')->count(); @endphp
                   <span id="reviews-badge" class="reservation-badge" style="display: {{ $pendingReviewsCount > 0 ? 'inline-block' : 'none' }};">{{ $pendingReviewsCount }}</span>
                 </a></li>
 
-                <li><a href="{{route('admin.announcements')}}"> <i class="icon-bullhorn"></i>📢 Announcements</a></li>
+                <li><a href="{{route('admin.announcements')}}"><i class="icon-bullhorn"></i><span class="sidebar-label">📢 Announcements</span></a></li>
 
-                <li><a href="{{ route('admin.faqs') }}"> <i class="icon-question"></i>🤖 Grandiya Assistant</a></li>
+                <li class="assistant-faq-link"><a href="{{ route('admin.faqs') }}"><i class="icon-question"></i><span class="sidebar-label">🤖 Grandiya Assistant</span></a></li>
+                <li class="assistant-conversations-link"><a href="{{ route('admin.assistant.conversations') }}"><i class="icon-comment"></i><span class="sidebar-label">💬 Assistant Conversations</span>
+                  @php
+                    $assistantPendingCount = 0;
+                    try {
+                        if (\Illuminate\Support\Facades\Schema::hasTable('assistant_messages')) {
+                            $lastMessages = \App\Models\AssistantMessage::select('user_id', 'is_from_admin', 'created_at')
+                                ->orderBy('created_at', 'asc')
+                                ->get()
+                                ->groupBy('user_id')
+                                ->map(function ($group) {
+                                    return $group->last();
+                                });
+
+                            $assistantPendingCount = $lastMessages->filter(function ($msg) {
+                                return !$msg->is_from_admin;
+                            })->count();
+                        }
+                    } catch (\Throwable $e) {
+                        $assistantPendingCount = 0;
+                    }
+                  @endphp
+                  <span id="assistant-badge" class="reservation-badge" style="display: {{ $assistantPendingCount > 0 ? 'inline-block' : 'none' }};">{{ $assistantPendingCount }}</span>
+                </a></li>
 
                 <li><a href="#eventTypesDropdown" aria-expanded="false" data-toggle="collapse"> <i class="icon-star"></i>🎪 Event Types</a>
                   <ul id="eventTypesDropdown" class="collapse list-unstyled ">
@@ -372,15 +395,32 @@
           }
         }
         
+        #sidebar ul.list-unstyled > li {
+          margin: 4px 0;
+        }
         #sidebar li a {
           position: relative;
           display: flex;
           align-items: center;
           flex-wrap: nowrap;
         }
+        #sidebar li a .sidebar-label {
+          margin-left: 6px;
+          white-space: nowrap;
+        }
         #sidebar li a .reservation-badge {
           margin-left: auto;
           flex-shrink: 0;
+        }
+        /* Assistant links: follow normal spacing like other items */
+        #sidebar li.assistant-faq-link,
+        #sidebar li.assistant-conversations-link {
+          margin-top: 4px;
+          margin-bottom: 0;
+        }
+        /* Pull Assistant Conversations a bit closer to Grandiya Assistant */
+        #sidebar li.assistant-conversations-link {
+          margin-top: -2px;
         }
 
         /* Mobile/tablet: sidebar as full-width overlay, all labels visible */

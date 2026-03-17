@@ -205,7 +205,7 @@
         }
 
         /* Chatbot */
-        .chatbot-icon { position: fixed; bottom: 100px; right: 20px; z-index: 3100; cursor: pointer; }
+        .chatbot-icon { position: fixed; bottom: 90px; right: 20px; z-index: 3100; cursor: pointer; }
         .chatbot-icon img { width: 90px; height: 90px; border-radius: 50%; }
         .chatbot-animate { animation: bounce 2s infinite; }
         @keyframes bounce { 0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);} }
@@ -764,7 +764,11 @@
         </ul>
         <ul class="navbar-nav ms-auto">
             @if (Route::has('login'))
-                @auth
+                @php
+                    $navUser = auth()->user();
+                    $navIsCustomer = $navUser && (string)($navUser->usertype ?? 'user') === 'user';
+                @endphp
+                @if ($navIsCustomer)
                     <!-- Return/Refund Button -->
                     @php
                         try {
@@ -1012,58 +1016,62 @@
                         </div>
                     </li>
 
-                    <li class="nav-item"><a class="nav-link" href="#blog">Delivery</a></li>
-
-                    <!-- Profile Account Dropdown (uses Jetstream URL + cache bust so new photo shows after upload) -->
                     @php
                         $authUser = auth()->user();
-                        $profilePhotoSrc = $authUser && $authUser->profile_photo_path
+                        $isCustomer = $authUser && (string)($authUser->usertype ?? 'user') === 'user';
+                        $profilePhotoSrc = $isCustomer && $authUser->profile_photo_path
                             ? (route('user.profile.photo', $authUser->id) . '?v=' . ($authUser->updated_at?->timestamp ?? time()))
                             : null;
                     @endphp
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <div class="profile-avatar">
-                                @if($profilePhotoSrc)
-                                    <img src="{{ $profilePhotoSrc }}" alt="Profile" class="profile-img">
-                                @else
-                                    <div class="profile-img-placeholder">
-                                        <i class="fas fa-user"></i>
-                                    </div>
-                                @endif
-                            </div>
-                            <span class="ml-2">{{ $authUser ? $authUser->name : 'User' }}</span>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown" style="min-width: 250px;">
-                            <div class="dropdown-header text-center">
-                                <div class="profile-avatar-large mb-2">
+
+                    <li class="nav-item"><a class="nav-link" href="#blog">Delivery</a></li>
+
+                    @if($isCustomer)
+                        <!-- Customer profile dropdown (hidden for admin accounts) -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <div class="profile-avatar">
                                     @if($profilePhotoSrc)
-                                        <img src="{{ $profilePhotoSrc }}" alt="Profile" class="profile-img-large">
+                                        <img src="{{ $profilePhotoSrc }}" alt="Profile" class="profile-img">
                                     @else
-                                        <div class="profile-img-placeholder-large">
+                                        <div class="profile-img-placeholder">
                                             <i class="fas fa-user"></i>
                                         </div>
                                     @endif
                                 </div>
-                                <h6 class="mb-0">{{ $authUser ? $authUser->name : 'User' }}</h6>
-                                <small class="text-muted">{{ $authUser ? $authUser->email : 'user@example.com' }}</small>
+                                <span class="ml-2">{{ $authUser ? $authUser->name : 'User' }}</span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown" style="min-width: 250px;">
+                                <div class="dropdown-header text-center">
+                                    <div class="profile-avatar-large mb-2">
+                                        @if($profilePhotoSrc)
+                                            <img src="{{ $profilePhotoSrc }}" alt="Profile" class="profile-img-large">
+                                        @else
+                                            <div class="profile-img-placeholder-large">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <h6 class="mb-0">{{ $authUser ? $authUser->name : 'User' }}</h6>
+                                    <small class="text-muted">{{ $authUser ? $authUser->email : 'user@example.com' }}</small>
+                                </div>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#" onclick="openProfileModal(); return false;">
+                                    <i class="fas fa-user-edit mr-2"></i>Edit Profile
+                                </a>
+                                <a class="dropdown-item" href="#" onclick="openPhotoUpload(); return false;">
+                                    <i class="fas fa-camera mr-2"></i>Change Photo
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <form action="{{route('logout')}}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                                    </button>
+                                </form>
                             </div>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="#" onclick="openProfileModal(); return false;">
-                                <i class="fas fa-user-edit mr-2"></i>Edit Profile
-                            </a>
-                            <a class="dropdown-item" href="#" onclick="openPhotoUpload(); return false;">
-                                <i class="fas fa-camera mr-2"></i>Change Photo
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <form action="{{route('logout')}}" method="POST" class="d-inline">
-                                @csrf
-                                <button type="submit" class="dropdown-item text-danger">
-                                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
-                                </button>
-                            </form>
-                        </div>
-                    </li>
+                        </li>
+                    @endif
                 @else
                     <li class="nav-item"><a class="nav-link" href="#blog">Delivery</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{route('login')}}">Login</a></li>
@@ -1209,6 +1217,9 @@
             ];
     @endphp
     const GRANDIYA_FAQS = @json($faqItems);
+    const ASSISTANT_AUTH = @json(auth()->check());
+    const ASSISTANT_SEND_URL = "{{ url('/customer/assistant/send') }}";
+    const ASSISTANT_MESSAGES_URL = "{{ url('/customer/assistant/messages') }}";
 
     // Enable Bootstrap 5 dropdowns explicitly
     document.addEventListener('DOMContentLoaded', function() {
@@ -1278,6 +1289,7 @@
     const chatbotClose = document.getElementById("chatbotClose");
     const chatbotBody = document.querySelector(".chatbot-body");
 
+    let assistantPollTimer = null;
     chatbotIcon.addEventListener("click", () => {
         chatbotIcon.style.display = "none";
         chatbotPopup.style.display = "block";
@@ -1301,12 +1313,52 @@
             }
             chatbotBody.appendChild(faqDiv);
         }
+
+        if (ASSISTANT_AUTH) {
+            loadAssistantThread();
+            assistantPollTimer = setInterval(loadAssistantThread, 5000);
+        }
     });
 
     chatbotClose.addEventListener("click", () => {
         chatbotPopup.style.display = "none";
         chatbotIcon.style.display = "block";
+        if (assistantPollTimer) {
+            clearInterval(assistantPollTimer);
+            assistantPollTimer = null;
+        }
     });
+
+    function renderAssistantThread(messages) {
+        let thread = document.getElementById("assistantThreadContainer");
+        if (!thread) {
+            thread = document.createElement("div");
+            thread.id = "assistantThreadContainer";
+            chatbotBody.appendChild(thread);
+        }
+        thread.innerHTML = "";
+        (messages || []).forEach((m) => {
+            const div = document.createElement("div");
+            div.className = m.is_from_admin ? "bot-msg" : "user-msg";
+            div.innerText = m.body;
+            thread.appendChild(div);
+        });
+        chatbotBody.scrollTop = chatbotBody.scrollHeight;
+    }
+
+    function loadAssistantThread() {
+        if (!ASSISTANT_AUTH) return;
+        fetch(ASSISTANT_MESSAGES_URL, {
+            method: "GET",
+            headers: { "Accept": "application/json", "X-Requested-With": "XMLHttpRequest" },
+            credentials: "same-origin",
+        })
+            .then((r) => r.json())
+            .then((data) => {
+                if (data && data.messages) renderAssistantThread(data.messages);
+            })
+            .catch(() => {});
+    }
 
     function faqReply(question, answerFromDb) {
         let userMsg = document.createElement("div");
@@ -1335,15 +1387,14 @@
 
     function sendMessageBtn() {
         let input = document.getElementById("userInput");
-        let msg = input.value.trim(); if (msg === "") return;
+        let msg = input.value.trim();
+        if (msg === "") return;
+
         let userMsg = document.createElement("div");
         userMsg.className = "user-msg";
         userMsg.innerText = msg;
         chatbotBody.appendChild(userMsg);
 
-        let botMsg = document.createElement("div");
-        botMsg.className = "bot-msg";
-        // Try to answer from configured FAQs (admin-managed)
         const msgLower = msg.toLowerCase();
         const match = Array.isArray(GRANDIYA_FAQS)
             ? GRANDIYA_FAQS.find((item) => {
@@ -1352,12 +1403,57 @@
             })
             : null;
 
+        const botMsg = document.createElement("div");
+        botMsg.className = "bot-msg";
+
         if (match && match.answer && String(match.answer).trim() !== "") {
             botMsg.innerText = String(match.answer);
+            chatbotBody.appendChild(botMsg);
+            if (ASSISTANT_AUTH) {
+                fetch(ASSISTANT_SEND_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.content || "",
+                    },
+                    credentials: "same-origin",
+                    body: JSON.stringify({ message: msg }),
+                })
+                    .then(() => {
+                        if (ASSISTANT_AUTH) setTimeout(loadAssistantThread, 800);
+                    })
+                    .catch(() => {});
+            }
         } else {
-            botMsg.innerText = "Thanks for your message!";
+            if (!ASSISTANT_AUTH) {
+                botMsg.innerText = "Please log in to send a message to our team.";
+                chatbotBody.appendChild(botMsg);
+            } else {
+                botMsg.innerText = "Message sent. Our team will reply here soon.";
+                chatbotBody.appendChild(botMsg);
+                fetch(ASSISTANT_SEND_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                        "X-CSRF-TOKEN": document.querySelector('meta[name=\"csrf-token\"]')?.content || "",
+                    },
+                    credentials: "same-origin",
+                    body: JSON.stringify({ message: msg }),
+                })
+                    .then((r) => {
+                        if (r.ok) setTimeout(loadAssistantThread, 800);
+                        else
+                            r.json()
+                                .then((d) => {
+                                    if (d.message) botMsg.innerText = d.message;
+                                })
+                                .catch(() => {});
+                    })
+                    .catch(() => {});
+            }
         }
-        chatbotBody.appendChild(botMsg);
 
         chatbotBody.scrollTop = chatbotBody.scrollHeight;
         input.value = "";

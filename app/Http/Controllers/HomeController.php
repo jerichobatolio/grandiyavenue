@@ -28,11 +28,17 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use App\Models\AssistantMessage;
 
 class HomeController extends Controller
 {
     public function my_home()
     {
+        // If an admin account is logged in, don't show public home – go straight to dashboard
+        if (Auth::check() && (string) (Auth::user()->usertype ?? 'user') !== 'user') {
+            return app(\App\Http\Controllers\AdminController::class)->dashboard();
+        }
+
         $data = Food::all();
         $galleries = Gallery::active()->ordered()->get();
         // Show all event types on home (no active filter)
@@ -66,16 +72,32 @@ class HomeController extends Controller
             ->orderBy('id')
             ->get();
         
-        // ✅ Fetch notifications for the authenticated user
+        // ✅ Fetch notifications & assistant reply count for the authenticated user
         $notifications = [];
         $notifCount = 0;
+        $assistantReplyCount = 0;
         if (Auth::check()) {
-            $notifications = Notification::where('user_id', Auth::id())
+            $userId = Auth::id();
+            $notifications = Notification::where('user_id', $userId)
                 ->orderBy('created_at', 'desc')
                 ->get();
-            $notifCount = Notification::where('user_id', Auth::id())
+            $notifCount = Notification::where('user_id', $userId)
                 ->where('is_read', false)
                 ->count();
+
+            // Count admin replies sent AFTER the customer's last message
+            if (Schema::hasTable('assistant_messages')) {
+                $lastCustomerMessageAt = AssistantMessage::where('user_id', $userId)
+                    ->where('is_from_admin', false)
+                    ->max('created_at');
+
+                if ($lastCustomerMessageAt) {
+                    $assistantReplyCount = AssistantMessage::where('user_id', $userId)
+                        ->where('is_from_admin', true)
+                        ->where('created_at', '>', $lastCustomerMessageAt)
+                        ->count();
+                }
+            }
         }
         
         // Get real table status and shared layout from database
@@ -100,6 +122,7 @@ class HomeController extends Controller
             'packageInclusions',
             'notifications',
             'notifCount',
+            'assistantReplyCount',
             'tableLayout',
             'tableStatus',
             'reservations',
@@ -179,13 +202,27 @@ class HomeController extends Controller
                     ->orderBy('id')
                     ->get();
 
-                // ✅ Fetch notifications for the authenticated user
+                // ✅ Fetch notifications & assistant reply count for the authenticated user
                 $notifications = Notification::where('user_id', Auth::id())
                     ->orderBy('created_at', 'desc')
                     ->get();
                 $notifCount = Notification::where('user_id', Auth::id())
                     ->where('is_read', false)
                     ->count();
+
+                $assistantReplyCount = 0;
+                if (Schema::hasTable('assistant_messages')) {
+                    $lastCustomerMessageAt = AssistantMessage::where('user_id', Auth::id())
+                        ->where('is_from_admin', false)
+                        ->max('created_at');
+
+                    if ($lastCustomerMessageAt) {
+                        $assistantReplyCount = AssistantMessage::where('user_id', Auth::id())
+                            ->where('is_from_admin', true)
+                            ->where('created_at', '>', $lastCustomerMessageAt)
+                            ->count();
+                    }
+                }
 
                 // Get real table status and shared layout from database
                 $tableLayout = $this->getTableLayoutPayload();
@@ -209,6 +246,7 @@ class HomeController extends Controller
                     'packageInclusions',
                     'notifications',
                     'notifCount',
+                    'assistantReplyCount',
                     'tableLayout',
                     'tableStatus',
                     'reservations',

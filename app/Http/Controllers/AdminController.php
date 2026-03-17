@@ -20,6 +20,7 @@ use App\Models\FoodPackageItem; // ✅ Simple food package items for events
 use App\Models\Announcement; // ✅ Announcements
 use App\Models\ReturnRefund; // ✅ Returns & refunds
 use App\Models\Faq; // ✅ FAQs for Grandiya Assistant
+use App\Models\AssistantMessage; // ✅ Assistant chat (customer ↔ admin)
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
@@ -2166,6 +2167,89 @@ class AdminController extends Controller
         return redirect()->back()->with('message', 'FAQ deleted successfully!');
     }
 
+    // -------------------- ASSISTANT CONVERSATIONS (Customer ↔ Admin chat) --------------------
+
+    /**
+     * List all users who have sent assistant messages (conversations).
+     */
+    public function assistantConversations()
+    {
+        if (! Schema::hasTable('assistant_messages')) {
+            return redirect()->route('admin.faqs')->with('error', 'Assistant messages table not found. Run migrations.');
+        }
+
+        $userIds = AssistantMessage::distinct()->pluck('user_id');
+        $users = User::whereIn('id', $userIds)->get();
+        $lastAt = AssistantMessage::selectRaw('user_id, max(created_at) as last_at')->groupBy('user_id')->pluck('last_at', 'user_id');
+        $users = $users->sortByDesc(fn ($u) => $lastAt[$u->id] ?? 0)->values();
+
+        $lastMessageByUser = AssistantMessage::select('user_id', 'message', 'is_from_admin', 'created_at')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->unique('user_id')
+            ->keyBy('user_id');
+
+        return view('admin.assistant_conversations', [
+            'users' => $users,
+            'lastMessageByUser' => $lastMessageByUser,
+        ]);
+    }
+
+    /**
+     * Show thread with a specific user and allow admin to reply.
+     */
+    public function assistantThread($userId)
+    {
+        $user = User::find($userId);
+        if (! $user) {
+            return redirect()->route('admin.assistant.conversations')->with('error', 'User not found.');
+        }
+
+        $messages = AssistantMessage::where('user_id', $user->id)->orderBy('created_at')->get();
+
+        return view('admin.assistant_thread', ['user' => $user, 'messages' => $messages]);
+    }
+
+    /**
+     * Admin replies to a user's assistant thread.
+     */
+    public function replyToThread(Request $request, $userId)
+    {
+        $request->validate(['message' => 'required|string|max:2000']);
+
+        $user = User::find($userId);
+        if (! $user) {
+            return redirect()->route('admin.assistant.conversations')->with('error', 'User not found.');
+        }
+
+        AssistantMessage::create([
+            'user_id' => $user->id,
+            'message' => trim($request->message),
+            'is_from_admin' => true,
+        ]);
+
+        return redirect()->route('admin.assistant.thread', $userId)->with('message', 'Reply sent!');
+    }
+
+    /**
+     * Delete an entire assistant conversation for a given user.
+     */
+    public function deleteAssistantConversation($userId)
+    {
+        if (! Schema::hasTable('assistant_messages')) {
+            return redirect()->route('admin.assistant.conversations')->with('error', 'Assistant messages table not found.');
+        }
+
+        $user = User::find($userId);
+        if (! $user) {
+            return redirect()->route('admin.assistant.conversations')->with('error', 'User not found.');
+        }
+
+        AssistantMessage::where('user_id', $user->id)->delete();
+
+        return redirect()->route('admin.assistant.conversations')->with('message', 'Conversation deleted successfully.');
+    }
+
     /**
      * Store a new Food Package item.
      */
@@ -2372,11 +2456,17 @@ class AdminController extends Controller
         $today = $now->copy()->startOfDay();
         $sevenDaysAgo = $now->copy()->subDays(7)->startOfDay();
 
+        // Price is stored as string; use correct cast per driver
+        $orderPriceExpression = DB::connection()->getDriverName() === 'pgsql'
+            ? DB::raw('CAST(price AS NUMERIC)')
+            : DB::raw('CAST(price AS DECIMAL(10,2))');
+
         // Summary metrics (net revenue includes orders, event bookings, and processed refunds)
-        $orderRevenueTotal = Order::where('delivery_status', 'Delivered')->sum('price');
+        $orderRevenueTotal = Order::where('delivery_status', 'Delivered')
+            ->sum($orderPriceExpression);
         $orderRevenueToday = Order::where('delivery_status', 'Delivered')
             ->whereDate('created_at', $today)
-            ->sum('price');
+            ->sum($orderPriceExpression);
 
         // Event booking revenue (use recorded amount for Paid, non-archived bookings)
         $eventRevenue = EventBooking::where('is_archived', false)
@@ -2585,11 +2675,16 @@ class AdminController extends Controller
         $today = $now->copy()->startOfDay();
         $sevenDaysAgo = $now->copy()->subDays(7)->startOfDay();
 
+        $orderPriceExpression = DB::connection()->getDriverName() === 'pgsql'
+            ? DB::raw('CAST(price AS NUMERIC)')
+            : DB::raw('CAST(price AS DECIMAL(10,2))');
+
         // Summary metrics (net revenue includes orders, event bookings, and processed refunds)
-        $orderRevenueTotal = Order::where('delivery_status', 'Delivered')->sum('price');
+        $orderRevenueTotal = Order::where('delivery_status', 'Delivered')
+            ->sum($orderPriceExpression);
         $orderRevenueToday = Order::where('delivery_status', 'Delivered')
             ->whereDate('created_at', $today)
-            ->sum('price');
+            ->sum($orderPriceExpression);
 
         // Event booking revenue (use recorded amount for Paid, non-archived bookings)
         $eventRevenue = EventBooking::where('is_archived', false)
@@ -2679,7 +2774,7 @@ class AdminController extends Controller
             // Net revenue per day (orders + approved table reservations + event bookings - refunds)
             $dailyOrderRevenue = Order::where('delivery_status', 'Delivered')
                 ->whereBetween('created_at', [$dateStart, $dateEnd])
-                ->sum('price');
+                ->sum($orderPriceExpression);
 
             $dailyEventRevenue = EventBooking::where('is_archived', false)
                 ->where('status', 'Paid')

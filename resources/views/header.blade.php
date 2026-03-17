@@ -153,7 +153,7 @@
         }
 
         /* Chatbot */
-        .chatbot-icon { position: fixed; bottom: 100px; right: 20px; z-index: 3100; cursor: pointer; }
+        .chatbot-icon { position: fixed; bottom: 90px; right: 20px; z-index: 3100; cursor: pointer; }
         .chatbot-icon img { width: 90px; height: 90px; border-radius: 50%; }
         .chatbot-animate { animation: bounce 2s infinite; }
         @keyframes bounce { 0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);} }

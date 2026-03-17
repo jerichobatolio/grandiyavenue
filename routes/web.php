@@ -6,6 +6,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\NotificationController; // ✅ Add this
+use App\Http\Controllers\AssistantController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\EventBookingController;
@@ -320,6 +321,11 @@ Route::get('/admin/faqs', [AdminController::class, 'faqs'])->name('admin.faqs');
 Route::post('/admin/faqs', [AdminController::class, 'storeFaq'])->name('admin.faqs.store');
 Route::post('/admin/faqs/{id}', [AdminController::class, 'updateFaq'])->name('admin.faqs.update');
 Route::get('/admin/faqs/{id}/delete', [AdminController::class, 'deleteFaq'])->name('admin.faqs.delete');
+// Admin Assistant conversations (customer ↔ admin chat)
+Route::get('/admin/assistant/conversations', [AdminController::class, 'assistantConversations'])->name('admin.assistant.conversations');
+Route::get('/admin/assistant/thread/{userId}', [AdminController::class, 'assistantThread'])->name('admin.assistant.thread');
+Route::post('/admin/assistant/reply/{userId}', [AdminController::class, 'replyToThread'])->name('admin.assistant.reply');
+Route::delete('/admin/assistant/conversation/{userId}', [AdminController::class, 'deleteAssistantConversation'])->name('admin.assistant.conversation.delete');
 
 // Event Type management routes - unified interface
 Route::get('event_types', [EventTypeController::class, 'index'])->name('event_types.index');
@@ -431,6 +437,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/customer/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('customer.notifications.mark_all_read');
     Route::post('/customer/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('customer.notifications.read');
     Route::delete('/customer/notifications/{id}', [NotificationController::class, 'deleteNotification'])->name('customer.notifications.delete');
+    // Grandiya Assistant chat: send message & get thread (two-way with admin)
+    Route::post('/customer/assistant/send', [AssistantController::class, 'send'])->name('customer.assistant.send');
+    Route::get('/customer/assistant/messages', [AssistantController::class, 'messages'])->name('customer.assistant.messages');
 });
 
 // Return/Refund routes for customers
