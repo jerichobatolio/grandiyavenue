@@ -359,19 +359,10 @@
                         </div>
                     </div>
 
-                    <!-- Mobile-only: QRPh-style pay options (Scan QR + Open in App) -->
+                    <!-- Mobile-only: Scan QR or Open GCash (not shown on desktop/website) -->
                     <div class="mobile-pay-options mobile-pay-options-table">
-                        <div class="qrph-header qrph-header-table">
-                            <span class="qrph-logo">QRPh</span>
-                        </div>
-                        <div class="mobile-pay-amount-bar mobile-pay-amount-bar-table">
-                            <span class="text-muted small">Amount to pay</span>
-                            <strong class="d-block" id="table-payment-mobile-amount">PHP 1,000.00</strong>
-                        </div>
-                        <a href="https://www.gcash.com" target="_blank" rel="noopener" class="btn btn-primary btn-open-external-app btn-open-external-app-table">
-                            <i class="fas fa-external-link-alt me-2"></i>OPEN in External App
-                        </a>
-                        <p class="small text-muted mt-2 mb-1">— or scan QR code below —</p>
+                        <p class="small table-payment-helper-text mb-2">Scan the QR code to pay, or</p>
+                        <a href="https://www.gcash.com" target="_blank" rel="noopener" class="btn btn-open-gcash btn-open-gcash-table">Open GCash</a>
                     </div>
 
                     <div class="table-payment-qr-wrap text-center">
@@ -1174,36 +1165,24 @@ label, .form-label {
 }
 
 
-/* Mobile-only: QRPh-style pay options for table payment */
+/* Mobile-only: Open GCash button for table payment (hidden on desktop/website) */
 .mobile-pay-options-table { display: none; }
 @media (max-width: 767px) {
-    .mobile-pay-options-table { display: block !important; }
-    .qrph-header-table {
-        background: linear-gradient(135deg, #003d82 0%, #0066b3 100%);
-        color: #fff;
-        padding: 12px 16px;
-        border-radius: 8px;
-        margin-bottom: 12px;
-        text-align: center;
-    }
-    .qrph-header-table .qrph-logo { font-weight: 700; font-size: 1.4rem; letter-spacing: 0.05em; }
-    .mobile-pay-amount-bar-table {
-        background: rgba(102, 126, 234, 0.12);
-        padding: 10px 14px;
-        border-radius: 8px;
-        margin-bottom: 14px;
-    }
-    .btn-open-external-app-table {
+    .mobile-pay-options-table { display: block !important; margin-bottom: 1rem; }
+    .btn-open-gcash-table {
+        display: block;
         width: 100%;
         padding: 14px 20px;
-        font-size: 1rem;
+        font-size: 1.1rem;
         font-weight: 600;
         border-radius: 8px;
-        background: linear-gradient(135deg, #003d82 0%, #0066b3 100%);
+        background: #E41E2D;
         border: none;
         color: #fff;
+        text-align: center;
+        text-decoration: none;
     }
-    .btn-open-external-app-table:hover { color: #fff; opacity: 0.95; }
+    .btn-open-gcash-table:hover { color: #fff; background: #c41a28; }
 }
 @media (min-width: 768px) {
     .mobile-pay-options-table { display: none !important; }
@@ -2355,10 +2334,7 @@ document.addEventListener('DOMContentLoaded', function() {
             : (booking.table_number || '-');
         document.getElementById('table-payment-summary-date').textContent = booking.date_display || '-';
         document.getElementById('table-payment-summary-time').textContent = `${booking.time_in_display || '-'} to ${booking.time_out_display || '-'}`;
-        const amountText = formatPeso(booking.down_payment_amount || fixedTableDownpayment);
-        document.getElementById('table-payment-summary-amount').textContent = amountText;
-        const mobileAmountEl = document.getElementById('table-payment-mobile-amount');
-        if (mobileAmountEl) mobileAmountEl.textContent = amountText;
+        document.getElementById('table-payment-summary-amount').textContent = formatPeso(booking.down_payment_amount || fixedTableDownpayment);
 
         const proofForm = document.getElementById('table-payment-proof-form');
         if (proofForm) {

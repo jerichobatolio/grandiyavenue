@@ -598,6 +598,30 @@
             }
         }
 
+        /* Mobile-only: Open GCash in Delivery/Checkout GCash modal (hidden on desktop/website) */
+        .mobile-pay-options-cart { display: none; }
+        @media (max-width: 767px) {
+            .mobile-pay-options-cart { display: block !important; margin: 20px 0; }
+            #gcash-qr-modal .gcash-scan-desktop { display: none !important; }
+            .btn-open-gcash-cart {
+                display: block;
+                width: 100%;
+                padding: 14px 20px;
+                font-size: 1.1rem;
+                font-weight: 600;
+                border-radius: 8px;
+                background: #E41E2D;
+                border: none;
+                color: #fff;
+                text-align: center;
+                text-decoration: none;
+            }
+            .btn-open-gcash-cart:hover { background: #c41a28; color: #fff; }
+        }
+        @media (min-width: 768px) {
+            .mobile-pay-options-cart { display: none !important; }
+        }
+
         .empty-cart-state {
             text-align: center;
             padding: 40px 20px;
@@ -870,8 +894,14 @@
                         </div>
                     @endif
                 </div>
+
+                <!-- Mobile-only: Scan QR or Open GCash (not shown on desktop/website) -->
+                <div class="mobile-pay-options mobile-pay-options-cart">
+                    <p style="color: #ccc; margin-bottom: 12px;">Scan the QR code to pay, or</p>
+                    <a href="https://www.gcash.com" target="_blank" rel="noopener" class="btn btn-open-gcash-cart">Open GCash</a>
+                </div>
                 
-                <p style="color: #ccc; margin-bottom: 20px;">Scan the QR code to pay via GCash.</p>
+                <p class="gcash-scan-desktop" style="color: #ccc; margin-bottom: 20px;">Scan the QR code to pay via GCash.</p>
                 
                 <div style="background-color: #4d3a00; color: white; padding: 15px; border-radius: 8px; margin: 20px 0;">
                     <strong>Important:</strong> Please keep your GCash transaction receipt as proof of payment. 

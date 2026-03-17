@@ -563,19 +563,10 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body text-center">
-                <!-- Mobile-only: QRPh-style pay options (Scan QR + Open in App) -->
+                <!-- Mobile-only: Scan QR or Open GCash (not shown on desktop/website) -->
                 <div class="mobile-pay-options">
-                    <div class="qrph-header">
-                        <span class="qrph-logo">QRPh</span>
-                    </div>
-                    <div class="mobile-pay-amount-bar">
-                        <span class="text-muted small">Amount to pay</span>
-                        <strong class="d-block" id="payment_amount_mobile">₱2,000.00</strong>
-                    </div>
-                    <a href="https://www.gcash.com" target="_blank" rel="noopener" class="btn btn-primary btn-open-external-app">
-                        <i class="fas fa-external-link-alt me-2"></i>OPEN in External App
-                    </a>
-                    <p class="small text-muted mt-2 mb-1">— or scan QR code below —</p>
+                    <p class="text-muted mb-2">Scan the QR code to pay, or</p>
+                    <a href="https://www.gcash.com" target="_blank" rel="noopener" class="btn btn-open-gcash">Open GCash</a>
                 </div>
                 <h4 class="payment-amount-desktop">Pay <span id="payment_amount">₱2,000.00</span> via GCash</h4>
                 <div class="my-4">
@@ -602,40 +593,24 @@
     </div>
 </div>
 <style>
-/* Mobile-only payment: QRPh-style header + Open in External App */
+/* Mobile-only: Open GCash button (hidden on desktop/website) */
 @media (max-width: 767px) {
-    .mobile-pay-options { display: block !important; }
+    .mobile-pay-options { display: block !important; margin-bottom: 1rem; }
     #paymentModal .payment-amount-desktop { display: none; }
-    .qrph-header {
-        background: linear-gradient(135deg, #003d82 0%, #0066b3 100%);
-        color: #fff;
-        padding: 12px 16px;
-        border-radius: 8px 8px 0 0;
-        margin: -1rem -1rem 1rem -1rem;
-        text-align: center;
-    }
-    .qrph-logo {
-        font-weight: 700;
-        font-size: 1.4rem;
-        letter-spacing: 0.05em;
-    }
-    .qrph-logo .qr { color: #ff0000; }
-    .mobile-pay-amount-bar {
-        background: rgba(102, 126, 234, 0.12);
-        padding: 10px 14px;
-        border-radius: 8px;
-        margin-bottom: 14px;
-    }
-    .btn-open-external-app {
+    .btn-open-gcash {
+        display: block;
         width: 100%;
         padding: 14px 20px;
-        font-size: 1rem;
+        font-size: 1.1rem;
         font-weight: 600;
         border-radius: 8px;
-        background: linear-gradient(135deg, #003d82 0%, #0066b3 100%);
+        background: #E41E2D;
         border: none;
+        color: #fff;
+        text-align: center;
+        text-decoration: none;
     }
-    .btn-open-external-app:hover { opacity: 0.95; color: #fff; }
+    .btn-open-gcash:hover { background: #c41a28; color: #fff; }
 }
 @media (min-width: 768px) {
     .mobile-pay-options { display: none !important; }
@@ -695,27 +670,15 @@
 <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title" id="confirmationModalLabel">✅ Booking Confirmed!</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
             <div class="modal-body text-center">
                 <div class="mb-3">
-                    <i class="fas fa-clock text-warning" style="font-size: 4rem;"></i>
+                    <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
                 </div>
-                <h4 class="text-warning">Payment Submitted for Verification!</h4>
-                <p>Your <span id="confirmed_payment_label">Full Payment</span> of <span id="confirmed_payment_amount">₱2,000.00</span> has been submitted and is pending admin verification. Thank you for booking with us.</p>
-                <div class="alert alert-info" style="background-color: #ffffff; color: #000000;">
-                    <strong class="text-dark">Booking ID:</strong>
-                    <span id="confirmed_booking_id" style="color: #28a745; font-weight: 700;"></span><br>
-                    <strong class="text-dark">Event Date:</strong>
-                    <span id="confirmed_event_date" style="color: #28a745; font-weight: 700;"></span><br>
-                    <strong class="text-dark">Event Type:</strong>
-                    <span id="confirmed_event_type" style="color: #28a745; font-weight: 700;"></span>
-                </div>
+                <h4 class="text-success">Payment Sent!</h4>
                 <p class="text-muted">We'll contact you soon to confirm the final details of your event.</p>
             </div>
             <div class="modal-footer">
+                <a href="#" id="downloadReceiptBtn" class="btn btn-success me-2" style="color: white; text-decoration: none;"><i class="fas fa-download"></i> Download Receipt</a>
                 <button type="button" class="btn btn-primary" id="confirmationCloseBtn" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
@@ -1172,8 +1135,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     const downPaymentLabel = formatCurrency(DEFAULT_DOWN_PAYMENT);
                     const fullPaymentLabel = formatCurrency(DEFAULT_FULL_PAYMENT);
                     document.getElementById('payment_amount').textContent = downPaymentLabel;
-                    const paymentAmountMobile = document.getElementById('payment_amount_mobile');
-                    if (paymentAmountMobile) paymentAmountMobile.textContent = downPaymentLabel;
                     updatePaymentOptionDisplays(downPaymentLabel, fullPaymentLabel);
                     
                     // Show payment modal
@@ -1321,21 +1282,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     bookingCleanupPending = false;
                     bookingFinalized = true;
                     navigatingToProofUpload = false;
-                    
-                    // Show confirmation
-                    document.getElementById('confirmed_booking_id').textContent = data.booking.id;
-                    document.getElementById('confirmed_event_date').textContent = data.booking.event_date;
-                    document.getElementById('confirmed_event_type').textContent = data.booking.event_type ? data.booking.event_type.name : 'Custom Event';
-                    
-                    // Set the confirmed payment details
-                    const amountPaidValue = data.booking.amount_paid ?? data.booking.down_payment_amount ?? DEFAULT_DOWN_PAYMENT;
-                    const confirmedAmount = formatCurrency(amountPaidValue);
-                    const paymentLabel = data.booking.payment_option === 'full_payment' ? 'Full Payment' : 'Down Payment';
-                    document.getElementById('confirmed_payment_amount').textContent = confirmedAmount;
-                    const confirmedPaymentLabelEl = document.getElementById('confirmed_payment_label');
-                    if (confirmedPaymentLabelEl) {
-                        confirmedPaymentLabelEl.textContent = paymentLabel;
-                    }
                     
                     // Show confirmation modal
                     const confirmationModalElement = document.getElementById('confirmationModal');

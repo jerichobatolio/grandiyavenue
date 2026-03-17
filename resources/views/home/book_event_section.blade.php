@@ -265,37 +265,25 @@
             margin-top: 80px;
         }
 
-        /* Mobile-only: QRPh-style pay options (Scan QR + Open in External App) */
+        /* Mobile-only: Open GCash button (hidden on desktop/website) */
         .mobile-pay-options-section { display: none; }
         @media (max-width: 767px) {
-            .mobile-pay-options-section { display: block !important; }
+            .mobile-pay-options-section { display: block !important; margin-bottom: 1rem; }
             #paymentModal .payment-amount-desktop-section { display: none !important; }
-            .qrph-header-section {
-                background: linear-gradient(135deg, #003d82 0%, #0066b3 100%);
-                color: #fff;
-                padding: 12px 16px;
-                border-radius: 8px;
-                margin: -1rem -1rem 1rem -1rem;
-                text-align: center;
-            }
-            .qrph-logo { font-weight: 700; font-size: 1.4rem; letter-spacing: 0.05em; }
-            .mobile-pay-amount-bar-section {
-                background: rgba(0, 61, 130, 0.3);
-                padding: 10px 14px;
-                border-radius: 8px;
-                margin-bottom: 14px;
-            }
-            .btn-open-external-app-section {
+            .btn-open-gcash-section {
+                display: block;
                 width: 100%;
                 padding: 14px 20px;
-                font-size: 1rem;
+                font-size: 1.1rem;
                 font-weight: 600;
                 border-radius: 8px;
-                background: linear-gradient(135deg, #003d82 0%, #0066b3 100%);
+                background: #E41E2D;
                 border: none;
                 color: #fff !important;
+                text-align: center;
+                text-decoration: none;
             }
-            .btn-open-external-app-section:hover { opacity: 0.95; color: #fff !important; }
+            .btn-open-gcash-section:hover { background: #c41a28; color: #fff !important; }
         }
         @media (min-width: 768px) {
             .mobile-pay-options-section { display: none !important; }
@@ -719,19 +707,10 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body text-center text-white">
-                <!-- Mobile-only: QRPh-style pay options (Scan QR + Open in App) -->
+                <!-- Mobile-only: Scan QR or Open GCash (not shown on desktop/website) -->
                 <div class="mobile-pay-options mobile-pay-options-section">
-                    <div class="qrph-header qrph-header-section">
-                        <span class="qrph-logo">QRPh</span>
-                    </div>
-                    <div class="mobile-pay-amount-bar mobile-pay-amount-bar-section">
-                        <span class="text-muted small">Amount to pay</span>
-                        <strong class="d-block text-white" id="payment_amount_mobile_section">₱0.00</strong>
-                    </div>
-                    <a href="https://www.gcash.com" target="_blank" rel="noopener" class="btn btn-primary btn-open-external-app btn-open-external-app-section">
-                        <i class="fas fa-external-link-alt me-2"></i>OPEN in External App
-                    </a>
-                    <p class="small text-muted mt-2 mb-1">— or scan QR code below —</p>
+                    <p class="text-muted mb-2">Scan the QR code to pay, or</p>
+                    <a href="https://www.gcash.com" target="_blank" rel="noopener" class="btn btn-open-gcash btn-open-gcash-section">Open GCash</a>
                 </div>
                 <h4 class="text-white payment-amount-desktop-section">Pay via GCash</h4>
                 <p class="mb-3 payment-amount-desktop-section">Choose whether you want to pay the required 50% downpayment or settle the full amount now.</p>
@@ -832,21 +811,11 @@
 <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content" style="background-color: #2c2c2c; border: 1px solid #555; color: #ffffff;">
-            <div class="modal-header" style="background: linear-gradient(135deg, #28a745, #1e7e34); border-bottom: 1px solid #555;">
-                <h5 class="modal-title" id="confirmationModalLabel">✅ Booking Confirmed!</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
             <div class="modal-body text-center">
                 <div class="mb-3">
                     <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
                 </div>
                 <h4>Payment Sent!</h4>
-                <div class="alert alert-info event-confirmation-card">
-                    <strong>Booking ID:</strong> <span id="confirmed_booking_id" style="font-weight: 600;"></span><br>
-                    <strong>Event Date:</strong> <span id="confirmed_event_date" style="font-weight: 600;"></span><br>
-                    <strong>Time:</strong> <span id="confirmed_event_time" style="font-weight: 600;"></span><br>
-                    <strong>Event Type:</strong> <span id="confirmed_event_type" style="font-weight: 600;"></span>
-                </div>
                 <p class="small">We'll contact you soon to confirm the final details of your event.</p>
             </div>
             <div class="modal-footer" style="border-top: 1px solid #555;">
@@ -1211,8 +1180,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (paymentFullAmount) paymentFullAmount.textContent = formatCurrency(currentBookingPricing.full);
         if (paymentSelectedLabel) paymentSelectedLabel.textContent = selectedLabel;
         if (paymentSelectedAmount) paymentSelectedAmount.textContent = formatCurrency(selectedAmount);
-        const paymentAmountMobileSection = document.getElementById('payment_amount_mobile_section');
-        if (paymentAmountMobileSection) paymentAmountMobileSection.textContent = formatCurrency(selectedAmount);
         if (proofPaymentLabel) proofPaymentLabel.textContent = selectedLabel;
         if (proofPaymentAmount) proofPaymentAmount.textContent = formatCurrency(selectedAmount);
     }
