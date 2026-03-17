@@ -677,9 +677,8 @@
                 <h4 class="text-success">Payment Sent!</h4>
                 <p class="text-muted">We'll contact you soon to confirm the final details of your event.</p>
             </div>
-            <div class="modal-footer">
-                <a href="#" id="downloadReceiptBtn" class="btn btn-success me-2" style="color: white; text-decoration: none;"><i class="fas fa-download"></i> Download Receipt</a>
-                <button type="button" class="btn btn-primary" id="confirmationCloseBtn" data-bs-dismiss="modal">Close</button>
+            <div class="modal-footer justify-content-center">
+                <a href="#" id="downloadReceiptBtn" class="btn btn-success" style="color: white; text-decoration: none;">View Receipt</a>
             </div>
         </div>
     </div>
@@ -728,6 +727,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const uploadProofBtn = document.getElementById('uploadProofBtn');
     const proofUploadForm = document.getElementById('proofUploadForm');
     const confirmationCloseBtn = document.getElementById('confirmationCloseBtn');
+    const downloadReceiptBtn = document.getElementById('downloadReceiptBtn');
     const paymentOptionDownLabel = document.getElementById('payment_option_down_amount');
     const paymentOptionFullLabel = document.getElementById('payment_option_full_amount');
     const paymentOptionDownRadio = document.getElementById('payment_option_down');
@@ -940,6 +940,31 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Start initialization after a short delay
     setTimeout(initializeForm, 100);
+
+    function setDownloadReceiptLink(bookingId) {
+        if (!downloadReceiptBtn || !bookingId) {
+            return;
+        }
+        // Add auto=1 so the receipt page auto-downloads the PDF
+        const url = `/event-booking/receipt/${bookingId}?auto=1`;
+        downloadReceiptBtn.href = url;
+        downloadReceiptBtn.dataset.bookingId = bookingId;
+        downloadReceiptBtn.target = '_blank';
+    }
+    
+    if (downloadReceiptBtn) {
+        downloadReceiptBtn.addEventListener('click', function (e) {
+            const bookingId = downloadReceiptBtn.dataset.bookingId || document.getElementById('booking_id')?.value;
+            if (!bookingId) {
+                e.preventDefault();
+                alert('Receipt is not ready yet. Please wait a moment and try again.');
+                return;
+            }
+            const url = `/event-booking/receipt/${bookingId}?auto=1`;
+            downloadReceiptBtn.href = url;
+            window.open(url, '_blank');
+        });
+    }
     
     //  Button
     if (bookEventBtn) {
@@ -1273,6 +1298,8 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data && data.booking) {
+                    const bookingId = data.booking.id || document.getElementById('booking_id').value;
+                    setDownloadReceiptLink(bookingId);
                     // Close proof upload modal
                     const proofUploadModalElement = document.getElementById('proofUploadModal');
                     const proofUploadModal = bootstrap.Modal.getInstance(proofUploadModalElement);
@@ -1297,6 +1324,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     updatePaymentOptionDisplays(formatCurrency(DEFAULT_DOWN_PAYMENT), formatCurrency(DEFAULT_FULL_PAYMENT));
                 } else {
                     // Even if backend didn't return booking, still proceed to confirmation UI.
+                    const bookingId = document.getElementById('booking_id').value;
+                    setDownloadReceiptLink(bookingId);
                     const confirmationModalElement = document.getElementById('confirmationModal');
                     const confirmationModal = new bootstrap.Modal(confirmationModalElement);
                     confirmationModal.show();
@@ -1305,6 +1334,8 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 console.error('Error uploading proof (non-blocking):', error);
                 // Proceed anyway to confirmation so user can download receipt / go back.
+                const bookingId = document.getElementById('booking_id').value;
+                setDownloadReceiptLink(bookingId);
                 const confirmationModalElement = document.getElementById('confirmationModal');
                 const confirmationModal = new bootstrap.Modal(confirmationModalElement);
                 confirmationModal.show();

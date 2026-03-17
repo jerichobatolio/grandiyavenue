@@ -280,7 +280,7 @@
         <div id="download-content">
         <div class="receipt-header">
             <h1>🎉 Event Booking Receipt</h1>
-            <p>Grandiya Restaurant & Events</p>
+            <p>Grandiya Venue & Restaurant</p>
         </div>
         
         <div class="receipt-id">
@@ -363,10 +363,31 @@
                     @endif
                 </strong></span>
             </div>
+            @if($booking->packageInclusion)
             <div class="info-row">
-                <span class="info-label">Number of Guests:</span>
-                <span class="info-value"><strong>{{ $booking->number_of_guests }} pax</strong></span>
+                <span class="info-label">Package Inclusion:</span>
+                @php
+                    $inclusion = $booking->packageInclusion;
+                    $paxLabel = null;
+                    if (!is_null($inclusion->pax_min) || !is_null($inclusion->pax_max)) {
+                        if (!is_null($inclusion->pax_min) && !is_null($inclusion->pax_max) && $inclusion->pax_min !== $inclusion->pax_max) {
+                            $paxLabel = $inclusion->pax_min . '–' . $inclusion->pax_max . ' pax';
+                        } else {
+                            $singlePax = !is_null($inclusion->pax_min) ? $inclusion->pax_min : $inclusion->pax_max;
+                            $paxLabel = $singlePax . ' pax';
+                        }
+                    }
+                @endphp
+                <span class="info-value">
+                    <strong>
+                        {{ $inclusion->name }}
+                        @if($paxLabel)
+                            ({{ $paxLabel }})
+                        @endif
+                    </strong>
+                </span>
             </div>
+            @endif
             @if($booking->additional_notes)
             <div class="additional-notes">
                 <strong>Additional Notes:</strong><br>
@@ -424,7 +445,10 @@
             @if($booking->gcash_payment_date)
             <div class="info-row">
                 <span class="info-label">Payment Date:</span>
-                <span class="info-value"><strong>{{ $booking->gcash_payment_date->format('F d, Y h:i A') }}</strong></span>
+                @php
+                    $paymentDate = $booking->gcash_payment_date->setTimezone(config('app.timezone', 'UTC'));
+                @endphp
+                <span class="info-value"><strong>{{ $paymentDate->format('F d, Y') }}</strong></span>
             </div>
             @endif
         </div>
@@ -433,8 +457,14 @@
         <div class="receipt-footer">
             <p style="margin-bottom: 5px;"><strong>Thank you for booking with us!</strong></p>
             <p style="margin-bottom: 5px;">We'll contact you soon to confirm the final details of your event.</p>
-            <p style="margin-top: 8px; margin-bottom: 5px;">This is a computer-generated receipt. No signature required.</p>
-            <p style="margin-top: 5px;">Generated on {{ now()->format('F d, Y \a\t h:i A') }}</p>
+            @php
+                // Use the actual payment date if available; otherwise fall back to booking creation date, then today's date
+                $baseTimestamp = $booking->gcash_payment_date
+                    ?? $booking->created_at
+                    ?? now();
+                $generatedAt = $baseTimestamp->setTimezone(config('app.timezone', 'UTC'));
+            @endphp
+            <p style="margin-top: 5px;">Generated on {{ $generatedAt->format('F d, Y') }}</p>
         </div>
         </div>
         <!-- End of download content -->
@@ -471,6 +501,17 @@
             // Generate and download PDF
             html2pdf().set(opt).from(element).save();
         }
+
+        // If opened with ?auto=1, automatically trigger download once the page is ready
+        document.addEventListener('DOMContentLoaded', function () {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('auto') === '1') {
+                // Small delay to ensure html2pdf and content are fully loaded
+                setTimeout(function () {
+                    downloadAsPDF();
+                }, 500);
+            }
+        });
     </script>
 </body>
 </html>

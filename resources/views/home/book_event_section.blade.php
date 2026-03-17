@@ -818,11 +818,10 @@
                 <h4>Payment Sent!</h4>
                 <p class="small">We'll contact you soon to confirm the final details of your event.</p>
             </div>
-            <div class="modal-footer" style="border-top: 1px solid #555;">
+            <div class="modal-footer justify-content-center" style="border-top: 1px solid #555;">
                 <a href="#" id="downloadReceiptBtn" class="btn btn-success" style="background-color: #28a745; border-color: #28a745; color: white; text-decoration: none;">
-                    <i class="fas fa-download"></i> Download Receipt
+                    View Receipt
                 </a>
-                <button type="button" class="btn btn-primary" id="confirmationCloseBtnSection" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -907,6 +906,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const paymentOptionInput = document.getElementById('selected_payment_option');
     const paymentOptionDownRadio = document.getElementById('payment_option_down');
     const paymentOptionFullRadio = document.getElementById('payment_option_full');
+    const downloadReceiptBtn = document.getElementById('downloadReceiptBtn');
     
     console.log('Elements found:', {
         form: !!form,
@@ -917,6 +917,26 @@ document.addEventListener('DOMContentLoaded', function() {
         agreeTermsCheckbox: !!agreeTermsCheckbox,
         continueToPaymentBtn: !!continueToPaymentBtn
     });
+
+    // Ensure Download Receipt always navigates correctly (prevents default "#" scroll)
+    if (downloadReceiptBtn) {
+        downloadReceiptBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const hiddenIdInput = document.getElementById('booking_id');
+            const bookingId =
+                (hiddenIdInput && hiddenIdInput.value) ||
+                (currentBooking && currentBooking.id);
+
+            if (!bookingId) {
+                alert('Receipt is not ready yet. Please wait a moment and try again.');
+                return;
+            }
+
+            const url = '/event-booking/receipt/' + bookingId;
+            window.location.href = url;
+        });
+    }
     
     const requiredFields = ['first_name', 'last_name', 'contact_number', 'email', 'event_date', 'event_time_slot_id', 'event_type_id', 'venue_type', 'package_inclusion_id'];
 
