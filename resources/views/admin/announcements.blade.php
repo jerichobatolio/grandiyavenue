@@ -30,6 +30,29 @@
             overflow-x: hidden;
         }
 
+        @media (max-width: 1199px) {
+            .announcements-container {
+                margin-left: 0;
+                margin-right: 0;
+                margin-top: 80px;
+                margin-bottom: 20px;
+                width: 100%;
+                max-width: 100vw;
+                padding: 15px 12px;
+                min-height: auto;
+                max-height: none;
+            }
+        }
+        @media (max-width: 768px) {
+            .announcements-container {
+                padding: 12px 10px;
+                margin-top: 70px;
+            }
+            .page-title { font-size: 1.5rem; }
+            .announcement-header { flex-direction: column; align-items: flex-start; }
+            .announcement-item { padding: 15px; }
+        }
+
         /* Image container for better display */
         .announcement-image-container {
             text-align: center;

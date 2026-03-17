@@ -720,6 +720,27 @@
             white-space: nowrap;
         }
 
+        @media (max-width: 1199px) {
+            .event-types-container {
+                max-width: 100%;
+                padding: 15px 10px;
+            }
+            /* Package Inclusions & Food Package tables: scroll horizontally on mobile */
+            #inclusions-section .inclusions-table-wrapper,
+            #food-packages-section .food-packages-table-wrapper {
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch;
+                margin: 0 -4px 1rem;
+            }
+            #inclusions-section .table,
+            #food-packages-section .table {
+                min-width: 600px;
+            }
+            /* Venue types: single column on small screens */
+            #venue-types-section .venue-types-grid {
+                grid-template-columns: 1fr !important;
+            }
+        }
         @media (max-width: 768px) {
             .management-tabs {
                 flex-direction: column;
@@ -732,6 +753,17 @@
             
             .event-types-grid {
                 grid-template-columns: 1fr;
+            }
+            .event-types-container {
+                padding: 12px 8px;
+            }
+            .venue-type-card {
+                padding: 15px;
+            }
+            #venue-types-section .venue-type-card .btn,
+            #venue-types-section .venue-type-card .btn-sm {
+                font-size: 0.8rem;
+                padding: 6px 10px;
             }
         }
     </style>
@@ -1263,7 +1295,7 @@
                                 </h4>
 
                                 @if($venueTypes->count() > 0)
-                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;">
+                                    <div class="venue-types-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;">
                                         @foreach($venueTypes as $venueType)
                                             <div class="venue-type-card" 
                                                  data-venue-id="{{ $venueType->id }}" id="venue-card-{{ $venueType->id }}">

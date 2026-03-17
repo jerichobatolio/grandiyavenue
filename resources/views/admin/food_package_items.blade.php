@@ -47,6 +47,13 @@
         .input-group .btn {
             white-space: nowrap;
         }
+        @media (max-width: 768px) {
+            .form-inline-row .form-control {
+                min-width: 0;
+                width: 100%;
+            }
+            .card { padding: 15px; }
+        }
     </style>
 </head>
 <body>

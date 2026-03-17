@@ -316,6 +316,8 @@
             .return-refunds-container {
                 margin: 10px;
                 padding: 15px;
+                max-width: 100%;
+                overflow-x: hidden;
             }
 
             .page-title {
@@ -333,20 +335,30 @@
             .search-input, .filter-select {
                 min-width: 100%;
             }
+
+            .orders-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin: 0 -4px;
+            }
+
+            .orders-container table {
+                min-width: 700px;
+            }
             
             th, td {
-                padding: 4px 2px;
+                padding: 6px 4px;
                 font-size: 10px;
             }
 
             .action-buttons {
-                flex-direction: column;
-                gap: 2px;
+                flex-wrap: wrap;
+                gap: 4px;
             }
 
             .btn-action {
-                font-size: 0.6rem;
-                padding: 3px 6px;
+                font-size: 0.65rem;
+                padding: 4px 8px;
             }
         }
     </style>
@@ -432,6 +444,7 @@
 
                     <!-- All Requests Section -->
                     <div id="all-section" class="return-refunds-section active">
+                        <div class="table-responsive">
                         <div class="orders-container">
                             <table>
                                 <thead>
@@ -516,11 +529,13 @@
                                 </tbody>
                             </table>
                         </div>
+                        </div>
                     </div>
 
                     <!-- Filtered Sections -->
                     @foreach(['pending', 'approved', 'rejected'] as $status)
                     <div id="{{ $status }}-section" class="return-refunds-section">
+                        <div class="table-responsive">
                         <div class="orders-container">
                             <table>
                                 <thead>
@@ -607,6 +622,7 @@
                                     @endforelse
                                 </tbody>
                             </table>
+                        </div>
                         </div>
                     </div>
                     @endforeach

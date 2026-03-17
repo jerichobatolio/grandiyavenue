@@ -326,6 +326,18 @@
            border-left: 4px solid #2196f3;
          }
 
+         @media (max-width: 1199px) {
+          .table-management-scroll {
+            max-width: 100%;
+            padding-left: 0;
+            padding-right: 0;
+          }
+          .table-management-container {
+            margin: 15px 0;
+            padding: 15px 10px;
+            max-width: 100%;
+          }
+         }
          @media (max-width: 768px) {
           .management-tabs {
             flex-direction: column;
@@ -337,7 +349,18 @@
           }
           
           .tables-grid-admin {
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+          }
+          .table-management-container {
+            padding: 12px 8px;
+          }
+          .table-item-admin {
+            padding: 15px;
+          }
+          .section-header {
+            font-size: 1rem;
+            padding: 12px;
           }
          }
    </style>

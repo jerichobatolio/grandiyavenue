@@ -31,6 +31,35 @@
             -webkit-overflow-scrolling: touch;
         }
 
+        @media (max-width: 1199px) {
+            .reviews-container {
+                margin-left: 0;
+                margin-right: 0;
+                margin-top: 80px;
+                margin-bottom: 20px;
+                width: 100%;
+                max-width: 100vw;
+                padding: 15px 12px;
+                min-height: auto;
+                max-height: none;
+            }
+            .reviews-list-scroll {
+                max-height: none;
+            }
+        }
+        @media (max-width: 768px) {
+            .reviews-container {
+                padding: 12px 10px;
+                margin-top: 70px;
+            }
+            .page-title { font-size: 1.5rem; }
+            .stats-cards { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .stat-card { padding: 15px; }
+            .stat-number { font-size: 1.75rem; }
+            .review-header { flex-wrap: wrap; gap: 10px; }
+            .review-actions { flex-wrap: wrap; }
+        }
+
         .reviews-list-scroll {
             max-height: calc(100vh - 380px);
             overflow-y: auto;

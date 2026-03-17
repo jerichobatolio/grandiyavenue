@@ -18,6 +18,8 @@
 <link rel="stylesheet" href="{{ asset('admin-assets/css/style.default.css') }}" id="theme-stylesheet">
 <!-- Custom stylesheet - for your changes -->
 <link rel="stylesheet" href="{{ asset('admin-assets/css/custom.css') }}">
+<!-- Admin mobile responsiveness -->
+<link rel="stylesheet" href="{{ asset('admin-assets/css/admin-mobile.css') }}">
 
 <!-- Favicon with your actual logo -->
 <link rel="icon" href="{{ asset('admin-assets/img/logo.png') }}" type="image/png">
