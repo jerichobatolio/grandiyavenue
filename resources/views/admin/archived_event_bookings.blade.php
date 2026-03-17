@@ -195,6 +195,36 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
+        .action-btn-archived {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-delete-permanent-archived {
+            background: linear-gradient(135deg, #b91c1c, #991b1b);
+            color: #fff;
+            box-shadow: 0 2px 4px rgba(185,28,28,0.4);
+        }
+
+        .btn-delete-permanent-archived:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(185,28,28,0.6);
+        }
+
+        .btn-cancel-archived {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+            color: #fff;
+        }
+
         /* Responsive Design */
         @media (max-width: 1200px) {
             th, td {
@@ -274,9 +304,33 @@
                         </div>
                     @else
                         <div class="orders-container">
+                            <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px; margin:10px 12px;">
+                                <button type="button"
+                                        class="action-btn-archived btn-delete-permanent-archived"
+                                        id="toggleArchivedEventDeleteMode"
+                                        onclick="toggleArchivedEventDeleteMode()"
+                                        style="margin-top:4px;">
+                                    🗑 Select to delete
+                                </button>
+                                <span class="delete-mode-actions-archived-events" style="display:none; align-items:center; gap:8px;">
+                                    <button type="button"
+                                            class="action-btn-archived btn-delete-permanent-archived"
+                                            onclick="deleteSelectedArchivedEvents()">
+                                        🗑 Delete Selected
+                                    </button>
+                                    <button type="button"
+                                            class="action-btn-archived btn-cancel-archived"
+                                            onclick="toggleArchivedEventDeleteMode()">
+                                        Cancel
+                                    </button>
+                                </span>
+                            </div>
                             <table>
                                 <thead>
                                     <tr>
+                                        <th class="th-checkbox-archived" style="display:none;">
+                                            <input type="checkbox" id="select-all-archived-events">
+                                        </th>
                                         <th>👤 Customer</th>
                                         <th>📧 Email</th>
                                         <th>📱 Contact</th>
@@ -295,7 +349,10 @@
                                 </thead>
                                 <tbody>
                                     @foreach($eventBookings as $booking)
-                                    <tr>
+                                    <tr data-booking-id="{{ $booking->id }}">
+                                        <td class="td-checkbox-archived" style="display:none;">
+                                            <input type="checkbox" class="archived-event-select" value="{{ $booking->id }}">
+                                        </td>
                                         <td class="package-inclusion-cell">
                                             <strong>{{ $booking->full_name }}</strong>
                                         </td>
@@ -396,13 +453,7 @@
                                                 {{ $booking->updated_at->format('M d, Y H:i') }}
                                             </div>
                                         </td>
-                                        <td>
-                                            <form action="{{ route('admin.event_booking.force_delete', ['id' => $booking->id]) }}" method="GET" onsubmit="return confirm('Permanently delete this archived event booking? This cannot be undone.');">
-                                                <button type="submit" class="btn btn-sm btn-danger">
-                                                    <i class="fas fa-trash-alt"></i> Delete
-                                                </button>
-                                            </form>
-                                        </td>
+                                        <td></td>
                                     </tr>
                                     @endforeach
                                 </tbody>
@@ -435,6 +486,63 @@
             document.getElementById('paymentProofModalLabel').textContent = 'Payment Proof - ' + customerName;
             $('#paymentProofModal').modal('show');
         }
+
+        function toggleArchivedEventDeleteMode() {
+            const on = document.body.classList.toggle('archived-events-delete-mode');
+            const ths = document.querySelectorAll('th.th-checkbox-archived');
+            const tds = document.querySelectorAll('td.td-checkbox-archived');
+            const toggleBtn = document.getElementById('toggleArchivedEventDeleteMode');
+            const actions = document.querySelector('.delete-mode-actions-archived-events');
+
+            ths.forEach(el => el.style.display = on ? 'table-cell' : 'none');
+            tds.forEach(el => el.style.display = on ? 'table-cell' : 'none');
+
+            if (toggleBtn) toggleBtn.style.display = on ? 'none' : 'inline-flex';
+            if (actions) actions.style.display = on ? 'inline-flex' : 'none';
+
+            if (!on) {
+                document.querySelectorAll('.archived-event-select').forEach(cb => cb.checked = false);
+                const selectAll = document.getElementById('select-all-archived-events');
+                if (selectAll) selectAll.checked = false;
+            }
+        }
+
+        function deleteSelectedArchivedEvents() {
+            const checkboxes = document.querySelectorAll('.archived-event-select:checked');
+            if (!checkboxes.length) {
+                alert('Please select at least one archived event booking.');
+                return;
+            }
+            if (!confirm('Permanently delete selected archived event bookings? This cannot be undone.')) {
+                return;
+            }
+
+            const ids = Array.from(checkboxes).map(cb => cb.value);
+            const token = document.querySelector('meta[name=\"csrf-token\"]').getAttribute('content');
+
+            fetch('{{ route('admin.event_booking.force_delete_bulk') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': token,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({ ids }),
+            })
+            .then(() => window.location.reload())
+            .catch(() => window.location.reload());
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const selectAll = document.getElementById('select-all-archived-events');
+            if (selectAll) {
+                selectAll.addEventListener('change', function () {
+                    document.querySelectorAll('.archived-event-select').forEach(cb => {
+                        cb.checked = selectAll.checked;
+                    });
+                });
+            }
+        });
     </script>
 
     @include('admin.js')

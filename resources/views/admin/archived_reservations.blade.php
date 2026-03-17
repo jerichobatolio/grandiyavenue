@@ -5,6 +5,41 @@
    @include('admin.css')
 
    <style>
+         .action-buttons {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+         }
+
+         .action-btn {
+          padding: 6px 14px;
+          border: none;
+          border-radius: 6px;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+         }
+
+         .btn-delete-permanent {
+          background: linear-gradient(135deg, #b91c1c, #991b1b);
+          color: #fff;
+          box-shadow: 0 2px 4px rgba(185,28,28,0.4);
+         }
+
+         .btn-delete-permanent:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 8px rgba(185,28,28,0.6);
+         }
+
+         .btn-cancel {
+          background: linear-gradient(135deg, #6b7280, #4b5563);
+          color: #fff;
+         }
          .reservations-container {
           margin: 20px auto;
           max-width: 1200px;
@@ -253,10 +288,33 @@
                 </div>
             @else
               <div class="reservations-table">
+                <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px; margin-bottom:10px;">
+                  <button type="button"
+                          class="action-btn btn-delete-permanent"
+                          id="toggleReservationDeleteMode"
+                          onclick="toggleReservationDeleteMode()">
+                    🗑 Select to delete
+                  </button>
+                  <span class="delete-mode-actions-reservations" style="display:none; align-items:center; gap:8px;">
+                    <button type="button"
+                            class="action-btn btn-delete-permanent"
+                            onclick="deleteSelectedReservations()">
+                      🗑 Delete Selected
+                    </button>
+                    <button type="button"
+                            class="action-btn btn-cancel"
+                            onclick="toggleReservationDeleteMode()">
+                      Cancel
+                    </button>
+                  </span>
+                </div>
                 <div class="table-header">Archived Table Reservations</div>
                 <table>
                   <thead>
                     <tr>
+                      <th class="th-checkbox" style="display:none;">
+                        <input type="checkbox" id="select-all-reservations">
+                      </th>
                       <th>Name</th>
                       <th>Table</th>
                       <th>Phone</th>
@@ -268,12 +326,14 @@
                       <th>Occasion</th>
                       <th>Status</th>
                       <th>Archived Date</th>
-                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     @foreach($book as $reservation)
                     <tr>
+                      <td class="td-checkbox" style="display:none;">
+                        <input type="checkbox" class="reservation-select" value="{{ $reservation->id }}">
+                      </td>
                       <td>{{ $reservation->name ?? 'N/A' }}</td>
                       <td>
                         <span class="table-badge {{ $reservation->table_number ? (strpos($reservation->table_number, 'T') === 0 ? 'top' : (strpos($reservation->table_number, 'H') === 0 ? 'hallway' : 'vip')) : 'top' }}">
@@ -335,14 +395,6 @@
                           {{ $reservation->updated_at->format('M d, Y H:i') }}
                         </div>
                       </td>
-                      <td>
-                        <form action="{{ route('admin.reservations.force_delete', ['id' => $reservation->id]) }}" method="POST" onsubmit="return confirm('Permanently delete this archived reservation? This cannot be undone.');">
-                          @csrf
-                          <button type="submit" class="btn btn-sm btn-danger">
-                            <i class="fas fa-trash-alt"></i> Delete
-                          </button>
-                        </form>
-                      </td>
                     </tr>
                     @endforeach
                   </tbody>
@@ -357,4 +409,68 @@
 
    @include('admin.js')
   </body>
+  <script>
+    function toggleReservationDeleteMode() {
+      const on = document.body.classList.toggle('reservations-delete-mode');
+      const ths = document.querySelectorAll('th.th-checkbox');
+      const tds = document.querySelectorAll('td.td-checkbox');
+      const toggleBtn = document.getElementById('toggleReservationDeleteMode');
+      const actions = document.querySelector('.delete-mode-actions-reservations');
+
+      ths.forEach(el => el.style.display = on ? 'table-cell' : 'none');
+      tds.forEach(el => el.style.display = on ? 'table-cell' : 'none');
+
+      if (toggleBtn) toggleBtn.style.display = on ? 'none' : 'inline-flex';
+      if (actions) actions.style.display = on ? 'inline-flex' : 'none';
+
+      if (!on) {
+        document.querySelectorAll('.reservation-select').forEach(cb => cb.checked = false);
+        const selectAll = document.getElementById('select-all-reservations');
+        if (selectAll) selectAll.checked = false;
+      }
+    }
+
+    function deleteSelectedReservations() {
+      const checkboxes = document.querySelectorAll('.reservation-select:checked');
+      if (!checkboxes.length) {
+        alert('Please select at least one reservation.');
+        return;
+      }
+      if (!confirm('Permanently delete selected reservations? This cannot be undone.')) {
+        return;
+      }
+
+      const ids = Array.from(checkboxes).map(cb => cb.value);
+      const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+      let completed = 0;
+      const total = ids.length;
+
+      ids.forEach(id => {
+        fetch(`/admin/reservations/${id}/force-delete`, {
+          method: 'POST',
+          headers: {
+            'X-CSRF-TOKEN': token,
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        }).finally(() => {
+          completed++;
+          if (completed === total) {
+            window.location.reload();
+          }
+        });
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const selectAll = document.getElementById('select-all-reservations');
+      if (selectAll) {
+        selectAll.addEventListener('change', function () {
+          document.querySelectorAll('.reservation-select').forEach(cb => {
+            cb.checked = selectAll.checked;
+          });
+        });
+      }
+    });
+  </script>
 </html>

@@ -4,6 +4,41 @@
     @include('admin.css')
 
     <style>
+        .action-buttons-archived {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn-archived {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-delete-permanent-archived {
+            background: linear-gradient(135deg, #b91c1c, #991b1b);
+            color: #fff;
+            box-shadow: 0 2px 4px rgba(185,28,28,0.4);
+        }
+
+        .btn-delete-permanent-archived:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(185,28,28,0.6);
+        }
+
+        .btn-cancel-archived {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+            color: #fff;
+        }
         .page-header-content {
             padding: 20px;
             background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
@@ -411,9 +446,33 @@
                     </div>
                 @else
                     <div class="orders-container">
+                        <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px; margin:10px 12px;">
+                            <button type="button"
+                                    class="action-btn-archived btn-delete-permanent-archived"
+                                    id="toggleArchivedOrderDeleteMode"
+                                    onclick="toggleArchivedOrderDeleteMode()"
+                                    style="margin-top:4px;">
+                                🗑 Select to delete
+                            </button>
+                            <span class="delete-mode-actions-archived-orders" style="display:none; align-items:center; gap:8px;">
+                                <button type="button"
+                                        class="action-btn-archived btn-delete-permanent-archived"
+                                        onclick="deleteSelectedArchivedOrders()">
+                                    🗑 Delete Selected
+                                </button>
+                                <button type="button"
+                                        class="action-btn-archived btn-cancel-archived"
+                                        onclick="toggleArchivedOrderDeleteMode()">
+                                    Cancel
+                                </button>
+                            </span>
+                        </div>
                         <table>
                             <thead>
                                 <tr>
+                                    <th class="th-checkbox-archived" style="display:none;">
+                                        <input type="checkbox" id="select-all-archived-orders">
+                                    </th>
                                     <th>Image</th>
                                     <th>Customer</th>
                                     <th>Contact</th>
@@ -445,7 +504,10 @@
                                     
                                     @if($isMultipleOrders)
                                     <!-- Summary Row (for multiple orders) -->
-                                    <tr class="summary-row" onclick="toggleOrderDetails('{{ $groupKey }}')" data-group="{{ $groupKey }}">
+                                    <tr class="summary-row" onclick="toggleOrderDetails('{{ $groupKey }}')" data-group="{{ $groupKey }}" data-order-ids="{{ $customerOrders->pluck('id')->implode(',') }}">
+                                        <td class="td-checkbox-archived" style="display:none;">
+                                            <input type="checkbox" class="archived-order-select" value="{{ $customerOrders->pluck('id')->implode(',') }}" onclick="event.stopPropagation();">
+                                        </td>
                                         <td>
                                             <div class="summary-info">
                                                 <i class="fas fa-caret-right expand-icon" aria-hidden="true"></i>
@@ -517,13 +579,7 @@
                                                 {{ $firstOrder->updated_at->format('M d, Y H:i') }}
                                             </div>
                                         </td>
-                                        <td>
-                                            <form action="{{ route('order.force_delete', ['id' => $firstOrder->id]) }}" method="GET" onsubmit="return confirm('Permanently delete all archived orders in this group? This cannot be undone.');">
-                                                <button type="submit" class="btn btn-sm btn-danger">
-                                                    <i class="fas fa-trash-alt"></i> Delete
-                                                </button>
-                                            </form>
-                                        </td>
+                                        <td></td>
                                     </tr>
                                     
                                     <!-- Expanded Details Rows (for multiple orders) -->
@@ -554,23 +610,20 @@
                                                 </div>
                                             </td>
                                         <td>
-                                                <div style="font-size: 12px; color: #6b7280;">
-                                                    {{ $order->updated_at->format('M d, Y H:i') }}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <form action="{{ route('order.force_delete', ['id' => $order->id]) }}" method="GET" onsubmit="return confirm('Permanently delete this archived order? This cannot be undone.');">
-                                                    <button type="submit" class="btn btn-sm btn-danger">
-                                                        <i class="fas fa-trash-alt"></i> Delete
-                                                    </button>
-                                                </form>
-                                            </td>
+                                            <div style="font-size: 12px; color: #6b7280;">
+                                                {{ $order->updated_at->format('M d, Y H:i') }}
+                                            </div>
+                                        </td>
+                                        <td></td>
                                         </tr>
                                     @endforeach
                                     @else
                                     <!-- Single Order Row -->
                                     @foreach($customerOrders as $order)
-                                        <tr>
+                                        <tr data-order-id="{{ $order->id }}">
+                                            <td class="td-checkbox-archived" style="display:none;">
+                                                <input type="checkbox" class="archived-order-select" value="{{ $order->id }}">
+                                            </td>
                                             <td>
                                                 <img width="70" height="70" src="{{ asset('food_img/'.$order->image) }}" alt="{{ $order->title }}" class="food-image" style="object-fit: cover;">
                                             </td>
@@ -703,6 +756,66 @@
                 }
             }
         }
+        
+        function toggleArchivedOrderDeleteMode() {
+            const on = document.body.classList.toggle('archived-orders-delete-mode');
+            const ths = document.querySelectorAll('th.th-checkbox-archived');
+            const tds = document.querySelectorAll('td.td-checkbox-archived');
+            const toggleBtn = document.getElementById('toggleArchivedOrderDeleteMode');
+            const actions = document.querySelector('.delete-mode-actions-archived-orders');
+
+            ths.forEach(el => el.style.display = on ? 'table-cell' : 'none');
+            tds.forEach(el => el.style.display = on ? 'table-cell' : 'none');
+
+            if (toggleBtn) toggleBtn.style.display = on ? 'none' : 'inline-flex';
+            if (actions) actions.style.display = on ? 'inline-flex' : 'none';
+
+            if (!on) {
+                document.querySelectorAll('.archived-order-select').forEach(cb => cb.checked = false);
+                const selectAll = document.getElementById('select-all-archived-orders');
+                if (selectAll) selectAll.checked = false;
+            }
+        }
+
+        function deleteSelectedArchivedOrders() {
+            const checkboxes = document.querySelectorAll('.archived-order-select:checked');
+            if (!checkboxes.length) {
+                alert('Please select at least one archived order.');
+                return;
+            }
+            if (!confirm('Permanently delete selected archived orders? This cannot be undone.')) {
+                return;
+            }
+
+            const allIds = [];
+            checkboxes.forEach(cb => {
+                const parts = String(cb.value).split(',');
+                parts.forEach(id => {
+                    const trimmed = id.trim();
+                    if (trimmed && !allIds.includes(trimmed)) {
+                        allIds.push(trimmed);
+                    }
+                });
+            });
+
+            if (!allIds.length) {
+                alert('No valid order IDs selected.');
+                return;
+            }
+
+            window.location.href = '{{ url("orders/force-delete-group") }}?ids=' + encodeURIComponent(allIds.join(','));
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const selectAll = document.getElementById('select-all-archived-orders');
+            if (selectAll) {
+                selectAll.addEventListener('change', function () {
+                    document.querySelectorAll('.archived-order-select').forEach(cb => {
+                        cb.checked = selectAll.checked;
+                    });
+                });
+            }
+        });
     </script>
 
     @include('admin.js')
