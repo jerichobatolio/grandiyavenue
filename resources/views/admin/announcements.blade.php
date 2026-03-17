@@ -368,7 +368,7 @@
         }
     </style>
 </head>
-<body>
+<body class="admin-page-scroll">
     @include('admin.header')
     @include('admin.sidebar')
 

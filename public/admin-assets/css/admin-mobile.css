@@ -5,6 +5,15 @@
  */
 
 @media (max-width: 1199px) {
+  /* Announcements & Reviews: allow page scroll (they don't use .page-content) */
+  body.admin-page-scroll,
+  html:has(body.admin-page-scroll) {
+    overflow: auto !important;
+    overflow-x: hidden;
+    height: auto !important;
+    min-height: 100%;
+  }
+
   body {
     overflow-x: hidden;
   }
