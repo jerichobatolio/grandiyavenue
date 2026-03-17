@@ -566,7 +566,7 @@
                 <!-- Mobile-only: Scan QR or Open GCash (not shown on desktop/website) -->
                 <div class="mobile-pay-options">
                     <p class="text-muted mb-2">Scan the QR code to pay, or</p>
-                    <a href="https://play.google.com/store/apps/details?id=com.globe.gcash" target="_blank" rel="noopener" class="btn btn-open-gcash">Open GCash</a>
+                    <a href="https://play.google.com/store/apps/details?id=com.globe.gcash.android" target="_blank" rel="noopener" class="btn btn-open-gcash">Open GCash</a>
                 </div>
                 <h4 class="payment-amount-desktop">Pay <span id="payment_amount">₱2,000.00</span> via GCash</h4>
                 <div class="my-4">

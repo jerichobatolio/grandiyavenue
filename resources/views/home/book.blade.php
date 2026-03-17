@@ -362,7 +362,7 @@
                     <!-- Mobile-only: Scan QR or Open GCash (not shown on desktop/website) -->
                     <div class="mobile-pay-options mobile-pay-options-table">
                         <p class="small table-payment-helper-text mb-2">Scan the QR code to pay, or</p>
-                        <a href="https://play.google.com/store/apps/details?id=com.globe.gcash" target="_blank" rel="noopener" class="btn btn-open-gcash btn-open-gcash-table">Open GCash</a>
+                        <a href="https://play.google.com/store/apps/details?id=com.globe.gcash.android" target="_blank" rel="noopener" class="btn btn-open-gcash btn-open-gcash-table">Open GCash</a>
                     </div>
 
                     <div class="table-payment-qr-wrap text-center">
