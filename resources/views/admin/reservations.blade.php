@@ -1708,10 +1708,6 @@
     */
    function forceDeleteReservation(reservationId) {
        console.log('Permanently deleting reservation with ID:', reservationId);
-       if (!confirm('Are you sure you want to permanently delete this reservation? This action cannot be undone.')) {
-           return;
-       }
-
        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
        const url = `/admin/reservations/${reservationId}/force-delete`;
 
@@ -1736,8 +1732,8 @@
            }
            return { success: true };
        })
-       .then(data => {
-           if (data.success) {
+      .then(data => {
+          if (data.success) {
                showNotification('Reservation deleted successfully!', 'success');
 
                // Remove from local data
@@ -1777,17 +1773,17 @@
                if (typeof updateReservationsData === 'function') {
                    updateReservationsData(true);
                }
-               if (typeof syncAdminReservationsToCustomer === 'function') {
+              if (typeof syncAdminReservationsToCustomer === 'function') {
                    syncAdminReservationsToCustomer();
                }
-           } else {
-               showNotification('Error deleting reservation: ' + (data.message || 'Unknown error'), 'error');
-           }
-       })
-       .catch(error => {
-           console.error('Error:', error);
-           showNotification('Error deleting reservation: ' + error.message, 'error');
-       });
+          } else {
+              showNotification('Error deleting reservation: ' + (data.message || 'Unknown error'), 'error');
+          }
+      })
+      .catch(error => {
+          console.error('Error:', error);
+          showNotification('Error deleting reservation: ' + error.message, 'error');
+      });
    }
 
   function bulkDeleteReservations() {
