@@ -458,6 +458,7 @@ Route::get('/admin/return-refunds/{id}', [AdminReturnRefundController::class, 's
 Route::post('/admin/return-refunds/{id}/approve', [AdminReturnRefundController::class, 'approve'])->name('admin.return_refunds.approve');
 Route::post('/admin/return-refunds/{id}/reject', [AdminReturnRefundController::class, 'reject'])->name('admin.return_refunds.reject');
 Route::post('/admin/return-refunds/{id}/refunded', [AdminReturnRefundController::class, 'markRefunded'])->name('admin.return_refunds.refunded');
+Route::delete('/admin/return-refunds/{id}', [AdminReturnRefundController::class, 'destroy'])->name('admin.return_refunds.destroy');
 
 
 

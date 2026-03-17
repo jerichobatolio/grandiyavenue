@@ -284,8 +284,8 @@
                             </td>
                             <td>
                                 <div class="order-date">
-                                    {{ $order->created_at->format('M d, Y') }}<br>
-                                    <small>{{ $order->created_at->format('h:i A') }}</small>
+                                    {{ $order->created_at->timezone(config('app.timezone'))->format('M d, Y') }}<br>
+                                    <small>{{ $order->created_at->timezone(config('app.timezone'))->format('h:i A') }}</small>
                                 </div>
                             </td>
                             <td>

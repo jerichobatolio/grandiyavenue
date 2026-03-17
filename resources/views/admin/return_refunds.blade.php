@@ -505,8 +505,8 @@
                                         </td>
                                         <td>
                                             <div style="font-size: 11px; color: #6b7280;">
-                                                {{ $returnRefund->created_at->format('M d, Y') }}<br>
-                                                <small>{{ $returnRefund->created_at->format('h:i A') }}</small>
+                                                {{ $returnRefund->created_at->timezone(config('app.timezone'))->format('M d, Y') }}<br>
+                                                <small>{{ $returnRefund->created_at->timezone(config('app.timezone'))->format('h:i A') }}</small>
                                             </div>
                                         </td>
                                         <td>
@@ -514,6 +514,13 @@
                                                 <a href="{{ route('admin.return_refunds.show', $returnRefund->id) }}" class="btn-action btn-view">
                                                     <i class="fa fa-eye"></i> View
                                                 </a>
+                                                <form action="{{ route('admin.return_refunds.destroy', $returnRefund->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to delete this return/refund request?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn-action btn-delete" style="background: #ef4444; color: #fff;">
+                                                        <i class="fa fa-trash"></i> Delete
+                                                    </button>
+                                                </form>
                                             </div>
                                         </td>
                                     </tr>
@@ -599,8 +606,8 @@
                                         </td>
                                         <td>
                                             <div style="font-size: 11px; color: #6b7280;">
-                                                {{ $returnRefund->created_at->format('M d, Y') }}<br>
-                                                <small>{{ $returnRefund->created_at->format('h:i A') }}</small>
+                                                {{ $returnRefund->created_at->timezone(config('app.timezone'))->format('M d, Y') }}<br>
+                                                <small>{{ $returnRefund->created_at->timezone(config('app.timezone'))->format('h:i A') }}</small>
                                             </div>
                                         </td>
                                         <td>
@@ -608,6 +615,13 @@
                                                 <a href="{{ route('admin.return_refunds.show', $returnRefund->id) }}" class="btn-action btn-view">
                                                     <i class="fa fa-eye"></i> View
                                                 </a>
+                                                <form action="{{ route('admin.return_refunds.destroy', $returnRefund->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to delete this return/refund request?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn-action btn-delete" style="background: #ef4444; color: #fff;">
+                                                        <i class="fa fa-trash"></i> Delete
+                                                    </button>
+                                                </form>
                                             </div>
                                         </td>
                                     </tr>

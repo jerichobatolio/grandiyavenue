@@ -412,7 +412,7 @@
                                 </div>
                                 <div class="info-item">
                                     <span class="info-label">Booking Date:</span>
-                                    <span class="info-value">{{ $booking->created_at->format('F d, Y \a\t g:i A') }}</span>
+                                    <span class="info-value">{{ $booking->created_at->timezone(config('app.timezone'))->format('F d, Y \a\t g:i A') }}</span>
                                 </div>
                                 <div class="info-item">
                                     <span class="info-label">Food Package:</span>

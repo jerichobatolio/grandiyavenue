@@ -1396,12 +1396,16 @@
         chatbotBody.appendChild(userMsg);
 
         const msgLower = msg.toLowerCase();
-        const match = Array.isArray(GRANDIYA_FAQS)
-            ? GRANDIYA_FAQS.find((item) => {
+        // Only try fuzzy FAQ matching for reasonably long queries (avoid "ok", "hi", etc.)
+        let match = null;
+        if (Array.isArray(GRANDIYA_FAQS) && msgLower.length >= 4) {
+            match = GRANDIYA_FAQS.find((item) => {
                 const q = (item && item.question ? String(item.question) : "").toLowerCase();
-                return q && (q === msgLower || q.includes(msgLower) || msgLower.includes(q));
-            })
-            : null;
+                if (!q) return false;
+                // Exact or strong partial match
+                return q === msgLower || q.includes(msgLower) || msgLower.includes(q);
+            }) || null;
+        }
 
         const botMsg = document.createElement("div");
         botMsg.className = "bot-msg";
@@ -1424,6 +1428,12 @@
                         if (ASSISTANT_AUTH) setTimeout(loadAssistantThread, 800);
                     })
                     .catch(() => {});
+
+                // Also show status message so user knows it was sent
+                const statusMsg = document.createElement("div");
+                statusMsg.className = "bot-msg";
+                statusMsg.innerText = "Message sent. Our team will reply here soon.";
+                chatbotBody.appendChild(statusMsg);
             }
         } else {
             if (!ASSISTANT_AUTH) {

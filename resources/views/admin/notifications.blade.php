@@ -416,7 +416,7 @@
                             
                             <div class="notification-actions">
                                 <small class="text-muted">
-                                    {{ $notification->created_at->format('M d, Y \a\t g:i A') }}
+                                    {{ $notification->created_at->timezone(config('app.timezone'))->format('M d, Y \a\t g:i A') }}
                                 </small>
 
                                 @if(!$notification->is_read)

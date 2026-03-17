@@ -168,22 +168,27 @@
 
                 <li><a href="{{route('admin.announcements')}}"><i class="icon-bullhorn"></i><span class="sidebar-label">📢 Announcements</span></a></li>
 
-                <li class="assistant-faq-link"><a href="{{ route('admin.faqs') }}"><i class="icon-question"></i><span class="sidebar-label">🤖 Grandiya Assistant</span></a></li>
-                <li class="assistant-conversations-link"><a href="{{ route('admin.assistant.conversations') }}"><i class="icon-comment"></i><span class="sidebar-label">💬 Assistant Conversations</span>
+                <li class="assistant-faq-link">
+                  <a href="{{ route('admin.faqs') }}">
+                    <i class="icon-question"></i><span class="sidebar-label">🤖 Grandiya Assistant</span>
+                  </a>
+                </li>
+                <li class="assistant-conversations-link">
+                  <a href="{{ route('admin.assistant.conversations') }}">
+                    <i class="icon-comment"></i><span class="sidebar-label">💬 Assistant Conversations</span>
                   @php
+                    // Count conversations where the *latest* message from that user
+                    // is from the customer (not admin) – matches conversations screen.
                     $assistantPendingCount = 0;
                     try {
                         if (\Illuminate\Support\Facades\Schema::hasTable('assistant_messages')) {
                             $lastMessages = \App\Models\AssistantMessage::select('user_id', 'is_from_admin', 'created_at')
-                                ->orderBy('created_at', 'asc')
+                                ->orderBy('created_at', 'desc')
                                 ->get()
-                                ->groupBy('user_id')
-                                ->map(function ($group) {
-                                    return $group->last();
-                                });
+                                ->unique('user_id');
 
                             $assistantPendingCount = $lastMessages->filter(function ($msg) {
-                                return !$msg->is_from_admin;
+                                return ! $msg->is_from_admin;
                             })->count();
                         }
                     } catch (\Throwable $e) {
@@ -191,7 +196,8 @@
                     }
                   @endphp
                   <span id="assistant-badge" class="reservation-badge" style="display: {{ $assistantPendingCount > 0 ? 'inline-block' : 'none' }};">{{ $assistantPendingCount }}</span>
-                </a></li>
+                  </a>
+                </li>
 
                 <li><a href="#eventTypesDropdown" aria-expanded="false" data-toggle="collapse"> <i class="icon-star"></i>🎪 Event Types</a>
                   <ul id="eventTypesDropdown" class="collapse list-unstyled ">
@@ -396,7 +402,7 @@
         }
         
         #sidebar ul.list-unstyled > li {
-          margin: 4px 0;
+          margin: 2px 0;
         }
         #sidebar li a {
           position: relative;
@@ -412,15 +418,17 @@
           margin-left: auto;
           flex-shrink: 0;
         }
-        /* Assistant links: follow normal spacing like other items */
+        /* Assistant links: visually grouped and aligned with same spacing as others */
         #sidebar li.assistant-faq-link,
         #sidebar li.assistant-conversations-link {
-          margin-top: 4px;
-          margin-bottom: 0;
+          margin-top: 1px;
+          margin-bottom: 1px;
         }
-        /* Pull Assistant Conversations a bit closer to Grandiya Assistant */
-        #sidebar li.assistant-conversations-link {
-          margin-top: -2px;
+        /* For Assistant Conversations, keep badge close to label instead of far right */
+        #sidebar li.assistant-conversations-link a .reservation-badge {
+          margin-left: 8px;
+          margin-right: 0;
+          transform: translateY(1px); /* slight vertical alignment tweak */
         }
 
         /* Mobile/tablet: sidebar as full-width overlay, all labels visible */

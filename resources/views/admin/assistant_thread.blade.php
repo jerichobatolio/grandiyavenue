@@ -19,14 +19,18 @@
             border-radius: 10px;
             padding: 1rem 1.25rem;
             margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
         }
         .thread-msg {
-            margin-bottom: 0.9rem;
-            padding: 0.6rem 0.9rem;
-            border-radius: 12px;
-            max-width: 78%;
+            padding: 0.55rem 0.85rem;
+            border-radius: 16px;
+            max-width: 62%;
             box-shadow: 0 2px 6px rgba(0,0,0,0.35);
-            font-size: 0.95rem;
+            font-size: 0.94rem;
+            word-wrap: break-word;
+            word-break: break-word;
         }
         .thread-msg.user {
             background: linear-gradient(135deg, #ff4b6a, #ff214f);
@@ -85,7 +89,7 @@
                         @forelse($messages as $m)
                             <div class="thread-msg {{ $m->is_from_admin ? 'admin' : 'user' }}">
                                 <div>{{ $m->message }}</div>
-                                <small>{{ $m->created_at->format('M j, g:i A') }} — {{ $m->is_from_admin ? 'You' : $user->name }}</small>
+                                <small>{{ $m->created_at->timezone(config('app.timezone'))->format('M j, g:i A') }} — {{ $m->is_from_admin ? 'You' : $user->name }}</small>
                             </div>
                         @empty
                             <p class="text-muted mb-0">No messages yet.</p>

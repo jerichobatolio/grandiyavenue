@@ -359,7 +359,7 @@
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Date Requested:</span>
-                            <span class="detail-value">{{ $returnRefund->created_at->format('M d, Y h:i A') }}</span>
+                            <span class="detail-value">{{ $returnRefund->created_at->timezone(config('app.timezone'))->format('M d, Y h:i A') }}</span>
                         </div>
                         <div class="requested-ago">
                             Requested {{ $returnRefund->created_at->diffForHumans() }}
@@ -367,7 +367,7 @@
                         @if($returnRefund->processed_at)
                         <div class="detail-row">
                             <span class="detail-label">Processed Date:</span>
-                            <span class="detail-value">{{ $returnRefund->processed_at->format('M d, Y h:i A') }}</span>
+                            <span class="detail-value">{{ $returnRefund->processed_at->timezone(config('app.timezone'))->format('M d, Y h:i A') }}</span>
                         </div>
                         @endif
                     </div>

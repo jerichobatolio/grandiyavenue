@@ -218,4 +218,15 @@ class ReturnRefundController extends Controller
 
         return view('admin.return_refunds', compact('returnRefunds', 'stats', 'status'));
     }
+
+    /**
+     * Permanently delete a return/refund request
+     */
+    public function destroy($id)
+    {
+        $returnRefund = ReturnRefund::findOrFail($id);
+        $returnRefund->delete();
+
+        return redirect()->back()->with('success', 'Return/refund request deleted successfully.');
+    }
 }

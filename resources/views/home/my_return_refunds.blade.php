@@ -454,8 +454,8 @@
                                 </td>
                                 <td>
                                     <div style="font-size: 0.9rem;">
-                                        {{ $returnRefund->created_at->format('M d, Y') }}<br>
-                                        <small style="color: #ccc;">{{ $returnRefund->created_at->format('h:i A') }}</small>
+                                        {{ $returnRefund->created_at->timezone(config('app.timezone'))->format('M d, Y') }}<br>
+                                        <small style="color: #ccc;">{{ $returnRefund->created_at->timezone(config('app.timezone'))->format('h:i A') }}</small>
                                     </div>
                                 </td>
                                 <td>

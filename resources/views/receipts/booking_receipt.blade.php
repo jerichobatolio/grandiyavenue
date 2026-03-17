@@ -314,7 +314,6 @@
         <div class="receipt-footer">
             <p><strong>Thank you for your reservation!</strong></p>
             <p>Please arrive on time for your booking. If you need to make changes, please contact us.</p>
-            <p style="margin-top: 15px;">This is a computer-generated receipt. No signature required.</p>
             <p style="margin-top: 10px; font-size: 11px;">Generated on {{ $generatedAt->format('F d, Y \a\t h:i A') }}</p>
         </div>
         </div>

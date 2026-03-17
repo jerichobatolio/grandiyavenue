@@ -479,7 +479,7 @@
                         </div>
 
                         <div style="color: #6c757d; font-size: 0.85rem; margin-top: 10px;">
-                            Submitted: {{ $review->created_at->format('M d, Y h:i A') }}
+                            Submitted: {{ $review->created_at->timezone(config('app.timezone'))->format('M d, Y h:i A') }}
                         </div>
 
                         <div class="review-actions">
