@@ -268,6 +268,7 @@
                       <th>Occasion</th>
                       <th>Status</th>
                       <th>Archived Date</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -333,6 +334,14 @@
                         <div style="font-size: 12px; color: #6b7280;">
                           {{ $reservation->updated_at->format('M d, Y H:i') }}
                         </div>
+                      </td>
+                      <td>
+                        <form action="{{ route('admin.reservations.force_delete', ['id' => $reservation->id]) }}" method="POST" onsubmit="return confirm('Permanently delete this archived reservation? This cannot be undone.');">
+                          @csrf
+                          <button type="submit" class="btn btn-sm btn-danger">
+                            <i class="fas fa-trash-alt"></i> Delete
+                          </button>
+                        </form>
                       </td>
                     </tr>
                     @endforeach

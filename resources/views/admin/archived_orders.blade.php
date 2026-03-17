@@ -423,6 +423,7 @@
                                     <th>Status</th>
                                     <th>Notes</th>
                                     <th>Archived Date</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -516,6 +517,13 @@
                                                 {{ $firstOrder->updated_at->format('M d, Y H:i') }}
                                             </div>
                                         </td>
+                                        <td>
+                                            <form action="{{ route('order.force_delete', ['id' => $firstOrder->id]) }}" method="GET" onsubmit="return confirm('Permanently delete all archived orders in this group? This cannot be undone.');">
+                                                <button type="submit" class="btn btn-sm btn-danger">
+                                                    <i class="fas fa-trash-alt"></i> Delete
+                                                </button>
+                                            </form>
+                                        </td>
                                     </tr>
                                     
                                     <!-- Expanded Details Rows (for multiple orders) -->
@@ -545,10 +553,17 @@
                                                     {{ $order->notes ?: '' }}
                                                 </div>
                                             </td>
-                                            <td>
+                                        <td>
                                                 <div style="font-size: 12px; color: #6b7280;">
                                                     {{ $order->updated_at->format('M d, Y H:i') }}
                                                 </div>
+                                            </td>
+                                            <td>
+                                                <form action="{{ route('order.force_delete', ['id' => $order->id]) }}" method="GET" onsubmit="return confirm('Permanently delete this archived order? This cannot be undone.');">
+                                                    <button type="submit" class="btn btn-sm btn-danger">
+                                                        <i class="fas fa-trash-alt"></i> Delete
+                                                    </button>
+                                                </form>
                                             </td>
                                         </tr>
                                     @endforeach

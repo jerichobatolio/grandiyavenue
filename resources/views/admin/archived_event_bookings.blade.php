@@ -290,6 +290,7 @@
                                         <th>💳 Proof</th>
                                         <th>📝 Notes</th>
                                         <th>📦 Archived Date</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -394,6 +395,13 @@
                                             <div style="font-size: 11px; color: #6b7280;">
                                                 {{ $booking->updated_at->format('M d, Y H:i') }}
                                             </div>
+                                        </td>
+                                        <td>
+                                            <form action="{{ route('admin.event_booking.force_delete', ['id' => $booking->id]) }}" method="GET" onsubmit="return confirm('Permanently delete this archived event booking? This cannot be undone.');">
+                                                <button type="submit" class="btn btn-sm btn-danger">
+                                                    <i class="fas fa-trash-alt"></i> Delete
+                                                </button>
+                                            </form>
                                         </td>
                                     </tr>
                                     @endforeach
