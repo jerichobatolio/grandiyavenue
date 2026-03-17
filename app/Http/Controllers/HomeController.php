@@ -72,7 +72,6 @@ class HomeController extends Controller
         if (Auth::check()) {
             $notifications = Notification::where('user_id', Auth::id())
                 ->orderBy('created_at', 'desc')
-                ->take(10)
                 ->get();
             $notifCount = Notification::where('user_id', Auth::id())
                 ->where('is_read', false)
@@ -183,7 +182,6 @@ class HomeController extends Controller
                 // ✅ Fetch notifications for the authenticated user
                 $notifications = Notification::where('user_id', Auth::id())
                     ->orderBy('created_at', 'desc')
-                    ->take(10)
                     ->get();
                 $notifCount = Notification::where('user_id', Auth::id())
                     ->where('is_read', false)
@@ -306,7 +304,6 @@ class HomeController extends Controller
         // ✅ Fetch notifications for the authenticated user
         $notifications = Notification::where('user_id', $user_id)
             ->orderBy('created_at', 'desc')
-            ->take(10)
             ->get();
         $notifCount = Notification::where('user_id', $user_id)
             ->where('is_read', false)
@@ -364,7 +361,6 @@ class HomeController extends Controller
         // ✅ Fetch notifications for the authenticated user
         $notifications = Notification::where('user_id', $user_id)
             ->orderBy('created_at', 'desc')
-            ->take(10)
             ->get();
         $notifCount = Notification::where('user_id', $user_id)
             ->where('is_read', false)
@@ -695,7 +691,6 @@ class HomeController extends Controller
             if (Auth::check()) {
                 $notifications = Notification::where('user_id', Auth::id())
                     ->orderBy('created_at', 'desc')
-                    ->take(10)
                     ->get();
                 $notifCount = Notification::where('user_id', Auth::id())
                     ->where('is_read', false)
@@ -745,7 +740,6 @@ class HomeController extends Controller
         if (Auth::check()) {
             $notifications = Notification::where('user_id', Auth::id())
                 ->orderBy('created_at', 'desc')
-                ->take(10)
                 ->get();
             $notifCount = Notification::where('user_id', Auth::id())
                 ->where('is_read', false)
@@ -813,7 +807,6 @@ class HomeController extends Controller
         if (Auth::check()) {
             $notifications = Notification::where('user_id', Auth::id())
                 ->orderBy('created_at', 'desc')
-                ->take(10)
                 ->get();
             $notifCount = Notification::where('user_id', Auth::id())
                 ->where('is_read', false)
@@ -838,7 +831,6 @@ class HomeController extends Controller
         if (Auth::check()) {
             $notifications = Notification::where('user_id', Auth::id())
                 ->orderBy('created_at', 'desc')
-                ->take(10)
                 ->get();
             $notifCount = Notification::where('user_id', Auth::id())
                 ->where('is_read', false)

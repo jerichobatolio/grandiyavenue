@@ -428,6 +428,7 @@ Route::get('/admin/test-event-types', function () {
 // ✅ Notification routes for JS polling and marking as read
 Route::middleware('auth')->group(function () {
     Route::get('/customer/notifications', [NotificationController::class, 'getNotifications'])->name('customer.notifications');
+    Route::post('/customer/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('customer.notifications.mark_all_read');
     Route::post('/customer/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('customer.notifications.read');
     Route::delete('/customer/notifications/{id}', [NotificationController::class, 'deleteNotification'])->name('customer.notifications.delete');
 });

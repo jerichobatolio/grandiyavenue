@@ -790,9 +790,12 @@
                             <span class="badge badge-warning" id="notifCount" style="display: none;">0</span>
                         </a>
                         <div class="dropdown-menu dropdown-menu-end notif-dropdown-menu" aria-labelledby="notifDropdown" style="max-height: 400px; overflow-y: auto;">
-                            <div class="dropdown-header d-flex justify-content-between align-items-center">
+                            <div class="dropdown-header d-flex justify-content-between align-items-center flex-wrap">
                                 <h6 class="mb-0">Notifications</h6>
-                                <small class="text-muted" id="notifCountText">No new notifications</small>
+                                <div class="d-flex align-items-center gap-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2" id="markAllNotificationsReadBtn" title="Mark all as read" style="font-size: 0.75rem; white-space: nowrap;">Mark all as read</button>
+                                    <small class="text-muted" id="notifCountText">No new notifications</small>
+                                </div>
                             </div>
                             <div class="dropdown-divider"></div>
                             <div id="notifList">
@@ -1818,6 +1821,33 @@
         
         // Start polling for new notifications
         startNotificationPolling();
+
+        // Mark all as read button
+        const markAllReadBtn = document.getElementById('markAllNotificationsReadBtn');
+        if (markAllReadBtn) {
+            markAllReadBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const btn = this;
+                btn.disabled = true;
+                fetch('/customer/notifications/mark-all-read', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateNotificationCount();
+                    }
+                })
+                .catch(err => console.error('Mark all read failed:', err))
+                .finally(() => { btn.disabled = false; });
+            });
+        }
         
     });
     

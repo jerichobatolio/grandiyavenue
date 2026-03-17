@@ -19,7 +19,6 @@ class NotificationController extends Controller
         $notifications = Notification::where('user_id', $user->id)
             ->with(['order', 'eventBooking.packageInclusion'])
             ->latest()
-            ->take(10)
             ->get();
 
         // Normalize event booking notification data so the frontend
@@ -135,5 +134,25 @@ class NotificationController extends Controller
         }
 
         return response()->json(['error' => 'Notification not found'], 404);
+    }
+
+    // Mark all notifications as read for the current user
+    public function markAllAsRead()
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $updated = Notification::where('user_id', $user->id)
+            ->where('is_read', 0)
+            ->update(['is_read' => 1]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'All notifications marked as read',
+            'updated_count' => $updated,
+        ]);
     }
 }
