@@ -84,6 +84,13 @@
             background-color: #dc3545 !important;
             color: white !important;
         }
+        /* Mark all as read button: ensure text is visible (dropdown-menu uses light inherited color) */
+        .notif-dropdown-menu #markAllNotificationsReadBtn {
+            color: #ff214f !important;
+        }
+        .notif-dropdown-menu #markAllNotificationsReadBtn:hover {
+            color: #fff !important;
+        }
         
         #notifCount {
             background-color: #dc3545 !important;
@@ -793,7 +800,7 @@
                             <div class="dropdown-header d-flex justify-content-between align-items-center flex-wrap">
                                 <h6 class="mb-0">Notifications</h6>
                                 <div class="d-flex align-items-center gap-2">
-                                    <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2" id="markAllNotificationsReadBtn" title="Mark all as read" style="font-size: 0.75rem; white-space: nowrap;">Mark all as read</button>
+                                    <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2" id="markAllNotificationsReadBtn" title="Mark all as read" style="font-size: 0.75rem; white-space: nowrap; color: #ff214f !important;">Mark all as read</button>
                                     <small class="text-muted" id="notifCountText">No new notifications</small>
                                 </div>
                             </div>
