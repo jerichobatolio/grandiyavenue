@@ -563,7 +563,21 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body text-center">
-                <h4>Pay <span id="payment_amount">₱2,000.00</span> via GCash</h4>
+                <!-- Mobile-only: QRPh-style pay options (Scan QR + Open in App) -->
+                <div class="mobile-pay-options">
+                    <div class="qrph-header">
+                        <span class="qrph-logo">QRPh</span>
+                    </div>
+                    <div class="mobile-pay-amount-bar">
+                        <span class="text-muted small">Amount to pay</span>
+                        <strong class="d-block" id="payment_amount_mobile">₱2,000.00</strong>
+                    </div>
+                    <a href="https://www.gcash.com" target="_blank" rel="noopener" class="btn btn-primary btn-open-external-app">
+                        <i class="fas fa-external-link-alt me-2"></i>OPEN in External App
+                    </a>
+                    <p class="small text-muted mt-2 mb-1">— or scan QR code below —</p>
+                </div>
+                <h4 class="payment-amount-desktop">Pay <span id="payment_amount">₱2,000.00</span> via GCash</h4>
                 <div class="my-4">
                     @if(isset($globalQrCode) && $globalQrCode)
                         <img id="admin_qr_code" src="{{ Storage::url($globalQrCode) }}" alt="GCash QR Code" class="img-fluid" style="max-width: 300px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
@@ -587,6 +601,46 @@
         </div>
     </div>
 </div>
+<style>
+/* Mobile-only payment: QRPh-style header + Open in External App */
+@media (max-width: 767px) {
+    .mobile-pay-options { display: block !important; }
+    #paymentModal .payment-amount-desktop { display: none; }
+    .qrph-header {
+        background: linear-gradient(135deg, #003d82 0%, #0066b3 100%);
+        color: #fff;
+        padding: 12px 16px;
+        border-radius: 8px 8px 0 0;
+        margin: -1rem -1rem 1rem -1rem;
+        text-align: center;
+    }
+    .qrph-logo {
+        font-weight: 700;
+        font-size: 1.4rem;
+        letter-spacing: 0.05em;
+    }
+    .qrph-logo .qr { color: #ff0000; }
+    .mobile-pay-amount-bar {
+        background: rgba(102, 126, 234, 0.12);
+        padding: 10px 14px;
+        border-radius: 8px;
+        margin-bottom: 14px;
+    }
+    .btn-open-external-app {
+        width: 100%;
+        padding: 14px 20px;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #003d82 0%, #0066b3 100%);
+        border: none;
+    }
+    .btn-open-external-app:hover { opacity: 0.95; color: #fff; }
+}
+@media (min-width: 768px) {
+    .mobile-pay-options { display: none !important; }
+}
+</style>
 
 <!-- Payment Proof Upload Modal -->
 <div class="modal fade" id="proofUploadModal" tabindex="-1" aria-labelledby="proofUploadModalLabel" aria-hidden="true">
@@ -1118,6 +1172,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     const downPaymentLabel = formatCurrency(DEFAULT_DOWN_PAYMENT);
                     const fullPaymentLabel = formatCurrency(DEFAULT_FULL_PAYMENT);
                     document.getElementById('payment_amount').textContent = downPaymentLabel;
+                    const paymentAmountMobile = document.getElementById('payment_amount_mobile');
+                    if (paymentAmountMobile) paymentAmountMobile.textContent = downPaymentLabel;
                     updatePaymentOptionDisplays(downPaymentLabel, fullPaymentLabel);
                     
                     // Show payment modal
