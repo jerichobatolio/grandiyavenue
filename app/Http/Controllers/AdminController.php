@@ -2491,15 +2491,20 @@ class AdminController extends Controller
             ->sum(DB::raw('COALESCE(amount_paid, down_payment_amount)'));
 
         // Refunds decrease revenue – deduct as soon as approved (and when refunded)
+        // Use ABS to be safe in case negative amounts are stored.
         $refundsTotal = ReturnRefund::whereIn('status', ['approved', 'refunded'])
-            ->sum('refund_amount');
+            ->sum(DB::raw('ABS(refund_amount)'));
 
         $refundsToday = ReturnRefund::where('status', 'refunded')
             ->whereDate('processed_at', $today)
-            ->sum('refund_amount');
+            ->sum(DB::raw('ABS(refund_amount)'));
 
-        $totalRevenue = ($orderRevenueTotal + $eventRevenue + $tableReservationRevenue) - $refundsTotal;
-        $revenueToday = ($orderRevenueToday + $eventRevenueToday + $tableReservationRevenueToday) - $refundsToday;
+        // Never go below zero: if there is no positive revenue yet, total should be 0.
+        $totalRevenueRaw = ($orderRevenueTotal + $eventRevenue + $tableReservationRevenue) - $refundsTotal;
+        $revenueTodayRaw = ($orderRevenueToday + $eventRevenueToday + $tableReservationRevenueToday) - $refundsToday;
+
+        $totalRevenue = max(0, $totalRevenueRaw);
+        $revenueToday = max(0, $revenueTodayRaw);
 
         // Show grouped (per-customer) active orders in the Orders card so it matches the Orders page
         $activeOrders = Order::where('is_archived', false)
@@ -2570,9 +2575,10 @@ class AdminController extends Controller
 
             $dailyRefunds = ReturnRefund::where('status', 'refunded')
                 ->whereBetween('processed_at', [$dateStart, $dateEnd])
-                ->sum('refund_amount');
+                ->sum(DB::raw('ABS(refund_amount)'));
 
-            $revenueData[] = ($dailyOrderRevenue + $dailyEventRevenue + $dailyTableReservationRevenue) - $dailyRefunds;
+            $dailyNet = ($dailyOrderRevenue + $dailyEventRevenue + $dailyTableReservationRevenue) - $dailyRefunds;
+            $revenueData[] = max(0, $dailyNet);
         }
 
         // Status breakdown
@@ -2703,15 +2709,20 @@ class AdminController extends Controller
             ->sum(DB::raw('COALESCE(amount_paid, down_payment_amount)'));
 
         // Refunds decrease revenue – deduct as soon as approved (and when refunded)
+        // Use ABS to be safe in case negative amounts are stored.
         $refundsTotal = ReturnRefund::whereIn('status', ['approved', 'refunded'])
-            ->sum('refund_amount');
+            ->sum(DB::raw('ABS(refund_amount)'));
 
         $refundsToday = ReturnRefund::where('status', 'refunded')
             ->whereDate('processed_at', $today)
-            ->sum('refund_amount');
+            ->sum(DB::raw('ABS(refund_amount)'));
 
-        $totalRevenue = ($orderRevenueTotal + $eventRevenue + $tableReservationRevenue) - $refundsTotal;
-        $revenueToday = ($orderRevenueToday + $eventRevenueToday + $tableReservationRevenueToday) - $refundsToday;
+        // Never go below zero: if there is no positive revenue yet, total should be 0.
+        $totalRevenueRaw = ($orderRevenueTotal + $eventRevenue + $tableReservationRevenue) - $refundsTotal;
+        $revenueTodayRaw = ($orderRevenueToday + $eventRevenueToday + $tableReservationRevenueToday) - $refundsToday;
+
+        $totalRevenue = max(0, $totalRevenueRaw);
+        $revenueToday = max(0, $revenueTodayRaw);
 
         // Show grouped (per-customer) active orders in the Orders card so it matches the Orders page
         $activeOrders = Order::where('is_archived', false)
@@ -2782,9 +2793,10 @@ class AdminController extends Controller
 
             $dailyRefunds = ReturnRefund::where('status', 'refunded')
                 ->whereBetween('processed_at', [$dateStart, $dateEnd])
-                ->sum('refund_amount');
+                ->sum(DB::raw('ABS(refund_amount)'));
 
-            $revenueData[] = ($dailyOrderRevenue + $dailyEventRevenue + $dailyTableReservationRevenue) - $dailyRefunds;
+            $dailyNet = ($dailyOrderRevenue + $dailyEventRevenue + $dailyTableReservationRevenue) - $dailyRefunds;
+            $revenueData[] = max(0, $dailyNet);
         }
 
         // Status breakdown
