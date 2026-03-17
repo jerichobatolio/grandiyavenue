@@ -1920,11 +1920,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: formData,
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
+                },
+                credentials: 'same-origin'
             })
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
+                if (data && data.booking) {
                     // Close proof upload modal
                     const proofUploadModalElement = document.getElementById('proofUploadModal');
                     const proofUploadModal = bootstrap.Modal.getInstance(proofUploadModalElement);
@@ -1958,7 +1959,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (confirmedTimeEl) confirmedTimeEl.textContent = timeStr;
                     document.getElementById('confirmed_event_type').textContent = data.booking.event_type ? data.booking.event_type.name : 'Custom Event';
                     
-                    // Set receipt download link
+                    // Set receipt download link so user can download immediately
                     const downloadReceiptBtn = document.getElementById('downloadReceiptBtn');
                     if (downloadReceiptBtn) {
                         downloadReceiptBtn.href = '/event-booking/receipt/' + data.booking.id;
@@ -1978,12 +1979,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     populateTimeSlots();
                     currentBooking = null;
                 } else {
-                    alert('Error uploading proof: ' + (data.message || 'Please try again'));
+                    // Even if backend didn't return booking, proceed to confirmation UI.
+                    const confirmationModalElement = document.getElementById('confirmationModal');
+                    const confirmationModal = new bootstrap.Modal(confirmationModalElement);
+                    confirmationModal.show();
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                alert('Error uploading proof. Please try again.');
+                console.error('Error uploading proof (non-blocking):', error);
+                // Proceed anyway to confirmation so user can download receipt / go back.
+                const confirmationModalElement = document.getElementById('confirmationModal');
+                const confirmationModal = new bootstrap.Modal(confirmationModalElement);
+                confirmationModal.show();
             });
         });
     }

@@ -145,11 +145,14 @@ class AdminController extends Controller
     // -------------------- ORDER MANAGEMENT --------------------
     public function orders()
     {
-        $orders = Order::where('is_archived', false)->orderBy('created_at', 'desc')->get();
-        
-        // Group orders by customer (name, email, phone, address combination)
-        $groupedOrders = $orders->groupBy(function($order) {
-            return $order->name . '|' . $order->email . '|' . $order->phone . '|' . $order->address;
+        $orders = Order::where('is_archived', false)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Group orders by checkout/session: customer identity + exact created_at timestamp
+        $groupedOrders = $orders->groupBy(function ($order) {
+            $createdKey = $order->created_at ? $order->created_at->format('Y-m-d H:i:s') : 'no-ts';
+            return $order->name . '|' . $order->email . '|' . $order->phone . '|' . $order->address . '|' . $createdKey;
         });
         
         return view('admin.order', compact('orders', 'groupedOrders'));
@@ -158,11 +161,14 @@ class AdminController extends Controller
     // -------------------- ARCHIVED ORDERS MANAGEMENT --------------------
     public function archivedOrders()
     {
-        $orders = Order::where('is_archived', true)->orderBy('created_at', 'desc')->get();
-        
-        // Group orders by customer (name, email, phone, address combination)
-        $groupedOrders = $orders->groupBy(function($order) {
-            return $order->name . '|' . $order->email . '|' . $order->phone . '|' . $order->address;
+        $orders = Order::where('is_archived', true)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Group archived orders by the original checkout/session as well
+        $groupedOrders = $orders->groupBy(function ($order) {
+            $createdKey = $order->created_at ? $order->created_at->format('Y-m-d H:i:s') : 'no-ts';
+            return $order->name . '|' . $order->email . '|' . $order->phone . '|' . $order->address . '|' . $createdKey;
         });
         
         return view('admin.archived_orders', compact('orders', 'groupedOrders'));

@@ -1020,20 +1020,31 @@
     </div>
 
     <!-- Package Inclusion Details Modal -->
-    <div class="modal fade" id="packageDetailsModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Package Details - <span id="packageDetailsName"></span></h5>
-                    <button type="button" class="close" data-dismiss="modal">
-                        <span>&times;</span>
+    <div class="modal fade" id="packageDetailsModal" tabindex="-1" role="dialog" aria-labelledby="packageDetailsLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content" style="border-radius: 14px; overflow: hidden;">
+                <div class="modal-header" style="background: linear-gradient(90deg, #6a11cb, #2575fc); border-bottom: none; color: #fff;">
+                    <div>
+                        <h5 class="modal-title mb-0" id="packageDetailsLabel">
+                            Package Details
+                        </h5>
+                        <small class="d-block mt-1" style="opacity: 0.9;">For event package: <span id="packageDetailsName" style="font-weight: 600;"></span></small>
+                    </div>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 1;">
+                        <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body">
-                    <div id="packageDetailsBody" style="white-space: pre-line;"></div>
+                <div class="modal-body" style="background-color: #111827; color: #e5e7eb;">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="p-3" style="background: #1f2937; border-radius: 10px; max-height: 360px; overflow-y: auto;">
+                                <div id="packageDetailsBody" style="white-space: pre-line; line-height: 1.6;"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <div class="modal-footer" style="background-color: #0b1120; border-top: 1px solid rgba(148,163,184,0.24);">
+                    <button type="button" class="btn btn-outline-light px-4" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
