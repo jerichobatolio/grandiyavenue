@@ -710,7 +710,7 @@
                 <!-- Mobile-only: Scan QR or Open GCash (not shown on desktop/website) -->
                 <div class="mobile-pay-options mobile-pay-options-section">
                     <p class="text-muted mb-2">Scan the QR code to pay, or</p>
-                    <a href="https://www.gcash.com" target="_blank" rel="noopener" class="btn btn-open-gcash btn-open-gcash-section">Open GCash</a>
+                    <a href="https://play.google.com/store/apps/details?id=com.globe.gcash" target="_blank" rel="noopener" class="btn btn-open-gcash btn-open-gcash-section">Open GCash</a>
                 </div>
                 <h4 class="text-white payment-amount-desktop-section">Pay via GCash</h4>
                 <p class="mb-3 payment-amount-desktop-section">Choose whether you want to pay the required 50% downpayment or settle the full amount now.</p>

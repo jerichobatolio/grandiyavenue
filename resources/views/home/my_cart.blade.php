@@ -898,7 +898,7 @@
                 <!-- Mobile-only: Scan QR or Open GCash (not shown on desktop/website) -->
                 <div class="mobile-pay-options mobile-pay-options-cart">
                     <p style="color: #ccc; margin-bottom: 12px;">Scan the QR code to pay, or</p>
-                    <a href="https://www.gcash.com" target="_blank" rel="noopener" class="btn btn-open-gcash-cart">Open GCash</a>
+                    <a href="https://play.google.com/store/apps/details?id=com.globe.gcash" target="_blank" rel="noopener" class="btn btn-open-gcash-cart">Open GCash</a>
                 </div>
                 
                 <p class="gcash-scan-desktop" style="color: #ccc; margin-bottom: 20px;">Scan the QR code to pay via GCash.</p>
