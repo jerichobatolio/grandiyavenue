@@ -2468,25 +2468,31 @@ class AdminController extends Controller
             : DB::raw('CAST(price AS DECIMAL(10,2))');
 
         // Summary metrics (net revenue includes orders, event bookings, and processed refunds)
-        $orderRevenueTotal = Order::where('delivery_status', 'Delivered')
+        $orderRevenueTotal = Order::where('is_archived', false)
+            ->where('delivery_status', 'On the Way')
             ->sum($orderPriceExpression);
-        $orderRevenueToday = Order::where('delivery_status', 'Delivered')
+        $orderRevenueToday = Order::where('is_archived', false)
+            ->where('delivery_status', 'On the Way')
             ->whereDate('created_at', $today)
             ->sum($orderPriceExpression);
 
         // Event booking revenue (use recorded amount for Paid bookings, including archived)
-        $eventRevenue = EventBooking::where('status', 'Paid')
+        $eventRevenue = EventBooking::where('is_archived', false)
+            ->where('status', 'Paid')
             ->sum(DB::raw('COALESCE(amount_paid, down_payment_amount)'));
 
-        $eventRevenueToday = EventBooking::where('status', 'Paid')
+        $eventRevenueToday = EventBooking::where('is_archived', false)
+            ->where('status', 'Paid')
             ->whereDate('created_at', $today)
             ->sum(DB::raw('COALESCE(amount_paid, down_payment_amount)'));
 
         // Table reservation revenue is recognized once the reservation is approved (including archived).
-        $tableReservationRevenue = Book::whereIn('status', ['approved', 'confirmed'])
+        $tableReservationRevenue = Book::where('is_archived', false)
+            ->where('status', 'approved')
             ->sum(DB::raw('COALESCE(amount_paid, down_payment_amount)'));
 
-        $tableReservationRevenueToday = Book::whereIn('status', ['approved', 'confirmed'])
+        $tableReservationRevenueToday = Book::where('is_archived', false)
+            ->where('status', 'approved')
             ->whereDate('updated_at', $today)
             ->sum(DB::raw('COALESCE(amount_paid, down_payment_amount)'));
 
@@ -2561,15 +2567,18 @@ class AdminController extends Controller
             $eventsData[] = EventBooking::whereBetween('created_at', [$dateStart, $dateEnd])->count();
 
             // Net revenue per day (orders + approved table reservations + event bookings - refunds)
-            $dailyOrderRevenue = Order::where('delivery_status', 'Delivered')
+            $dailyOrderRevenue = Order::where('is_archived', false)
+                ->where('delivery_status', 'On the Way')
                 ->whereBetween('created_at', [$dateStart, $dateEnd])
                 ->sum('price');
 
-            $dailyEventRevenue = EventBooking::where('status', 'Paid')
+            $dailyEventRevenue = EventBooking::where('is_archived', false)
+                ->where('status', 'Paid')
                 ->whereBetween('created_at', [$dateStart, $dateEnd])
                 ->sum(DB::raw('COALESCE(amount_paid, down_payment_amount)'));
 
-            $dailyTableReservationRevenue = Book::whereIn('status', ['approved', 'confirmed'])
+            $dailyTableReservationRevenue = Book::where('is_archived', false)
+                ->where('status', 'approved')
                 ->whereBetween('updated_at', [$dateStart, $dateEnd])
                 ->sum(DB::raw('COALESCE(amount_paid, down_payment_amount)'));
 
@@ -2686,25 +2695,31 @@ class AdminController extends Controller
             : DB::raw('CAST(price AS DECIMAL(10,2))');
 
         // Summary metrics (net revenue includes orders, event bookings, and processed refunds)
-        $orderRevenueTotal = Order::where('delivery_status', 'Delivered')
+        $orderRevenueTotal = Order::where('is_archived', false)
+            ->where('delivery_status', 'On the Way')
             ->sum($orderPriceExpression);
-        $orderRevenueToday = Order::where('delivery_status', 'Delivered')
+        $orderRevenueToday = Order::where('is_archived', false)
+            ->where('delivery_status', 'On the Way')
             ->whereDate('created_at', $today)
             ->sum($orderPriceExpression);
 
         // Event booking revenue (use recorded amount for Paid bookings, including archived)
-        $eventRevenue = EventBooking::where('status', 'Paid')
+        $eventRevenue = EventBooking::where('is_archived', false)
+            ->where('status', 'Paid')
             ->sum(DB::raw('COALESCE(amount_paid, down_payment_amount)'));
 
-        $eventRevenueToday = EventBooking::where('status', 'Paid')
+        $eventRevenueToday = EventBooking::where('is_archived', false)
+            ->where('status', 'Paid')
             ->whereDate('created_at', $today)
             ->sum(DB::raw('COALESCE(amount_paid, down_payment_amount)'));
 
         // Table reservation revenue is recognized once the reservation is approved (including archived).
-        $tableReservationRevenue = Book::whereIn('status', ['approved', 'confirmed'])
+        $tableReservationRevenue = Book::where('is_archived', false)
+            ->where('status', 'approved')
             ->sum(DB::raw('COALESCE(amount_paid, down_payment_amount)'));
 
-        $tableReservationRevenueToday = Book::whereIn('status', ['approved', 'confirmed'])
+        $tableReservationRevenueToday = Book::where('is_archived', false)
+            ->where('status', 'approved')
             ->whereDate('updated_at', $today)
             ->sum(DB::raw('COALESCE(amount_paid, down_payment_amount)'));
 
@@ -2779,15 +2794,18 @@ class AdminController extends Controller
             $eventsData[] = EventBooking::whereBetween('created_at', [$dateStart, $dateEnd])->count();
 
             // Net revenue per day (orders + approved table reservations + event bookings - refunds)
-            $dailyOrderRevenue = Order::where('delivery_status', 'Delivered')
+            $dailyOrderRevenue = Order::where('is_archived', false)
+                ->where('delivery_status', 'On the Way')
                 ->whereBetween('created_at', [$dateStart, $dateEnd])
                 ->sum($orderPriceExpression);
 
-            $dailyEventRevenue = EventBooking::where('status', 'Paid')
+            $dailyEventRevenue = EventBooking::where('is_archived', false)
+                ->where('status', 'Paid')
                 ->whereBetween('created_at', [$dateStart, $dateEnd])
                 ->sum(DB::raw('COALESCE(amount_paid, down_payment_amount)'));
 
-            $dailyTableReservationRevenue = Book::whereIn('status', ['approved', 'confirmed'])
+            $dailyTableReservationRevenue = Book::where('is_archived', false)
+                ->where('status', 'approved')
                 ->whereBetween('updated_at', [$dateStart, $dateEnd])
                 ->sum(DB::raw('COALESCE(amount_paid, down_payment_amount)'));
 
