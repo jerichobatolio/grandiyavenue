@@ -260,6 +260,7 @@ Route::get('/event-booking-payment-proof/{booking}', function (\App\Models\Event
 Route::get('/notifications', [AdminController::class,'notifications'])->name('admin.notifications');
 Route::get('/notifications/mark-read/{id}', [AdminController::class,'markNotificationAsRead'])->name('admin.notification.mark_read');
 Route::get('/notifications/mark-all-read', [AdminController::class,'markAllNotificationsAsRead'])->name('admin.notification.mark_all_read');
+Route::post('/notifications/delete-all-read', [AdminController::class,'deleteAllReadNotifications'])->name('admin.notification.delete_all_read');
 Route::delete('/notifications/{id}', [AdminController::class,'deleteNotification'])->name('admin.notification.delete');
 
 Route::get('/cancel/{id}', [AdminController::class,'cancel']);
@@ -436,6 +437,7 @@ Route::get('/admin/test-event-types', function () {
 Route::middleware('auth')->group(function () {
     Route::get('/customer/notifications', [NotificationController::class, 'getNotifications'])->name('customer.notifications');
     Route::post('/customer/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('customer.notifications.mark_all_read');
+    Route::post('/customer/notifications/delete-all-read', [NotificationController::class, 'deleteAllRead'])->name('customer.notifications.delete_all_read');
     Route::post('/customer/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('customer.notifications.read');
     Route::delete('/customer/notifications/{id}', [NotificationController::class, 'deleteNotification'])->name('customer.notifications.delete');
     // Grandiya Assistant chat: send message & get thread (two-way with admin)

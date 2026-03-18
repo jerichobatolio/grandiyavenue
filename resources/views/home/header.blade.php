@@ -814,8 +814,9 @@
                         <div class="dropdown-menu dropdown-menu-end notif-dropdown-menu" aria-labelledby="notifDropdown" style="max-height: 400px; overflow-y: auto;">
                             <div class="dropdown-header d-flex justify-content-between align-items-center flex-wrap">
                                 <h6 class="mb-0">Notifications</h6>
-                                <div class="d-flex align-items-center gap-2">
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
                                     <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2" id="markAllNotificationsReadBtn" title="Mark all as read" style="font-size: 0.75rem; white-space: nowrap; color: #ff214f !important;">Mark all as read</button>
+                                    <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2" id="deleteAllReadNotificationsBtn" title="Delete all read" style="font-size: 0.75rem; white-space: nowrap; color: #6c757d !important;">Delete all read</button>
                                     <small class="text-muted" id="notifCountText">No new notifications</small>
                                 </div>
                             </div>
@@ -2016,6 +2017,34 @@
                     }
                 })
                 .catch(err => console.error('Mark all read failed:', err))
+                .finally(() => { btn.disabled = false; });
+            });
+        }
+
+        // Delete all read button
+        const deleteAllReadBtn = document.getElementById('deleteAllReadNotificationsBtn');
+        if (deleteAllReadBtn) {
+            deleteAllReadBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!confirm('Delete all read notifications? This cannot be undone.')) return;
+                const btn = this;
+                btn.disabled = true;
+                fetch('/customer/notifications/delete-all-read', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateNotificationCount();
+                    }
+                })
+                .catch(err => console.error('Delete all read failed:', err))
                 .finally(() => { btn.disabled = false; });
             });
         }

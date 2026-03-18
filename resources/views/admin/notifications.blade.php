@@ -172,6 +172,18 @@
             margin-bottom: 20px;
         }
 
+        .action-buttons-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .action-buttons-left .inline-form {
+            display: inline-block;
+            margin: 0;
+        }
+
         .search-form {
             display: flex;
             gap: 10px;
@@ -334,8 +346,12 @@
                     @endif
 
                     <div class="search-row">
-                        <div>
+                        <div class="action-buttons-left">
                             <a class="btn-mark-read" href="{{ route('admin.notification.mark_all_read') }}">Mark all as read</a>
+                            <form method="POST" action="{{ route('admin.notification.delete_all_read') }}" class="inline-form" onsubmit="return confirm('Delete all read notifications? This cannot be undone.');">
+                                @csrf
+                                <button type="submit" class="btn-delete">Delete all read messages</button>
+                            </form>
                         </div>
                         <form class="search-form" method="GET" action="{{ route('admin.notifications') }}">
                             <input class="search-input" type="text" name="q" value="{{ request('q') }}" placeholder="Search notifications (title, message, type)..." />

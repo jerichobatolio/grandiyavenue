@@ -38,6 +38,7 @@ class GalleryController extends Controller
         ]);
 
         $imagePath = $request->file('image')->store('gallery_images', 'public');
+        $imagePath = str_replace('\\', '/', $imagePath);
 
         Gallery::create([
             'title' => $request->title,
@@ -91,9 +92,9 @@ class GalleryController extends Controller
         if ($request->hasFile('image')) {
             // Delete old image
             if ($gallery->image_path) {
-                Storage::disk('public')->delete($gallery->image_path);
+                Storage::disk('public')->delete(str_replace('\\', '/', $gallery->image_path));
             }
-            $data['image_path'] = $request->file('image')->store('gallery_images', 'public');
+            $data['image_path'] = str_replace('\\', '/', $request->file('image')->store('gallery_images', 'public'));
         }
 
         $gallery->update($data);
@@ -110,7 +111,7 @@ class GalleryController extends Controller
         
         // Delete image file
         if ($gallery->image_path) {
-            Storage::disk('public')->delete($gallery->image_path);
+            Storage::disk('public')->delete(str_replace('\\', '/', $gallery->image_path));
         }
         
         $gallery->delete();

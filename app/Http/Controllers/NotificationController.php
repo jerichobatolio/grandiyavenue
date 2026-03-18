@@ -155,4 +155,24 @@ class NotificationController extends Controller
             'updated_count' => $updated,
         ]);
     }
+
+    // Delete all read notifications for the current user
+    public function deleteAllRead()
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $deleted = Notification::where('user_id', $user->id)
+            ->where('is_read', true)
+            ->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => $deleted > 0 ? "{$deleted} read notification(s) deleted." : 'No read notifications to delete.',
+            'deleted_count' => $deleted,
+        ]);
+    }
 }

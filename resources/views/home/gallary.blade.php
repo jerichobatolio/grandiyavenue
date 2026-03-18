@@ -16,7 +16,7 @@
         {{-- Show dynamic images from database --}}
         @foreach($galleries as $gallery)
             <div class="col-sm-6 col-lg-3 gallary-item wow fadeIn">
-                <img src="{{ asset('storage/' . $gallery->image_path) }}" 
+                <img src="{{ $gallery->image_url ?? '' }}" 
                      alt="{{ $gallery->title ?? 'Gallery Image' }}" 
                      class="gallary-img"
                      title="{{ $gallery->description ?? $gallery->title ?? 'Gallery Image' }}">

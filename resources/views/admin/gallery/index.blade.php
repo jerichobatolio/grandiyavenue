@@ -284,11 +284,11 @@
                         @foreach($galleries as $gallery)
                             <div class="col-sm-6 col-lg-3 gallary-item" style="margin-bottom: 20px; padding: 10px;">
                                 <div style="background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; min-height: 200px;">
-                                    <img src="{{ asset('storage/' . $gallery->image_path) }}" 
+                                    <img src="{{ $gallery->image_url ?? '' }}" 
                                          alt="{{ $gallery->title ?? 'Gallery Image' }}" 
                                          class="gallary-img"
                                          style="width: 100%; height: auto; object-fit: contain; border-radius: 4px; display: block;"
-                                         onclick="openImageModal('{{ asset('storage/' . $gallery->image_path) }}', '{{ $gallery->title ?? 'Gallery Image' }}')">
+                                         onclick="openImageModal('{{ $gallery->image_url ?? '' }}', '{{ $gallery->title ?? 'Gallery Image' }}')">
                                 </div>
                                 <div class="gallery-actions" style="margin-top: 15px; text-align: center;">
                                     <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">

@@ -29,7 +29,7 @@
 
                     <div class="div_deg">
                         <label for="">Current Image</label>
-                        <img width="150" src="{{ asset('storage/'.$gallery->image_path) }}" alt="">
+                        <img width="150" src="{{ $gallery->image_url ?? '' }}" alt="">
                     </div>
 
                     <div class="div_deg">
@@ -40,17 +40,17 @@
                     <div class="div_deg">
                         <input class="btn btn-warning" type="submit" value="Update Gallery Item">
                     </div>
-
-                    <div class="div_deg">
-                        <form action="{{ route('gallery.destroy', $gallery->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this gallery item?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger">
-                                🗑️ Delete Gallery Item
-                            </button>
-                        </form>
-                    </div>
                 </form>
+
+                <div class="div_deg">
+                    <form action="{{ route('gallery.destroy', $gallery->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this gallery item?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger">
+                            🗑️ Delete Gallery Item
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

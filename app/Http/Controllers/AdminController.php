@@ -978,10 +978,12 @@ class AdminController extends Controller
 
             if (!$reservation) {
                 \Log::warning('Reservation not found for permanent delete with ID: ' . $id);
+                // Idempotent delete: if it's already gone (or soft-deleted),
+                // treat the operation as successful so the UI doesn't show an error.
                 return response()->json([
-                    'success' => false,
-                    'message' => 'Reservation not found',
-                ], 404);
+                    'success' => true,
+                    'message' => 'Reservation already deleted',
+                ], 200);
             }
 
             $reservation->delete();
@@ -1465,7 +1467,9 @@ class AdminController extends Controller
      */
     public function notifications(Request $request)
     {
+        $userId = auth()->id();
         $notificationsQuery = Notification::with(['user', 'eventBooking', 'order'])
+            ->where('user_id', $userId)
             ->orderBy('created_at', 'desc');
 
         if ($request->filled('q')) {
@@ -1478,9 +1482,9 @@ class AdminController extends Controller
         }
 
         $notifications = $notificationsQuery->paginate(20)->withQueryString();
-            
-        $unreadCount = Notification::where('is_read', false)->count();
-        
+
+        $unreadCount = Notification::where('user_id', $userId)->where('is_read', false)->count();
+
         return view('admin.notifications', compact('notifications', 'unreadCount'));
     }
 
@@ -1513,6 +1517,23 @@ class AdminController extends Controller
         } catch (\Exception $e) {
             \Log::error('Error marking all notifications as read: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Error marking all notifications as read');
+        }
+    }
+
+    /**
+     * Delete all read notifications
+     */
+    public function deleteAllReadNotifications()
+    {
+        try {
+            $deleted = Notification::where('is_read', true)->delete();
+
+            return redirect()->back()->with('message', $deleted > 0
+                ? "{$deleted} read notification(s) deleted."
+                : 'No read notifications to delete.');
+        } catch (\Exception $e) {
+            \Log::error('Error deleting read notifications: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error deleting read notifications');
         }
     }
 
