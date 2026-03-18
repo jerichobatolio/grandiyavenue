@@ -77,8 +77,8 @@ class AdminController extends Controller
     {
         $allFoods = Food::with(['category', 'bundles'])->get();
         
-        // Get all categories from database
-        $categories = Category::where('is_active', true)->orderBy('name')->get();
+        // Get all categories from database with bundles (for Bundle Package layout)
+        $categories = Category::where('is_active', true)->orderBy('name')->with(['bundles' => fn ($q) => $q->with('foods')])->get();
         
         // Group foods by category_id instead of type
         $categorizedFoods = $allFoods->groupBy('category_id');
@@ -123,10 +123,12 @@ class AdminController extends Controller
             $data->subcategory = $request->subcategory; // ✅ Handle subcategory
 
             if ($request->hasFile('image')) {
-                // Delete old image if exists
-                $oldImagePath = public_path('food_img/' . $data->image);
-                if (file_exists($oldImagePath)) {
-                    unlink($oldImagePath);
+                // Delete old image if exists (only if we have a filename and it's a file, not a directory)
+                if (!empty($data->image)) {
+                    $oldImagePath = public_path('food_img/' . $data->image);
+                    if (is_file($oldImagePath)) {
+                        unlink($oldImagePath);
+                    }
                 }
                 
                 $image = $request->file('image');
@@ -1681,6 +1683,23 @@ class AdminController extends Controller
         // This update only changes bundle details, not the foods in it
 
         return redirect()->back()->with('message', 'Bundle updated successfully!');
+    }
+
+    /**
+     * Remove bundle image only (clear image field and delete file)
+     */
+    public function removeBundleImage($id)
+    {
+        $bundle = Bundle::findOrFail($id);
+        if ($bundle->image) {
+            $path = public_path('food_img/' . $bundle->image);
+            if (is_file($path)) {
+                unlink($path);
+            }
+            $bundle->image = null;
+            $bundle->save();
+        }
+        return redirect()->back()->with('message', 'Bundle image removed successfully!');
     }
 
     /**

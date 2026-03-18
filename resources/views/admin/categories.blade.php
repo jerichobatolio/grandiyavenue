@@ -67,12 +67,6 @@
                                 </div>
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <label for="subtitle">Subtitle (Optional)</label>
-                                        <input type="text" name="subtitle" id="subtitle" class="form-control" placeholder="Brief description">
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
                                         <label for="image">Category Image</label>
                                         <input type="file" name="image" id="image" class="form-control" accept="image/*">
                                     </div>
@@ -104,9 +98,6 @@
                                             @endif
                                             <div>
                                                 <h6 class="mb-0">{{ $category->name }}</h6>
-                                                @if($category->subtitle)
-                                                    <small class="text-muted">{{ $category->subtitle }}</small>
-                                                @endif
                                             </div>
                                         </div>
                                         <div>
@@ -132,12 +123,6 @@
                                                     <div class="form-group">
                                                         <label>Category Name *</label>
                                                         <input type="text" name="name" class="form-control" value="{{ $category->name }}" required>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <div class="form-group">
-                                                        <label>Subtitle</label>
-                                                        <input type="text" name="subtitle" class="form-control" value="{{ $category->subtitle }}">
                                                     </div>
                                                 </div>
                                                 <div class="col-md-3">

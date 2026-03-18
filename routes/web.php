@@ -191,6 +191,7 @@ Route::get('/get_subcategories/{categoryId}', [AdminController::class,'get_subca
 Route::get('/bundles', [AdminController::class,'bundles'])->name('admin.bundles');
 Route::post('/create_bundle', [AdminController::class,'createBundle'])->name('admin.create_bundle');
 Route::post('/update_bundle/{id}', [AdminController::class,'updateBundle'])->name('admin.update_bundle');
+Route::get('/remove_bundle_image/{id}', [AdminController::class,'removeBundleImage'])->name('admin.remove_bundle_image');
 Route::get('/delete_bundle/{id}', [AdminController::class,'deleteBundle'])->name('admin.delete_bundle');
 Route::get('/toggle_bundle_status/{id}', [AdminController::class,'toggleBundleStatus'])->name('admin.toggle_bundle_status');
 Route::post('/add_food_to_bundle/{bundleId}', [AdminController::class,'addFoodToBundle'])->name('admin.add_food_to_bundle');

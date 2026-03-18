@@ -439,9 +439,14 @@
                         <div class="form-group">
                             <label for="edit_bundle_image{{ $bundle->id }}">Bundle Image</label>
                             @if($bundle->image)
-                                <div class="mb-2">
+                                <div class="mb-2 d-flex align-items-center flex-wrap" style="gap: 8px;">
                                     <img src="{{ asset('food_img/' . $bundle->image) }}" alt="{{ $bundle->name }}" style="width: 100px; height: 100px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px;">
-                                    <p class="text-muted small mt-1">Current image</p>
+                                    <div>
+                                        <p class="text-muted small mt-1 mb-1">Current image</p>
+                                        <a href="{{ url('remove_bundle_image/' . $bundle->id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Remove this image? The bundle will have no image until you upload a new one.');" title="Delete image">
+                                            <i class="fas fa-trash-alt"></i> Delete image
+                                        </a>
+                                    </div>
                                 </div>
                             @endif
                             <input type="file" name="image" id="edit_bundle_image{{ $bundle->id }}" class="form-control" accept="image/*">
