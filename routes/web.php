@@ -45,6 +45,11 @@ Route::get('/about-bg', function () {
     return FacadeResponse::file($path);
 })->name('about.background');
 
+// Gallery images (storage/app/public/gallery_images) — Laravel-served so production works without /storage symlink
+Route::get('/gallery-image/{filename}', [GalleryController::class, 'serveImage'])
+    ->where('filename', '[A-Za-z0-9._\-]+')
+    ->name('gallery.image');
+
 // Serve user profile photos directly from the public storage disk
 Route::get('/user-profile-photo/{user}', function (\App\Models\User $user) {
     if (! $user->profile_photo_path) {

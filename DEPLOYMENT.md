@@ -21,6 +21,8 @@ php artisan storage:link
 
 If this is not run, URLs like `/storage/profile-photos/...` will return 404 and user images will not show.
 
+**Gallery images** are served at `/gallery-image/{filename}` via Laravel (not `/storage/...`), so they work even when the symlink is missing. Other uploads may still need the link.
+
 ### Railway (Docker)
 
 The project `Dockerfile` runs `php artisan storage:link --force` **on every container start**, so `/storage/...` should work without manual SSH.

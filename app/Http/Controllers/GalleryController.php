@@ -10,6 +10,25 @@ use Illuminate\Support\Str;
 class GalleryController extends Controller
 {
     /**
+     * Stream a gallery file from the public disk (same pattern as payment proofs / profile photos).
+     * Avoids relying on the public/storage symlink, which often breaks on Railway and other hosts.
+     */
+    public function serveImage(string $filename)
+    {
+        if (str_contains($filename, '..') || str_contains($filename, '/')) {
+            abort(404);
+        }
+
+        $path = 'gallery_images/'.$filename;
+
+        if (! Storage::disk('public')->exists($path)) {
+            abort(404);
+        }
+
+        return Storage::disk('public')->response($path);
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index()

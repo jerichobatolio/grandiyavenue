@@ -19,10 +19,10 @@ class Gallery extends Model
     ];
 
     /**
-     * Public URL for the stored image. Uses asset() so the same root URL / scheme
-     * as the current request applies (see AppServiceProvider URL::forceRootUrl).
-     * Storage::disk('public')->url() only uses APP_URL from config and ignores
-     * forced root URLs, which breaks images when visiting via a different host or port.
+     * Public URL for the stored image. Gallery files use a named route that streams
+     * from Storage (see GalleryController::serveImage) — same pattern as profile photos
+     * and payment proofs — so hosting works without a working public/storage symlink
+     * (common on Railway/Docker). Falls back to asset() for legacy paths.
      */
     public function getImageUrlAttribute(): ?string
     {
@@ -43,6 +43,13 @@ class Gallery extends Model
 
         if (str_starts_with($path, 'storage/')) {
             $path = substr($path, 8);
+        }
+
+        if (str_starts_with($path, 'gallery_images/')) {
+            $filename = substr($path, strlen('gallery_images/'));
+            if ($filename !== '') {
+                return route('gallery.image', ['filename' => $filename], absolute: true);
+            }
         }
 
         return asset('storage/'.$path);
