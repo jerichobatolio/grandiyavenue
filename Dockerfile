@@ -32,6 +32,7 @@ RUN php artisan config:clear \
     && php artisan route:clear \
     && php artisan view:clear
 
-# Run on PORT (Railway sets this); run migrations (ignore if tables exist) then start server
+# Run on PORT (Railway sets this); link public/storage -> storage/app/public, migrate, then serve
+# Without storage:link, /storage/* URLs 404 (uploads live under storage/app/public).
 EXPOSE 8000
-CMD sh -c 'php artisan migrate --force || true && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}'
+CMD sh -c 'php artisan storage:link --force && (php artisan migrate --force || true) && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}'

@@ -21,6 +21,17 @@ php artisan storage:link
 
 If this is not run, URLs like `/storage/profile-photos/...` will return 404 and user images will not show.
 
+### Railway (Docker)
+
+The project `Dockerfile` runs `php artisan storage:link --force` **on every container start**, so `/storage/...` should work without manual SSH.
+
+**Ephemeral disk:** Railway containers do not keep files across deploys unless you add a **volume**. Without a volume, uploads disappear after each deploy (the database still has paths, but files are gone → 404). To persist uploads:
+
+1. In Railway: **Project → your service → Settings → Volumes**
+2. Add a volume and mount it at **`/app/storage`** (or at least mount **`/app/storage/app/public`** for public uploads only).
+
+After adding a volume, redeploy once. Re-upload any gallery images that were added before the volume existed.
+
 ## 3. (Optional) Reverse proxy
 
 If the app is behind Nginx/Apache and you use HTTPS, ensure the proxy forwards the correct scheme and host. Laravel’s `TrustProxies` middleware should be configured for your proxy (see `app/Http/Middleware/TrustProxies.php` and set the proxy IPs if needed).
