@@ -104,7 +104,9 @@ class GalleryController extends Controller
         $data = [
             'title' => $request->title,
             'description' => $request->description,
-            'is_active' => $request->has('is_active'),
+            // Edit form sends hidden is_active=0 + optional checkbox=1 (see edit.blade.php).
+            // Old bug: form omitted is_active, so code used has('is_active') → always false → hidden from public.
+            'is_active' => $request->boolean('is_active'),
         ];
 
         if ($request->hasFile('image')) {

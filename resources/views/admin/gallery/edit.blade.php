@@ -38,6 +38,13 @@
                     </div>
 
                     <div class="div_deg">
+                        <label style="width:auto;">
+                            <input type="checkbox" name="is_active" value="1" {{ old('is_active', $gallery->is_active) ? 'checked' : '' }}>
+                            Show on public website (Our Menu section)
+                        </label>
+                    </div>
+
+                    <div class="div_deg">
                         <input class="btn btn-warning" type="submit" value="Update Gallery Item">
                     </div>
                 </form>
