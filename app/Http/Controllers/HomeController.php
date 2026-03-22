@@ -40,7 +40,7 @@ class HomeController extends Controller
         }
 
         $data = Food::all();
-        $galleries = Gallery::active()->ordered()->get();
+        $galleries = Gallery::ordered()->get();
         // Show all event types on home (no active filter)
         $eventTypes = EventType::orderBy('name')->get();
         $venueTypes = VenueType::orderBy('name')->get(); // ✅ Get all venue types (admin manages visibility)
@@ -170,7 +170,7 @@ class HomeController extends Controller
 
             if ($usertype == 'user') {
                 $data = Food::all();
-                $galleries = Gallery::active()->ordered()->get();
+                $galleries = Gallery::ordered()->get();
                 // Show all event types on home (no active filter)
                 $eventTypes = EventType::orderBy('name')->get();
                 $venueTypes = VenueType::orderBy('name')->get(); // ✅ Get all venue types (admin manages visibility)

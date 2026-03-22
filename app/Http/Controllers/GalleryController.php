@@ -98,15 +98,11 @@ class GalleryController extends Controller
             'title' => 'nullable|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'description' => 'nullable|string',
-            'is_active' => 'boolean',
         ]);
 
         $data = [
             'title' => $request->title,
             'description' => $request->description,
-            // Edit form sends hidden is_active=0 + optional checkbox=1 (see edit.blade.php).
-            // Old bug: form omitted is_active, so code used has('is_active') → always false → hidden from public.
-            'is_active' => $request->boolean('is_active'),
         ];
 
         if ($request->hasFile('image')) {
@@ -144,7 +140,7 @@ class GalleryController extends Controller
      */
     public function publicGallery()
     {
-        $galleries = Gallery::active()->ordered()->get();
+        $galleries = Gallery::ordered()->get();
         return $galleries;
     }
 }
