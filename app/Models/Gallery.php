@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 class Gallery extends Model
 {
@@ -19,19 +18,34 @@ class Gallery extends Model
         'is_active' => 'boolean',
     ];
 
+    /**
+     * Public URL for the stored image. Uses asset() so the same root URL / scheme
+     * as the current request applies (see AppServiceProvider URL::forceRootUrl).
+     * Storage::disk('public')->url() only uses APP_URL from config and ignores
+     * forced root URLs, which breaks images when visiting via a different host or port.
+     */
     public function getImageUrlAttribute(): ?string
     {
         if (! $this->image_path) {
             return null;
         }
 
-        $path = str_replace('\\', '/', $this->image_path);
+        $path = str_replace('\\', '/', (string) $this->image_path);
         $path = ltrim($path, '/');
+
+        if (preg_match('#^https?://#i', $path)) {
+            return $path;
+        }
+
         if (str_starts_with($path, 'public/')) {
             $path = substr($path, 7);
         }
 
-        return Storage::disk('public')->url($path);
+        if (str_starts_with($path, 'storage/')) {
+            $path = substr($path, 8);
+        }
+
+        return asset('storage/'.$path);
     }
 
     public function scopeActive($query)
