@@ -63,6 +63,59 @@ Route::get('/user-profile-photo/{user}', function (\App\Models\User $user) {
     return Storage::disk('public')->response($user->profile_photo_path);
 })->name('user.profile.photo');
 
+// Global GCash QR (storage/app/public/global/qr_codes) — works without public/storage symlink
+Route::get('/admin-qr-code-image/{adminQrCode}', function (\App\Models\AdminQrCode $adminQrCode) {
+    if (! $adminQrCode->image_path) {
+        abort(404);
+    }
+
+    $path = str_replace('\\', '/', ltrim($adminQrCode->image_path, '/'));
+    if (str_starts_with($path, 'public/')) {
+        $path = substr($path, 7);
+    }
+
+    if (! Storage::disk('public')->exists($path)) {
+        abort(404);
+    }
+
+    return Storage::disk('public')->response($path);
+})->name('admin.qr-code.image');
+
+// Event type QR / admin photo — same storage URL issue as above
+Route::get('/event-type-qr-image/{eventType}', function (\App\Models\EventType $eventType) {
+    if (! $eventType->qr_code_image) {
+        abort(404);
+    }
+
+    $path = str_replace('\\', '/', ltrim($eventType->qr_code_image, '/'));
+    if (str_starts_with($path, 'public/')) {
+        $path = substr($path, 7);
+    }
+
+    if (! Storage::disk('public')->exists($path)) {
+        abort(404);
+    }
+
+    return Storage::disk('public')->response($path);
+})->name('event_types.qr_image');
+
+Route::get('/event-type-admin-photo/{eventType}', function (\App\Models\EventType $eventType) {
+    if (! $eventType->admin_photo) {
+        abort(404);
+    }
+
+    $path = str_replace('\\', '/', ltrim($eventType->admin_photo, '/'));
+    if (str_starts_with($path, 'public/')) {
+        $path = substr($path, 7);
+    }
+
+    if (! Storage::disk('public')->exists($path)) {
+        abort(404);
+    }
+
+    return Storage::disk('public')->response($path);
+})->name('event_types.admin_photo');
+
 // Serve order payment proof images safely (handles storage paths)
 Route::get('/order-payment-proof/{order}', function (\App\Models\Order $order) {
     if (! $order->payment_proof_path) {

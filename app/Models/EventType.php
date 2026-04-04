@@ -50,16 +50,30 @@ class EventType extends Model
         return '₱' . number_format($this->price, 2);
     }
 
-    // Get QR code image URL
-    public function getQrCodeImageUrlAttribute()
+    // Get QR code image URL (routed via Storage response — no /storage symlink required)
+    public function getQrCodeImageUrlAttribute(): ?string
     {
-        return $this->qr_code_image ? \Storage::url($this->qr_code_image) : null;
+        if (! $this->qr_code_image) {
+            return null;
+        }
+
+        $url = route('event_types.qr_image', ['eventType' => $this], absolute: false);
+        $v = $this->updated_at?->timestamp;
+
+        return $v !== null ? "{$url}?v={$v}" : $url;
     }
 
     // Get admin photo URL
-    public function getAdminPhotoUrlAttribute()
+    public function getAdminPhotoUrlAttribute(): ?string
     {
-        return $this->admin_photo ? \Storage::url($this->admin_photo) : null;
+        if (! $this->admin_photo) {
+            return null;
+        }
+
+        $url = route('event_types.admin_photo', ['eventType' => $this], absolute: false);
+        $v = $this->updated_at?->timestamp;
+
+        return $v !== null ? "{$url}?v={$v}" : $url;
     }
 
     // Get down payment percentage (safe from division by zero)

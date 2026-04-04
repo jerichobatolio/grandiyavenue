@@ -570,8 +570,8 @@
                 </div>
                 <h4 class="payment-amount-desktop">Pay <span id="payment_amount">₱2,000.00</span> via GCash</h4>
                 <div class="my-4">
-                    @if(isset($globalQrCode) && $globalQrCode)
-                        <img id="admin_qr_code" src="{{ Storage::url($globalQrCode) }}" alt="GCash QR Code" class="img-fluid" style="max-width: 300px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+                    @if(isset($adminQrCode) && $adminQrCode && $adminQrCode->is_active)
+                        <img id="admin_qr_code" src="{{ $adminQrCode->image_url }}" alt="GCash QR Code" class="img-fluid" style="max-width: 300px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
                     @else
                         <div class="alert alert-warning">
                             <i class="fas fa-exclamation-triangle"></i>

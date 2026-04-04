@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 class AdminQrCode extends Model
 {
@@ -19,11 +18,19 @@ class AdminQrCode extends Model
     ];
 
     /**
-     * Get the URL for the QR code image
+     * Public URL for the stored QR image. Uses a named route that streams from
+     * Storage::disk('public') so it works when /storage is not symlinked.
      */
-    public function getImageUrlAttribute()
+    public function getImageUrlAttribute(): ?string
     {
-        return $this->image_path ? Storage::disk('public')->url($this->image_path) : null;
+        if (! $this->image_path) {
+            return null;
+        }
+
+        $url = route('admin.qr-code.image', ['adminQrCode' => $this], absolute: false);
+        $v = $this->updated_at?->timestamp;
+
+        return $v !== null ? "{$url}?v={$v}" : $url;
     }
 
     /**
