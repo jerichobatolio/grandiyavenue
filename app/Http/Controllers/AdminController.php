@@ -1468,7 +1468,7 @@ class AdminController extends Controller
     public function notifications(Request $request)
     {
         // List all notifications so the page matches the sidebar badge (global unread count).
-        $notificationsQuery = Notification::with(['user', 'eventBooking', 'order'])
+        $notificationsQuery = Notification::with(['user', 'eventBooking.packageInclusion', 'order'])
             ->orderBy('created_at', 'desc');
 
         if ($request->filled('q')) {

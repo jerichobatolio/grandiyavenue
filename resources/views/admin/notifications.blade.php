@@ -436,12 +436,32 @@
                             @endif
 
                             @if($notification->eventBooking)
+                            @php
+                                $eb = $notification->eventBooking;
+                                $pkg = $eb->packageInclusion;
+                                if ($pkg) {
+                                    $paxMin = (int) ($pkg->pax_min ?? 0);
+                                    $paxMax = (int) ($pkg->pax_max ?? 0);
+                                    if ($paxMin > 0 && $paxMax > 0) {
+                                        $paxPart = $paxMin === $paxMax
+                                            ? "{$paxMin} pax"
+                                            : "{$paxMin}–{$paxMax} pax";
+                                    } else {
+                                        $paxPart = '';
+                                    }
+                                    $packageInclusionWithPax = trim($pkg->name.($paxPart !== '' ? ' ('.$paxPart.')' : ''));
+                                } else {
+                                    $packageInclusionWithPax = $eb->number_of_guests
+                                        ? (string) $eb->number_of_guests.' guest(s) — package not set'
+                                        : '—';
+                                }
+                            @endphp
                             <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin: 10px 0; font-size: 0.9rem;">
-                                <strong>🧑 Customer:</strong> {{ $notification->eventBooking->full_name }}
-                                <strong>📅 Event:</strong> {{ $notification->eventBooking->event_date->format('M d, Y') }} 
-                                | <strong>👥 Guests:</strong> {{ $notification->eventBooking->number_of_guests }}
-                                | <strong>💰 Down Payment:</strong> ₱{{ number_format($notification->eventBooking->down_payment_amount, 2) }}
-                                @if($notification->eventBooking->payment_proof_path)
+                                <strong>🧑 Customer:</strong> {{ $eb->full_name }}
+                                <strong>📅 Event:</strong> {{ $eb->event_date->format('M d, Y') }}
+                                | <strong>📦 Package inclusion with pax:</strong> {{ $packageInclusionWithPax }}
+                                | <strong>💰 Down Payment:</strong> ₱{{ number_format($eb->down_payment_amount, 2) }}
+                                @if($eb->payment_proof_path)
                                     | <strong>🧾 Payment:</strong> Proof uploaded
                                 @endif
                             </div>
