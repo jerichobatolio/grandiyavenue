@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\User;
 use App\Models\Food;
 use App\Models\Order;
 use App\Models\Book;
@@ -516,29 +515,6 @@ class HomeController extends Controller
                         'status' => 'Pending',
                         'amount' => (float) ($data->down_payment_amount ?: $this->getTableBookingDownPaymentAmount()),
                     ]
-                ]);
-            }
-
-            // Staff / admin notifications (same pattern as new food orders)
-            $guestName = trim(trim((string) $data->name).' '.trim((string) $data->last_name));
-            $staffUsers = User::where('id', '!=', Auth::id())->get();
-            foreach ($staffUsers as $user) {
-                Notification::create([
-                    'user_id' => $user->id,
-                    'type' => 'reservation_submitted',
-                    'title' => 'New Table Reservation',
-                    'message' => "New table reservation from {$guestName} — Table {$data->table_number}, {$data->guest} guest(s), pending approval.",
-                    'is_read' => false,
-                    'data' => [
-                        'reservation_id' => $data->id,
-                        'date' => $dateFormatted,
-                        'time' => $timeFormatted,
-                        'time_out' => $timeOutFormatted,
-                        'table' => $data->table_number,
-                        'guests' => $data->guest,
-                        'customer_name' => $guestName,
-                        'status' => 'Pending',
-                    ],
                 ]);
             }
 

@@ -34,7 +34,10 @@ class Notification extends Model
     public function scopeVisibleOnAdminNotificationsPage(Builder $query): Builder
     {
         return $query
-            ->whereNotIn('type', ['return_refund_submitted_customer'])
+            ->whereNotIn('type', [
+                'return_refund_submitted_customer',
+                'reservation_submitted',
+            ])
             ->where(function (Builder $q) {
                 // `title != '…'` is UNKNOWN in SQL when title IS NULL, so rows like
                 // order_placed (no title, user_id set) were incorrectly hidden; event_bookings
