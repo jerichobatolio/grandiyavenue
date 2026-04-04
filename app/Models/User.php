@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -79,5 +80,22 @@ class User extends Authenticatable
         return $this->hasMany(Notification::class);
     }
 
+    /**
+     * Use the named route that streams from Storage::disk('public') instead of
+     * Storage::url(), so avatars work when public/storage is not symlinked
+     * (same pattern as gallery images in this project).
+     */
+    protected function profilePhotoUrl(): Attribute
+    {
+        return Attribute::get(function (): string {
+            if (! $this->profile_photo_path) {
+                return $this->defaultProfilePhotoUrl();
+            }
 
+            $url = route('user.profile.photo', ['user' => $this], absolute: false);
+            $v = $this->updated_at?->timestamp;
+
+            return $v !== null ? "{$url}?v={$v}" : $url;
+        });
+    }
 }

@@ -942,7 +942,7 @@ class HomeController extends Controller
                 $version = $user->updated_at?->timestamp;
                 return response()->json([
                     'message' => 'Profile photo updated.',
-                    'photo_url' => $user->profile_photo_url . ($version ? ('?v=' . $version) : ''),
+                    'photo_url' => $user->profile_photo_url,
                     'updated_at' => $version,
                 ]);
             }
