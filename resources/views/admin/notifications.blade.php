@@ -237,6 +237,17 @@
             color: #c62828;
         }
 
+        .type-reservation_pending,
+        .type-reservation_submitted {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .type-return_refund_pending {
+            background: #fce4ec;
+            color: #ad1457;
+        }
+
         .unread-badge {
             position: absolute;
             top: 15px;

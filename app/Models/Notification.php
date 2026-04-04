@@ -36,8 +36,11 @@ class Notification extends Model
         return $query
             ->whereNotIn('type', ['return_refund_submitted_customer'])
             ->where(function (Builder $q) {
-                $q->where('title', '!=', 'Return/Refund Request Submitted')
-                    ->orWhereNull('user_id');
+                // `title != '…'` is UNKNOWN in SQL when title IS NULL, so rows like
+                // order_placed (no title, user_id set) were incorrectly hidden; event_bookings
+                // usually have a title and still appeared.
+                $q->whereNull('title')
+                    ->orWhere('title', '!=', 'Return/Refund Request Submitted');
             });
     }
 

@@ -489,19 +489,18 @@ class HomeController extends Controller
 
             $data->save();
 
+            $dateFormatted = $data->date instanceof \Carbon\Carbon
+                ? $data->date->format('Y-m-d')
+                : $data->date;
+            $timeFormatted = $data->time_in instanceof \Carbon\Carbon
+                ? $data->time_in->format('H:i')
+                : (is_string($data->time_in) ? substr($data->time_in, 0, 5) : $data->time_in);
+            $timeOutFormatted = $data->time_out instanceof \Carbon\Carbon
+                ? $data->time_out->format('H:i')
+                : (is_string($data->time_out) ? substr($data->time_out, 11, 5) : $data->time_out);
+
             // Create notification for the customer if authenticated
             if (Auth::check() && $data->user_id) {
-                // Format date and time
-                $dateFormatted = $data->date instanceof \Carbon\Carbon 
-                    ? $data->date->format('Y-m-d') 
-                    : $data->date;
-                $timeFormatted = $data->time_in instanceof \Carbon\Carbon 
-                    ? $data->time_in->format('H:i') 
-                    : (is_string($data->time_in) ? substr($data->time_in, 0, 5) : $data->time_in);
-                $timeOutFormatted = $data->time_out instanceof \Carbon\Carbon
-                    ? $data->time_out->format('H:i')
-                    : (is_string($data->time_out) ? substr($data->time_out, 11, 5) : $data->time_out);
-                
                 Notification::create([
                     'user_id' => $data->user_id,
                     'type' => 'reservation_pending',
@@ -517,6 +516,29 @@ class HomeController extends Controller
                         'status' => 'Pending',
                         'amount' => (float) ($data->down_payment_amount ?: $this->getTableBookingDownPaymentAmount()),
                     ]
+                ]);
+            }
+
+            // Staff / admin notifications (same pattern as new food orders)
+            $guestName = trim(trim((string) $data->name).' '.trim((string) $data->last_name));
+            $staffUsers = User::where('id', '!=', Auth::id())->get();
+            foreach ($staffUsers as $user) {
+                Notification::create([
+                    'user_id' => $user->id,
+                    'type' => 'reservation_submitted',
+                    'title' => 'New Table Reservation',
+                    'message' => "New table reservation from {$guestName} — Table {$data->table_number}, {$data->guest} guest(s), pending approval.",
+                    'is_read' => false,
+                    'data' => [
+                        'reservation_id' => $data->id,
+                        'date' => $dateFormatted,
+                        'time' => $timeFormatted,
+                        'time_out' => $timeOutFormatted,
+                        'table' => $data->table_number,
+                        'guests' => $data->guest,
+                        'customer_name' => $guestName,
+                        'status' => 'Pending',
+                    ],
                 ]);
             }
 
