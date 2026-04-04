@@ -308,24 +308,8 @@
                         <!-- Event Booking Form -->
                         @php
                             $user = auth()->user();
-
-                            // Prefer dedicated first_name / last_name fields when available,
-                            // and only fall back to splitting the generic "name" field.
-                            if ($user) {
-                                $defaultFirstName = $user->first_name ?? '';
-                                $defaultLastName = $user->last_name ?? '';
-
-                                // If first/last are not set but a full name exists, split it.
-                                if ((!$defaultFirstName || !$defaultLastName) && !empty($user->name)) {
-                                    $nameParts = explode(' ', trim($user->name), 2);
-                                    $defaultFirstName = $defaultFirstName ?: ($nameParts[0] ?? '');
-                                    $defaultLastName = $defaultLastName ?: ($nameParts[1] ?? '');
-                                }
-                            } else {
-                                $defaultFirstName = '';
-                                $defaultLastName = '';
-                            }
-
+                            $defaultFirstName = $user ? $user->formGivenNameDefault() : '';
+                            $defaultLastName = $user ? $user->formFamilyNameDefault() : '';
                             $defaultContactNumber = $user ? ($user->phone ?? '') : '';
                             $defaultEmail = $user ? ($user->email ?? '') : '';
                         @endphp

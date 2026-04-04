@@ -11,11 +11,12 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <x-label for="name" value="{{ __('First Name') }}" />
+                    <x-label for="name" value="{{ __('Given name(s)') }}" />
                     <x-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="given-name" />
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ __('Put your first and middle name here (e.g. Willia Mae). Only your family name goes in the next field.') }}</p>
                 </div>
                 <div>
-                    <x-label for="last_name" value="{{ __('Last Name') }}" />
+                    <x-label for="last_name" value="{{ __('Last name (family name)') }}" />
                     <x-input id="last_name" class="block mt-1 w-full" type="text" name="last_name" :value="old('last_name')" autocomplete="family-name" />
                 </div>
             </div>

@@ -283,10 +283,7 @@
                         <!-- Event Booking Form -->
                         @php
                             $user = auth()->user();
-                            $defaultFullName = $user ? trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')) : '';
-                            if (!$defaultFullName && $user && !empty($user->name)) {
-                                $defaultFullName = $user->name;
-                            }
+                            $defaultFullName = $user ? $user->fullDisplayName() : '';
                             $defaultContactNumber = $user ? ($user->phone ?? '') : '';
                             $defaultEmail = $user ? ($user->email ?? '') : '';
                         @endphp

@@ -728,6 +728,12 @@
         </div>
 
         @if($hasCartItems)
+        @php
+            $checkoutUser = auth()->user();
+            $defaultCheckoutFullname = $checkoutUser ? $checkoutUser->fullDisplayName() : '';
+            $defaultCheckoutContact = $checkoutUser ? ($checkoutUser->phone ?? '') : '';
+            $defaultCheckoutAddress = $checkoutUser ? ($checkoutUser->address ?? '') : '';
+        @endphp
         <!-- Checkout Section -->
         <div class="checkout-section">
             <!-- Checkout Form -->
@@ -742,7 +748,7 @@
                         
                         <div class="form-group">
                             <label for="fullname">Full Name</label>
-                            <input type="text" name="fullname" id="fullname" placeholder="Enter your full name" required value="{{ old('fullname') }}">
+                            <input type="text" name="fullname" id="fullname" placeholder="Enter your full name" required value="{{ old('fullname', $defaultCheckoutFullname) }}">
                             @error('fullname')
                                 <div style="color: #dc3545; font-size: 0.875rem; margin-top: 5px;">{{ $message }}</div>
                             @enderror
@@ -750,7 +756,7 @@
                         
                         <div class="form-group">
                             <label for="contact">Contact Number</label>
-                            <input type="tel" name="contact" id="contact" placeholder="09XXXXXXXXX (11 digits only)" maxlength="11" pattern="\d{11}" title="Enter exactly 11 digits" required value="{{ old('contact') }}">
+                            <input type="tel" name="contact" id="contact" placeholder="09XXXXXXXXX (11 digits only)" maxlength="11" pattern="\d{11}" title="Enter exactly 11 digits" required value="{{ old('contact', $defaultCheckoutContact) }}">
                             <small style="color: #ccc; display: block; margin-top: 5px;">11 digits only (e.g. 09171234567)</small>
                             @error('contact')
                                 <div style="color: #dc3545; font-size: 0.875rem; margin-top: 5px;">{{ $message }}</div>
@@ -759,7 +765,7 @@
                         
                         <div class="form-group">
                             <label for="address">Delivery Address</label>
-                            <textarea name="address" id="address" placeholder="Enter your complete delivery address (Street, Barangay, City, Province)" required>{{ old('address') }}</textarea>
+                            <textarea name="address" id="address" placeholder="Enter your complete delivery address (Street, Barangay, City, Province)" required>{{ old('address', $defaultCheckoutAddress) }}</textarea>
                             @error('address')
                                 <div style="color: #dc3545; font-size: 0.875rem; margin-top: 5px;">{{ $message }}</div>
                             @enderror

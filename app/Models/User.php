@@ -69,6 +69,58 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * Given name(s) for forms: registration stores all given names (e.g. "Willia Mae") in `name`
+     * and the family name in `last_name`. Do not split `name` on the first space when `last_name` is set.
+     */
+    public function formGivenNameDefault(): string
+    {
+        $name = trim((string) $this->name);
+        $last = trim((string) ($this->last_name ?? ''));
+
+        if ($last !== '') {
+            return $name;
+        }
+
+        $parts = preg_split('/\s+/u', $name, -1, PREG_SPLIT_NO_EMPTY);
+        if (count($parts) >= 3) {
+            return implode(' ', array_slice($parts, 0, -1));
+        }
+
+        return $name;
+    }
+
+    /**
+     * Family name for forms; when `last_name` is empty, treat the last word of `name` as surname only if there are 3+ words.
+     */
+    public function formFamilyNameDefault(): string
+    {
+        $name = trim((string) $this->name);
+        $last = trim((string) ($this->last_name ?? ''));
+
+        if ($last !== '') {
+            return $last;
+        }
+
+        $parts = preg_split('/\s+/u', $name, -1, PREG_SPLIT_NO_EMPTY);
+        if (count($parts) >= 3) {
+            return (string) $parts[count($parts) - 1];
+        }
+
+        return '';
+    }
+
+    /**
+     * Full display name for checkout and similar (given + family).
+     */
+    public function fullDisplayName(): string
+    {
+        $first = trim((string) $this->name);
+        $last = trim((string) ($this->last_name ?? ''));
+
+        return $last === '' ? $first : trim($first.' '.$last);
+    }
+
     // Relationships
     public function orders()
     {
