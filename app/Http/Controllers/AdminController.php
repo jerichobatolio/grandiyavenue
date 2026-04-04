@@ -1467,8 +1467,9 @@ class AdminController extends Controller
      */
     public function notifications(Request $request)
     {
-        // List all notifications so the page matches the sidebar badge (global unread count).
+        // List notifications relevant to admin (exclude customer-only return/refund receipts).
         $notificationsQuery = Notification::with(['user', 'eventBooking.packageInclusion', 'order'])
+            ->visibleOnAdminNotificationsPage()
             ->orderBy('created_at', 'desc');
 
         if ($request->filled('q')) {
@@ -1498,7 +1499,7 @@ class AdminController extends Controller
             ? collect()
             : Book::whereIn('id', $reservationIds)->get()->keyBy('id');
 
-        $unreadCount = Notification::where('is_read', false)->count();
+        $unreadCount = Notification::unreadCountVisibleOnAdminNotificationsPage();
 
         return view('admin.notifications', compact('notifications', 'unreadCount', 'booksByReservationId'));
     }

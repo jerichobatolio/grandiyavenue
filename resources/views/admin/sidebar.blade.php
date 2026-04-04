@@ -149,7 +149,7 @@
 
                <li><a href="{{url('notifications')}}"> <i class="icon-bell"></i>🔔 Notifications
                   @php
-                    $unreadNotificationsCount = \App\Models\Notification::where('is_read', false)->count();
+                    $unreadNotificationsCount = \App\Models\Notification::unreadCountVisibleOnAdminNotificationsPage();
                   @endphp
                   <span id="notification-badge" class="reservation-badge" style="display: {{ $unreadNotificationsCount > 0 ? 'inline-block' : 'none' }};">{{ $unreadNotificationsCount }}</span>
                </a></li>

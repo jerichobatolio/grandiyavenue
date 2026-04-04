@@ -106,34 +106,31 @@ class ReturnRefundController extends Controller
                 'reason' => $request->reason,
             ]);
 
-            // Create notification for admin
-            $adminUsers = \App\Models\User::where('id', '!=', Auth::id())->get();
-            foreach ($adminUsers as $admin) {
-                Notification::create([
-                    'user_id' => $admin->id,
-                    'type' => 'return_refund_request',
-                    'title' => 'New Return/Refund Request',
-                    'message' => Auth::user()->name . ' has requested a ' . $request->refund_type . ' for ₱' . number_format($request->refund_amount, 2),
-                    'is_read' => false,
-                    'data' => [
-                        'return_refund_id' => $returnRefund->id,
-                        'type' => $request->type,
-                        'refundable_id' => $refundable->id,
-                        'amount' => $request->refund_amount,
-                    ]
-                ]);
-            }
+            // Admin bell / Notifications page (one row; customer receipt is hidden there by scope)
+            Notification::create([
+                'user_id' => null,
+                'type' => 'return_refund_pending',
+                'title' => 'New Return/Refund Request',
+                'message' => Auth::user()->name.' has requested a '.$request->refund_type.' for ₱'.number_format((float) $request->refund_amount, 2),
+                'is_read' => false,
+                'data' => [
+                    'return_refund_id' => $returnRefund->id,
+                    'type' => $request->type,
+                    'refundable_id' => $refundable->id,
+                    'amount' => $request->refund_amount,
+                ],
+            ]);
 
-            // Create notification for customer
+            // Customer in-app confirmation (hidden from admin notifications list)
             Notification::create([
                 'user_id' => Auth::id(),
-                'type' => 'return_refund_request',
+                'type' => 'return_refund_submitted_customer',
                 'title' => 'Return/Refund Request Submitted',
                 'message' => 'Your return/refund request has been submitted and is pending admin review.',
                 'is_read' => false,
                 'data' => [
                     'return_refund_id' => $returnRefund->id,
-                ]
+                ],
             ]);
 
             return redirect()->route('return_refunds.index')

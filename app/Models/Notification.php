@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -25,6 +26,28 @@ class Notification extends Model
     protected $casts = [
         'data' => 'array',
     ];
+
+    /**
+     * Rows the admin Notifications page (and bell badge) should show.
+     * Hides in-app receipts meant only for customers (return/refund submit confirmation).
+     */
+    public function scopeVisibleOnAdminNotificationsPage(Builder $query): Builder
+    {
+        return $query
+            ->whereNotIn('type', ['return_refund_submitted_customer'])
+            ->where(function (Builder $q) {
+                $q->where('title', '!=', 'Return/Refund Request Submitted')
+                    ->orWhereNull('user_id');
+            });
+    }
+
+    public static function unreadCountVisibleOnAdminNotificationsPage(): int
+    {
+        return static::query()
+            ->visibleOnAdminNotificationsPage()
+            ->where('is_read', false)
+            ->count();
+    }
 
     // Relationships
     public function user()

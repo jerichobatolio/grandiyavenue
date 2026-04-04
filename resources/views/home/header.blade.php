@@ -852,13 +852,14 @@
                                             $badgeClass = $type === 'reservation_approved' ? 'success' : 'danger';
                                         } elseif (
                                             $type === 'return_refund_request' ||
+                                            $type === 'return_refund_submitted_customer' ||
                                             $type === 'return_refund_approved' ||
                                             $type === 'return_refund_rejected' ||
                                             $type === 'return_refund_processed'
                                         ) {
                                             $requestId = $data['return_refund_id'] ?? 'N/A';
                                             $amount = $data['amount'] ?? null;
-                                            if ($type === 'return_refund_request') {
+                                            if ($type === 'return_refund_request' || $type === 'return_refund_submitted_customer') {
                                                 $status = 'Pending';
                                                 $badgeClass = 'warning';
                                             } elseif ($type === 'return_refund_approved') {
@@ -920,6 +921,7 @@
                                                         </span>
                                                     @elseif(
                                                         $type === 'return_refund_request' ||
+                                                        $type === 'return_refund_submitted_customer' ||
                                                         $type === 'return_refund_approved' ||
                                                         $type === 'return_refund_rejected' ||
                                                         $type === 'return_refund_processed'
@@ -954,6 +956,7 @@
                                                         @endif
                                                     @elseif(
                                                         $type === 'return_refund_request' ||
+                                                        $type === 'return_refund_submitted_customer' ||
                                                         $type === 'return_refund_approved' ||
                                                         $type === 'return_refund_rejected' ||
                                                         $type === 'return_refund_processed'
@@ -1718,6 +1721,7 @@
             `;
         } else if (
             type === 'return_refund_request' ||
+            type === 'return_refund_submitted_customer' ||
             type === 'return_refund_approved' ||
             type === 'return_refund_rejected' ||
             type === 'return_refund_processed'
@@ -1727,7 +1731,7 @@
             let status = '';
             let badgeClass = '';
             
-            if (type === 'return_refund_request') {
+            if (type === 'return_refund_request' || type === 'return_refund_submitted_customer') {
                 status = 'Pending';
                 badgeClass = 'warning';
             } else if (type === 'return_refund_approved') {
