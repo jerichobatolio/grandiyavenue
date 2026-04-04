@@ -386,9 +386,20 @@
                                 {{ $notification->message }}
                             </div>
 
-                            @if($notification->user)
+                            @php
+                                $notifData = $notification->data ?? [];
+                                $reservationId = is_array($notifData) ? ($notifData['reservation_id'] ?? null) : null;
+                                $reservationBook = $reservationId && isset($booksByReservationId[$reservationId])
+                                    ? $booksByReservationId[$reservationId]
+                                    : null;
+                                $reservationEnteredName = $reservationBook
+                                    ? trim(trim((string) $reservationBook->name).' '.trim((string) ($reservationBook->last_name ?? '')))
+                                    : '';
+                                $isReservationNotification = str_starts_with((string) $notification->type, 'reservation_');
+                            @endphp
+                            @if(! $notification->order && ! $notification->eventBooking && $isReservationNotification && $reservationEnteredName !== '')
                             <p class="text-muted" style="font-size: 0.85rem; margin: 8px 0 0;">
-                                <strong>Recipient:</strong> {{ $notification->user->name }}
+                                <strong>Recipient:</strong> {{ $reservationEnteredName }}
                             </p>
                             @endif
                             

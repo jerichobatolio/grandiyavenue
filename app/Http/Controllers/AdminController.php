@@ -1482,9 +1482,25 @@ class AdminController extends Controller
 
         $notifications = $notificationsQuery->paginate(20)->withQueryString();
 
+        $reservationIds = $notifications->getCollection()
+            ->map(function (Notification $n) {
+                $d = $n->data;
+
+                return is_array($d) && ! empty($d['reservation_id'])
+                    ? (int) $d['reservation_id']
+                    : null;
+            })
+            ->filter()
+            ->unique()
+            ->values();
+
+        $booksByReservationId = $reservationIds->isEmpty()
+            ? collect()
+            : Book::whereIn('id', $reservationIds)->get()->keyBy('id');
+
         $unreadCount = Notification::where('is_read', false)->count();
 
-        return view('admin.notifications', compact('notifications', 'unreadCount'));
+        return view('admin.notifications', compact('notifications', 'unreadCount', 'booksByReservationId'));
     }
 
     /**
