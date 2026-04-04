@@ -1111,7 +1111,7 @@
 <!-- Chatbot Popup -->
 <div id="chatbotPopup" class="chatbot-popup">
     <div class="chatbot-header">
-        <strong>Grandiya Assistant (FAQ)</strong>
+        <strong>Grandiya Assistant</strong>
         <span class="close-btn" id="chatbotClose">×</span>
     </div>
     <div class="chatbot-body">
