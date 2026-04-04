@@ -1467,9 +1467,8 @@ class AdminController extends Controller
      */
     public function notifications(Request $request)
     {
-        $userId = auth()->id();
+        // List all notifications so the page matches the sidebar badge (global unread count).
         $notificationsQuery = Notification::with(['user', 'eventBooking', 'order'])
-            ->where('user_id', $userId)
             ->orderBy('created_at', 'desc');
 
         if ($request->filled('q')) {
@@ -1483,7 +1482,7 @@ class AdminController extends Controller
 
         $notifications = $notificationsQuery->paginate(20)->withQueryString();
 
-        $unreadCount = Notification::where('user_id', $userId)->where('is_read', false)->count();
+        $unreadCount = Notification::where('is_read', false)->count();
 
         return view('admin.notifications', compact('notifications', 'unreadCount'));
     }

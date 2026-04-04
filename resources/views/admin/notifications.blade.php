@@ -385,6 +385,15 @@
                             <div class="notification-message">
                                 {{ $notification->message }}
                             </div>
+
+                            @if($notification->user)
+                            <p class="text-muted" style="font-size: 0.85rem; margin: 8px 0 0;">
+                                <strong>Recipient:</strong> {{ $notification->user->name }}
+                                @if($notification->user->email)
+                                    <span style="opacity: 0.85;">({{ $notification->user->email }})</span>
+                                @endif
+                            </p>
+                            @endif
                             
                             @if($notification->order)
                             @php
