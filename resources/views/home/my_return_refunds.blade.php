@@ -425,8 +425,11 @@
                             @php
                                 $refundable = $returnRefund->refundable;
                                 $itemName = '';
-                                if ($returnRefund->refundable_type === 'App\Models\EventBooking') {
-                                    $itemName = ($refundable->eventType->name ?? 'Event') . ' - ' . ($refundable->event_date ? $refundable->event_date->format('M d, Y') : 'N/A');
+                                if (! $refundable) {
+                                    $was = $returnRefund->refundable_type === 'App\Models\EventBooking' ? 'Event booking' : 'Order';
+                                    $itemName = $was . ' (removed)' . ($returnRefund->refundable_id ? ' #' . $returnRefund->refundable_id : '');
+                                } elseif ($returnRefund->refundable_type === 'App\Models\EventBooking') {
+                                    $itemName = ($refundable->eventType?->name ?? 'Event') . ' - ' . ($refundable->event_date ? $refundable->event_date->format('M d, Y') : 'N/A');
                                 } else {
                                     $itemName = $refundable->title ?? 'Order #' . $refundable->id;
                                 }
