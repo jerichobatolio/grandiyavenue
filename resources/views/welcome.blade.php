@@ -541,8 +541,8 @@
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content">
-            <h1>Grandiya Venue And Restaurant</h1>
-            <h2>Booking and Reservation &amp; System</h2>
+            <h1>Grandiya Venue &amp; Restaurant</h1>
+            <h2>Booking and Reservation System</h2>
             <div class="hero-buttons">
                 <a href="{{ route('register') }}" class="btn-primary">Sign Up</a>
                 <a href="{{ route('login') }}" class="btn-secondary">Login</a>
