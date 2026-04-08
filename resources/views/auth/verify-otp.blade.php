@@ -29,11 +29,7 @@
                 <x-input id="otp" class="block mt-1 w-full" type="text" name="otp" maxlength="6" pattern="\d{6}" required />
             </div>
 
-            <div class="flex items-center justify-between mt-4">
-                <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md" href="{{ route('login') }}">
-                    {{ __('Back to login') }}
-                </a>
-
+            <div class="flex items-center justify-end mt-4">
                 <x-button>
                     {{ __('Verify OTP') }}
                 </x-button>
