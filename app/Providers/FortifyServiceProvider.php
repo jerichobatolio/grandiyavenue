@@ -47,7 +47,10 @@ class FortifyServiceProvider extends ServiceProvider
                 return null;
             }
 
-            if (! $user->email_otp_verified_at) {
+            $hasPendingEmailOtp = ! $user->email_otp_verified_at
+                && ($user->email_otp_code || $user->email_otp_expires_at);
+
+            if ($hasPendingEmailOtp) {
                 app(EmailOtpService::class)->issue($user);
 
                 throw ValidationException::withMessages([
