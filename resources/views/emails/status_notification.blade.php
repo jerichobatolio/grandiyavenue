@@ -160,7 +160,7 @@
                 @endif
             </div>
             <div class="footer">
-                This is an automated email notification from {{ $appName }}.
+                This is an automated email notification.
             </div>
         </div>
     </div>
