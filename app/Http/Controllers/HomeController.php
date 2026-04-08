@@ -443,20 +443,18 @@ class HomeController extends Controller
                 'special_requests' => 'nullable|string|max:500'
             ]);
 
-            // Block table reservations if there is a whole-day event booking on the same date.
-            $hasWholeDayEvent = EventBooking::query()
+            // Block table reservations only when an event is already approved/accepted on that date.
+            $hasEventBookingOnDate = EventBooking::query()
                 ->whereDate('event_date', $request->date)
                 ->where('is_archived', false)
-                ->where('status', '!=', 'Cancelled')
-                ->where(function ($q) {
-                    $q->whereNull('time_in')
-                        ->orWhereNull('time_out');
-                })
+                ->whereRaw(
+                    "LOWER(COALESCE(status, '')) IN ('approved', 'accepted', 'confirmed', 'paid', 'completed')"
+                )
                 ->exists();
 
-            if ($hasWholeDayEvent) {
+            if ($hasEventBookingOnDate) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
-                    'date' => ['This date is fully booked for an event. Please choose another date.'],
+                    'date' => ['This date already has an event booking. Table reservations are not available on this date.'],
                 ]);
             }
 
@@ -467,6 +465,27 @@ class HomeController extends Controller
                 ->copy()
                 ->addHours(4)
                 ->format('Y-m-d H:i:s');
+
+            // Prevent double-booking only against approved/accepted table reservations.
+            $hasTableTimeConflict = Book::query()
+                ->where('is_archived', false)
+                ->whereDate('date', $request->date)
+                ->where('table_number', $request->table_number)
+                ->whereRaw(
+                    "LOWER(COALESCE(status, '')) IN ('approved', 'confirmed', 'reserved', 'paid')"
+                )
+                ->where(function ($q) use ($dateTimeIn, $dateTimeOut) {
+                    // Overlap rule: existing.start < new.end AND existing.end > new.start
+                    $q->where('time_in', '<', $dateTimeOut)
+                        ->where('time_out', '>', $dateTimeIn);
+                })
+                ->exists();
+
+            if ($hasTableTimeConflict) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'table_number' => ['This table is already reserved at the selected time. Please choose another date, time, or table.'],
+                ]);
+            }
             
             $data = new Book;
             $data->name = $request->name;
@@ -1026,11 +1045,53 @@ class HomeController extends Controller
      */
     private function getReservationsForCalendar(bool $includePast = false)
     {
+        $toDisplayTime = function ($value) {
+            if (!$value) return 'N/A';
+
+            try {
+                $appTz = config('app.timezone', 'Asia/Manila');
+
+                if ($value instanceof \DateTimeInterface) {
+                    return \Carbon\Carbon::instance($value)->setTimezone($appTz)->format('g:i A');
+                }
+
+                if (is_string($value)) {
+                    $trimmed = trim($value);
+                    if ($trimmed === '' || strtoupper($trimmed) === 'N/A') return 'N/A';
+
+                    if (preg_match('/^\d{1,2}:\d{2}\s*(AM|PM)$/i', $trimmed)) {
+                        return strtoupper($trimmed);
+                    }
+
+                    if (preg_match('/^(\d{1,2}):(\d{2})$/', $trimmed, $m)) {
+                        $hour = (int) $m[1];
+                        $minute = $m[2];
+                        $period = $hour >= 12 ? 'PM' : 'AM';
+                        $hour12 = $hour > 12 ? $hour - 12 : ($hour === 0 ? 12 : $hour);
+                        return $hour12 . ':' . $minute . ' ' . $period;
+                    }
+
+                    // Datetime string: convert to app timezone only when timezone exists.
+                    $hasTzInfo = str_ends_with($trimmed, 'Z') || preg_match('/[+\-]\d{2}:\d{2}$/', $trimmed);
+                    $dt = $hasTzInfo
+                        ? \Carbon\Carbon::parse($trimmed)->setTimezone($appTz)
+                        : \Carbon\Carbon::parse($trimmed, $appTz);
+
+                    return $dt->format('g:i A');
+                }
+            } catch (\Throwable $e) {
+                // Fall through to string fallback
+            }
+
+            return is_scalar($value) ? (string) $value : 'N/A';
+        };
+
         // === Table reservations ===
         $reservationsQuery = Book::where('is_archived', false)
             ->where(function ($query) {
                 $query->where('status', 'approved')
                     ->orWhere('status', 'confirmed')
+                    ->orWhere('status', 'reserved')
                     ->orWhere('status', 'pending')
                     ->orWhere('status', 'paid')
                     ->orWhere('status', 'cancelled')
@@ -1053,85 +1114,8 @@ class HomeController extends Controller
                 $calendarData[$date] = [];
             }
 
-            // Format time_in and time_out - extract just the time portion in 12-hour format with AM/PM
-            $timeIn = 'N/A';
-            $timeOut = 'N/A';
-
-            if ($reservation->time_in) {
-                try {
-                    // Handle different formats: datetime object, ISO string, or time string
-                    if ($reservation->time_in instanceof \DateTime || $reservation->time_in instanceof \Carbon\Carbon) {
-                        $timeIn = $reservation->time_in->format('g:i A');
-                    } elseif (is_string($reservation->time_in)) {
-                        // Check if it's a full datetime string (contains T or space)
-                        if (strpos($reservation->time_in, 'T') !== false || strpos($reservation->time_in, ' ') !== false) {
-                            $timeIn = \Carbon\Carbon::parse($reservation->time_in)->format('g:i A');
-                        } else {
-                            // It's already a time string like "10:22" - convert to 12-hour format
-                            if (preg_match('/(\d{2}):(\d{2})/', $reservation->time_in, $matches)) {
-                                $hour = (int) $matches[1];
-                                $minute = $matches[2];
-                                $period = $hour >= 12 ? 'PM' : 'AM';
-                                $hour12 = $hour > 12 ? $hour - 12 : ($hour == 0 ? 12 : $hour);
-                                $timeIn = $hour12 . ':' . $minute . ' ' . $period;
-                            } else {
-                                $timeIn = $reservation->time_in;
-                            }
-                        }
-                    }
-                } catch (\Exception $e) {
-                    // If parsing fails, try to extract time from string
-                    if (is_string($reservation->time_in)) {
-                        if (preg_match('/(\d{2}):(\d{2})/', $reservation->time_in, $matches)) {
-                            $hour = (int) $matches[1];
-                            $minute = $matches[2];
-                            $period = $hour >= 12 ? 'PM' : 'AM';
-                            $hour12 = $hour > 12 ? $hour - 12 : ($hour == 0 ? 12 : $hour);
-                            $timeIn = $hour12 . ':' . $minute . ' ' . $period;
-                        } else {
-                            $timeIn = $reservation->time_in;
-                        }
-                    }
-                }
-            }
-
-            if ($reservation->time_out) {
-                try {
-                    // Handle different formats: datetime object, ISO string, or time string
-                    if ($reservation->time_out instanceof \DateTime || $reservation->time_out instanceof \Carbon\Carbon) {
-                        $timeOut = $reservation->time_out->format('g:i A');
-                    } elseif (is_string($reservation->time_out)) {
-                        // Check if it's a full datetime string (contains T or space)
-                        if (strpos($reservation->time_out, 'T') !== false || strpos($reservation->time_out, ' ') !== false) {
-                            $timeOut = \Carbon\Carbon::parse($reservation->time_out)->format('g:i A');
-                        } else {
-                            // It's already a time string like "17:22" - convert to 12-hour format
-                            if (preg_match('/(\d{2}):(\d{2})/', $reservation->time_out, $matches)) {
-                                $hour = (int) $matches[1];
-                                $minute = $matches[2];
-                                $period = $hour >= 12 ? 'PM' : 'AM';
-                                $hour12 = $hour > 12 ? $hour - 12 : ($hour == 0 ? 12 : $hour);
-                                $timeOut = $hour12 . ':' . $minute . ' ' . $period;
-                            } else {
-                                $timeOut = $reservation->time_out;
-                            }
-                        }
-                    }
-                } catch (\Exception $e) {
-                    // If parsing fails, try to extract time from string
-                    if (is_string($reservation->time_out)) {
-                        if (preg_match('/(\d{2}):(\d{2})/', $reservation->time_out, $matches)) {
-                            $hour = (int) $matches[1];
-                            $minute = $matches[2];
-                            $period = $hour >= 12 ? 'PM' : 'AM';
-                            $hour12 = $hour > 12 ? $hour - 12 : ($hour == 0 ? 12 : $hour);
-                            $timeOut = $hour12 . ':' . $minute . ' ' . $period;
-                        } else {
-                            $timeOut = $reservation->time_out;
-                        }
-                    }
-                }
-            }
+            $timeIn = $toDisplayTime($reservation->time_in ?: $reservation->time);
+            $timeOut = $toDisplayTime($reservation->time_out);
 
             $calendarData[$date][] = [
                 'id' => $reservation->id,
@@ -1183,12 +1167,12 @@ class HomeController extends Controller
             $timeOutRaw = null; // "HH:MM" for client-side comparisons
 
             if ($booking->time_in) {
-                $timeIn = $booking->time_in->format('g:i A');
+                $timeIn = $toDisplayTime($booking->time_in);
                 $timeInRaw = $booking->time_in->format('H:i');
             }
 
             if ($booking->time_out) {
-                $timeOut = $booking->time_out->format('g:i A');
+                $timeOut = $toDisplayTime($booking->time_out);
                 $timeOutRaw = $booking->time_out->format('H:i');
             }
 

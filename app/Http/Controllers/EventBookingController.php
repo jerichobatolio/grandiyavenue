@@ -86,11 +86,11 @@ class EventBookingController extends Controller
         $timeOut = $request->input('time_out');
         $isWholeDayQuery = empty($timeIn) || empty($timeOut);
 
-        // Event bookings: whole-day events block any time on that date
+        // Event bookings: only approved/accepted bookings should block.
         $wholeDayEventExists = EventBooking::query()
             ->when(Schema::hasColumn('event_bookings', 'is_archived'), fn ($q) => $q->where('is_archived', false))
             ->whereDate('event_date', $date)
-            ->where('status', '!=', 'Cancelled')
+            ->whereRaw("LOWER(COALESCE(status, '')) IN ('approved', 'accepted', 'confirmed', 'paid', 'completed')")
             ->where(function ($q) {
                 $q->whereNull('time_in')->orWhereNull('time_out');
             })
@@ -104,23 +104,20 @@ class EventBookingController extends Controller
             $eventBookingConflicts = EventBooking::query()
                 ->when(Schema::hasColumn('event_bookings', 'is_archived'), fn ($q) => $q->where('is_archived', false))
                 ->whereDate('event_date', $date)
-                ->where('status', '!=', 'Cancelled')
+                ->whereRaw("LOWER(COALESCE(status, '')) IN ('approved', 'accepted', 'confirmed', 'paid', 'completed')")
                 ->count();
 
             $tableReservationConflicts = Book::query()
                 ->where('is_archived', false)
                 ->whereDate('date', $date)
-                ->where(function ($q) {
-                    $q->whereNull('status')
-                        ->orWhereNotIn('status', ['cancelled']);
-                })
+                ->whereRaw("LOWER(COALESCE(status, '')) IN ('approved', 'confirmed', 'reserved', 'paid')")
                 ->count();
         } elseif (!$wholeDayEventExists && $timeIn && $timeOut) {
             // Time-slot selection: check overlapping bookings/reservations on this date.
             $eventBookingConflicts = EventBooking::query()
                 ->when(Schema::hasColumn('event_bookings', 'is_archived'), fn ($q) => $q->where('is_archived', false))
                 ->whereDate('event_date', $date)
-                ->where('status', '!=', 'Cancelled')
+                ->whereRaw("LOWER(COALESCE(status, '')) IN ('approved', 'accepted', 'confirmed', 'paid', 'completed')")
                 ->whereNotNull('time_in')
                 ->whereNotNull('time_out')
                 ->where('time_in', '<', $timeOut)
@@ -133,10 +130,7 @@ class EventBookingController extends Controller
             $tableReservationConflicts = Book::query()
                 ->where('is_archived', false)
                 ->whereDate('date', $date)
-                ->where(function ($q) {
-                    $q->whereNull('status')
-                        ->orWhereNotIn('status', ['cancelled']);
-                })
+                ->whereRaw("LOWER(COALESCE(status, '')) IN ('approved', 'confirmed', 'reserved', 'paid')")
                 ->whereNotNull('time_in')
                 ->whereNotNull('time_out')
                 ->where('time_in', '<', $end)
@@ -208,12 +202,12 @@ class EventBookingController extends Controller
         $timeIn = $request->input('time_in');   // expected format: H:i (stored as TIME)
         $timeOut = $request->input('time_out'); // expected format: H:i (stored as TIME)
 
-        // Business rule: disallow whole-day booking when there is an accepted (Paid) time-slot booking on that date.
+        // Business rule: disallow whole-day booking when there is an approved/accepted time-slot booking on that date.
         $isWholeDayRequest = !empty($eventDate) && (empty($timeIn) || empty($timeOut));
         if ($isWholeDayRequest) {
             $hasAcceptedTimeSlotBooking = EventBooking::query()
                 ->whereDate('event_date', $eventDate)
-                ->where('status', 'Paid')
+                ->whereRaw("LOWER(COALESCE(status, '')) IN ('approved', 'accepted', 'confirmed', 'paid', 'completed')")
                 ->whereNotNull('time_in')
                 ->whereNotNull('time_out')
                 ->when(Schema::hasColumn('event_bookings', 'is_archived'), fn ($q) => $q->where('is_archived', false))
@@ -230,12 +224,13 @@ class EventBookingController extends Controller
             }
         }
 
-        // Prevent the same user from booking the same date/time (or an overlapping time range).
+        // Prevent the same user from booking the same date/time only when an approved/accepted
+        // booking already exists. Pending bookings should not block new attempts.
         if (!empty($eventDate) && !empty($timeIn)) {
             $conflictQuery = EventBooking::query()
                 ->where('user_id', auth()->id())
                 ->whereDate('event_date', $eventDate)
-                ->where('status', '!=', 'Cancelled');
+                ->whereRaw("LOWER(COALESCE(status, '')) IN ('approved', 'accepted', 'confirmed', 'paid', 'completed')");
 
             if (Schema::hasColumn('event_bookings', 'is_archived')) {
                 $conflictQuery->where('is_archived', false);

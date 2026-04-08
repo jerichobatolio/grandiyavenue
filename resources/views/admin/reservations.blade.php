@@ -444,11 +444,13 @@
           font-size: 1.1em;
          }
 
-         .calendar-day-info {
-          font-size: 0.7em;
-          margin-top: 2px;
-          opacity: 0.8;
-         }
+        .calendar-day-info {
+         font-size: 0.7em;
+         margin-top: 2px;
+         opacity: 0.85;
+         line-height: 1.25;
+         white-space: normal;
+        }
 
          .calendar-legend {
           display: flex;
@@ -2137,16 +2139,62 @@
       }
        
       dayElement.className = dayClass;
-      const hasEventBooking = dayReservations.some(r => {
-        const id = r && r.id;
-        const idStr = (id === null || id === undefined) ? '' : String(id);
-        const occ = r && r.occasion;
-        const occStr = (occ === null || occ === undefined) ? '' : String(occ).toLowerCase();
-        return idStr.startsWith('event-') || occStr === 'event booking';
-      });
+      const tableReservations = dayReservations.filter(r => !isAdminEventBooking(r));
+      const eventReservations = dayReservations.filter(r => isAdminEventBooking(r));
+
+      const summarizeStatus = (items) => {
+        const summary = { approvedLike: 0, pending: 0, cancelled: 0 };
+        items.forEach(item => {
+          const status = String(item?.status || 'pending').toLowerCase();
+          if (status === 'approved' || status === 'confirmed' || status === 'paid' || status === 'reserved') {
+            summary.approvedLike += 1;
+            return;
+          }
+          if (status === 'cancelled') {
+            summary.cancelled += 1;
+            return;
+          }
+          summary.pending += 1;
+        });
+        return summary;
+      };
+
+      const formatSummaryText = (label, items, approvedLabel) => {
+        if (!items.length) return '';
+        const statusSummary = summarizeStatus(items);
+
+        // If there is only one pending item, show status directly.
+        if (
+          items.length === 1 &&
+          statusSummary.pending === 1 &&
+          statusSummary.approvedLike === 0 &&
+          statusSummary.cancelled === 0
+        ) {
+          return `${label}: pending`;
+        }
+
+        const parts = [];
+        if (statusSummary.approvedLike > 0) parts.push(`${statusSummary.approvedLike} ${approvedLabel}`);
+        if (statusSummary.pending > 0) parts.push(`${statusSummary.pending} pending`);
+        if (statusSummary.cancelled > 0) parts.push(`${statusSummary.cancelled} cancelled`);
+        const breakdown = parts.join(', ');
+        return `${label}: ${breakdown || `${items.length} booking${items.length === 1 ? '' : 's'}`}`;
+      };
+
+      const dayInfoLines = [];
+      if (tableReservations.length > 0) {
+        dayInfoLines.push(`<div>${formatSummaryText('Reservations', tableReservations, 'reserved')}</div>`);
+      }
+      if (eventReservations.length > 0) {
+        dayInfoLines.push(`<div>${formatSummaryText('Event Booking', eventReservations, 'booked')}</div>`);
+      }
+      if (dayInfoLines.length === 0) {
+        dayInfoLines.push('<div>Available</div>');
+      }
+
       dayElement.innerHTML = `
         <div class="calendar-day-number">${day}</div>
-        <div class="calendar-day-info">${hasEventBooking ? 'Event Booking' : `${dayReservations.length} reservations`}</div>
+        <div class="calendar-day-info">${dayInfoLines.join('')}</div>
       `;
        
        // Add click event for day details
@@ -2352,14 +2400,15 @@
       return v;
     }
     
-    // Group reservations by date using current data, include approved, pending, paid, and cancelled
+    // Group reservations by date using current data, include approved/reserved, pending, paid, and cancelled
     currentReservationsData.forEach(reservation => {
-      // Sync approved, confirmed, pending, paid (booked), and cancelled reservations to customer calendar
+      // Sync approved/confirmed/reserved, pending, paid (booked), and cancelled reservations to customer calendar
       const rawStatus = reservation.status || 'pending';
       const status = String(rawStatus).toLowerCase();
       if (
         status !== 'approved' &&
         status !== 'confirmed' &&
+        status !== 'reserved' &&
         status !== 'pending' &&
         status !== 'paid' &&
         status !== 'cancelled'

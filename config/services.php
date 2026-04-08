@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'sms' => [
+        'enabled' => env('SMS_ENABLED', false),
+        'api_url' => env('SMS_API_URL'),
+        'api_key' => env('SMS_API_KEY'),
+        'from' => env('SMS_SENDER_NAME', 'Grandiya'),
+    ],
+
 ];

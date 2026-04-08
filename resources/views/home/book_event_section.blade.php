@@ -933,17 +933,34 @@ document.addEventListener('DOMContentLoaded', function() {
     const bookingConflictWarning = document.getElementById('booking_conflict_warning');
     const bookingConflictWarningText = document.getElementById('booking_conflict_warning_text');
     let conflictCheckTimer = null;
+    let isBookingConflictActive = false;
+    let currentConflictMessage = '';
+
+    function showEventRestrictionModal(message, title = '') {
+        const fullMessage = title ? `${title}\n\n${message}` : message;
+        alert(fullMessage);
+    }
 
     function hideBookingConflictWarning() {
         if (bookingConflictWarning) bookingConflictWarning.style.display = 'none';
+        isBookingConflictActive = false;
+        currentConflictMessage = '';
+        // Re-evaluate button state after conflict clears.
+        checkFormCompletion();
     }
 
     function showBookingConflictWarning(message) {
-        if (!bookingConflictWarning) return;
+        // Popup-only behavior: keep inline warning hidden.
+        if (bookingConflictWarning) bookingConflictWarning.style.display = 'none';
         if (bookingConflictWarningText) {
             bookingConflictWarningText.textContent = message || 'This date and time slot may already be booked.';
         }
-        bookingConflictWarning.style.display = 'block';
+        const modalMessage = message || 'This date and time slot may already be booked.';
+        isBookingConflictActive = true;
+        currentConflictMessage = modalMessage;
+        // Keep button state aligned with active conflict.
+        checkFormCompletion();
+        showEventRestrictionModal(modalMessage);
     }
 
     function scheduleConflictCheck() {
@@ -1008,7 +1025,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             if (data.conflict) {
-                showBookingConflictWarning('Warning: This date and time slot overlaps an existing booking or reservation. Please choose another slot.');
+                showBookingConflictWarning('This date and time slot overlaps an existing booking or reservation. Please choose another slot.');
                 return;
             }
 
@@ -1297,6 +1314,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
         console.log('Validation result:', {allFieldsFilled, missingFields});
         
+        if (isBookingConflictActive) {
+            console.log('❌ Date/time conflict active - disabling button');
+            bookEventBtn.disabled = true;
+            bookEventBtn.textContent = 'Schedule Conflict - Change Date/Time';
+            bookEventBtn.style.backgroundColor = '#6c757d';
+            bookEventBtn.style.borderColor = '#6c757d';
+            bookEventBtn.style.color = 'white';
+            return;
+        }
+
         if (allFieldsFilled) {
             console.log('✅ All fields filled - enabling button');
             bookEventBtn.disabled = false;
@@ -1320,6 +1347,15 @@ document.addEventListener('DOMContentLoaded', function() {
         if (field) {
             field.addEventListener('input', checkFormCompletion);
             field.addEventListener('change', checkFormCompletion);
+            if (fieldName !== 'event_date' && fieldName !== 'event_time_slot_id') {
+                const showConflictAgain = function() {
+                    if (isBookingConflictActive) {
+                        showEventRestrictionModal(currentConflictMessage || 'This date and time slot may already be booked.');
+                    }
+                };
+                field.addEventListener('input', showConflictAgain);
+                field.addEventListener('change', showConflictAgain);
+            }
         } else {
             console.error(`Field not found: ${fieldName}`);
         }
@@ -1344,6 +1380,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const additionalNotes = document.getElementById('additional_notes');
     if (additionalNotes) {
         additionalNotes.addEventListener('input', checkFormCompletion);
+        additionalNotes.addEventListener('input', function() {
+            if (isBookingConflictActive) {
+                showEventRestrictionModal(currentConflictMessage || 'This date and time slot may already be booked.');
+            }
+        });
     }
     
     const nameFields = [firstNameField, lastNameField];
@@ -1470,9 +1511,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Book Event Button
     if (bookEventBtn) {
-        bookEventBtn.addEventListener('click', function(e) {
+        bookEventBtn.addEventListener('click', async function(e) {
             e.preventDefault();
             console.log('Book Event clicked!');
+
+            // Re-check conflict right before proceeding to prevent bypass.
+            await checkBookingConflicts();
+
+            if (isBookingConflictActive) {
+                showEventRestrictionModal(currentConflictMessage || 'This date and time slot overlaps an existing booking or reservation. Please choose another slot.');
+                return;
+            }
             
             if (bookEventBtn.disabled) {
                 console.log('Button disabled');
@@ -1667,9 +1716,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Proceed to Payment Button (from summary modal)
     if (proceedToPaymentBtn) {
-        proceedToPaymentBtn.addEventListener('click', function(e) {
+        proceedToPaymentBtn.addEventListener('click', async function(e) {
             e.preventDefault();
             console.log('Proceed to Payment clicked!');
+
+            // Re-check conflict right before submit to prevent bypass.
+            await checkBookingConflicts();
+
+            if (isBookingConflictActive) {
+                showEventRestrictionModal(currentConflictMessage || 'This date and time slot overlaps an existing booking or reservation. Please choose another slot.');
+                return;
+            }
             
             if (proceedToPaymentBtn.disabled) {
                 console.log('Payment button disabled');
@@ -1795,7 +1852,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 console.error('Fetch error:', error);
                 console.error('Error details:', error.message);
-                alert('Error creating booking. Please try again. Error: ' + error.message);
+                alert(error.message || 'Unable to create booking. Please try another date/time slot.');
             });
         });
     }

@@ -21,11 +21,17 @@ use App\Models\Announcement; // ✅ Announcements
 use App\Models\ReturnRefund; // ✅ Returns & refunds
 use App\Models\Faq; // ✅ FAQs for Grandiya Assistant
 use App\Models\AssistantMessage; // ✅ Assistant chat (customer ↔ admin)
+use App\Services\StatusNotificationService;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
+    private function statusNotifier(): StatusNotificationService
+    {
+        return app(StatusNotificationService::class);
+    }
+
     // -------------------- FOOD MANAGEMENT --------------------
     public function add_food()
     {
@@ -248,6 +254,14 @@ class AdminController extends Controller
                 ]
             ]);
         }
+
+        // External customer notification (email/SMS), independent from in-app feed.
+        $this->statusNotifier()->sendStatusUpdate(
+            $order->email,
+            $order->phone,
+            "Order #{$order->id} {$status}",
+            "Your order #{$order->id} status is now {$status}."
+        );
     }
 
     /**
@@ -351,6 +365,13 @@ class AdminController extends Controller
                 ],
             ]);
         }
+
+        $this->statusNotifier()->sendStatusUpdate(
+            $firstOrder->email,
+            $firstOrder->phone,
+            "Order Status {$status}",
+            "Your order with {$totalItems} {$itemText} has been updated to {$status}."
+        );
 
         // Optionally also notify other users (e.g. admins) in aggregated form.
         // This keeps admin notifications concise when a group action is used.
@@ -829,6 +850,7 @@ class AdminController extends Controller
             
             // Create notification for the user
             if ($reservation->user_id) {
+                $reservationUser = User::find($reservation->user_id);
                 // Format date and time exactly as customer entered (no extra formatting)
                 $dateFormatted = $reservation->date instanceof \Carbon\Carbon 
                     ? $reservation->date->format('Y-m-d') 
@@ -855,6 +877,13 @@ class AdminController extends Controller
                         'amount' => (float) ($reservation->amount_paid ?: $reservation->down_payment_amount ?: 1000),
                     ]
                 ]);
+
+                $this->statusNotifier()->sendStatusUpdate(
+                    $reservationUser?->email,
+                    $reservation->phone,
+                    'Reservation Approved',
+                    "Your table reservation for {$dateFormatted} {$timeFormatted} has been approved."
+                );
             }
             
             \Log::info('Reservation approved successfully');
@@ -894,6 +923,7 @@ class AdminController extends Controller
             
             // Create notification for the user
             if ($reservation->user_id) {
+                $reservationUser = User::find($reservation->user_id);
                 // Format date and time exactly as customer entered (no extra formatting)
                 $dateFormatted = $reservation->date instanceof \Carbon\Carbon 
                     ? $reservation->date->format('Y-m-d') 
@@ -920,6 +950,13 @@ class AdminController extends Controller
                         'amount' => (float) ($reservation->amount_paid ?: $reservation->down_payment_amount ?: 1000),
                     ]
                 ]);
+
+                $this->statusNotifier()->sendStatusUpdate(
+                    $reservationUser?->email,
+                    $reservation->phone,
+                    'Reservation Cancelled',
+                    "Your table reservation for {$dateFormatted} {$timeFormatted} has been cancelled."
+                );
             }
             
             // Trigger real-time update for public calendar
@@ -1396,37 +1433,15 @@ class AdminController extends Controller
                 ]
             ]);
 
-            // Send email notification if user has email
-            if ($booking->email) {
-                $this->sendEventBookingEmailNotification($booking, $status, $title, $message);
-            }
         }
-    }
 
-    /**
-     * Send email notification for event booking status change
-     */
-    private function sendEventBookingEmailNotification($booking, $status, $title, $message)
-    {
-        try {
-            $data = [
-                'booking' => $booking,
-                'status' => $status,
-                'title' => $title,
-                'message' => $message,
-                'event_date' => $booking->event_date->format('F d, Y'),
-                'guests' => $booking->number_of_guests,
-                'amount' => number_format($booking->down_payment_amount, 2)
-            ];
-
-            \Mail::send('emails.event_booking_status', $data, function($mail) use ($booking, $title) {
-                $mail->to($booking->email, $booking->full_name)
-                     ->subject($title . ' - ' . config('app.name'));
-            });
-
-            \Log::info("Event booking email notification sent to {$booking->email} for booking ID {$booking->id}");
-        } catch (\Exception $e) {
-            \Log::error("Failed to send event booking email notification: " . $e->getMessage());
+        if ($booking->email || $booking->contact_number) {
+            $this->statusNotifier()->sendStatusUpdate(
+                $booking->email,
+                $booking->contact_number,
+                $title,
+                $message . ' Event date: ' . $eventDateFormatted . '.'
+            );
         }
     }
 

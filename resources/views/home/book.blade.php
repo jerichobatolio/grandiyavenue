@@ -91,16 +91,8 @@
                         <span>Available</span>
                     </div>
                     <div class="legend-item">
-                        <span class="legend-color pending"></span>
-                        <span>Pending</span>
-                    </div>
-                    <div class="legend-item">
                         <span class="legend-color approved"></span>
-                        <span>Approved</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-color cancelled"></span>
-                        <span>Cancelled</span>
+                        <span>Reserved</span>
                     </div>
                 </div>
             </div>
@@ -839,8 +831,8 @@
 }
 
 .legend-color.available {
-    background-color: rgba(108,117,125,0.3);
-    border-color: #6c757d;
+    background-color: rgba(173,181,189,0.55);
+    border-color: #adb5bd;
 }
 
 .legend-color.pending {
@@ -1010,6 +1002,20 @@ label, .form-label {
     color: #333333;
     border-radius: 18px;
     box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+}
+
+.restriction-modal-title {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: #212529;
+}
+
+.restriction-modal-message {
+    margin: 0;
+    font-size: 17px;
+    color: #333;
+    line-height: 1.55;
 }
 
 .table-payment-modal-header {
@@ -1261,7 +1267,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const minIn = '10:00';
                     const maxIn = '17:00';
                     if (v < minIn || v > maxIn) {
-                        alert('Reservation time must be between 10:00 AM and 5:00 PM (time out will be 4 hours later, up to 9:00 PM).');
+                        showRestrictionModal('Reservation time must be between 10:00 AM and 5:00 PM (time out will be 4 hours later, up to 9:00 PM).');
                         timeIn.value = '';
                         timeOut.value = '';
                         return;
@@ -2278,7 +2284,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    function getCsrfToken() {
+        const metaToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (metaToken) return metaToken;
+
+        const formToken = document.querySelector('#booking-form input[name="_token"]')?.value;
+        if (formToken) return formToken;
+
+        return '{{ csrf_token() }}';
+    }
+
+    function showRestrictionModal(message, title = '') {
+        const fullMessage = title ? `${title}\n\n${message}` : message;
+        alert(fullMessage);
+    }
     const tablePaymentProofUploadUrl = @json(route('book.table.payment.proof'));
     let tablePaymentProofValid = false;
     const fixedTableDownpayment = 1000;
@@ -2466,13 +2485,15 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const formData = new FormData(tablePaymentProofForm);
                 formData.set('booking_id', pendingTableBooking.id);
+                formData.set('_token', getCsrfToken());
 
                 const response = await fetch(tablePaymentProofUploadUrl, {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': csrfToken,
+                        'X-CSRF-TOKEN': getCsrfToken(),
                         'Accept': 'application/json',
                     },
+                    credentials: 'same-origin',
                     body: formData,
                 });
 
@@ -2534,6 +2555,78 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Form validation
     const bookingForm = document.getElementById('booking-form');
+
+    function parseTimeToMinutes(timeValue) {
+        if (!timeValue || timeValue === 'N/A') return null;
+        const raw = String(timeValue).trim();
+
+        // 12-hour format: h:mm AM/PM
+        const ampmMatch = raw.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+        if (ampmMatch) {
+            let hour = parseInt(ampmMatch[1], 10);
+            const minute = parseInt(ampmMatch[2], 10);
+            const period = ampmMatch[3].toUpperCase();
+            if (period === 'PM' && hour !== 12) hour += 12;
+            if (period === 'AM' && hour === 12) hour = 0;
+            return (hour * 60) + minute;
+        }
+
+        // 24-hour format: HH:mm
+        const hhmmMatch = raw.match(/^(\d{1,2}):(\d{2})$/);
+        if (hhmmMatch) {
+            const hour = parseInt(hhmmMatch[1], 10);
+            const minute = parseInt(hhmmMatch[2], 10);
+            return (hour * 60) + minute;
+        }
+
+        // ISO or datetime text
+        if (raw.includes('T') || raw.includes(' ')) {
+            const extracted = raw.match(/(\d{2}):(\d{2})/);
+            if (extracted) {
+                const hour = parseInt(extracted[1], 10);
+                const minute = parseInt(extracted[2], 10);
+                return (hour * 60) + minute;
+            }
+        }
+
+        return null;
+    }
+
+    function hasTableTimeConflict(dateValue, tableNumber, startTimeValue) {
+        if (!dateValue || !tableNumber || !startTimeValue || !reservations || !reservations[dateValue]) {
+            return false;
+        }
+
+        const requestedStart = parseTimeToMinutes(startTimeValue);
+        if (requestedStart === null) return false;
+        const requestedEnd = requestedStart + (4 * 60); // table booking duration
+
+        return reservations[dateValue].some(reservation => {
+            if (isEventBooking(reservation)) return false;
+
+            const reservedTable = String(
+                reservation.table_number || reservation.table || reservation.tableName || ''
+            ).trim();
+            if (reservedTable !== String(tableNumber).trim()) return false;
+
+            const status = String(reservation.status || 'pending').toLowerCase();
+            const blocksSelection = (
+                status === 'approved' ||
+                status === 'confirmed' ||
+                status === 'reserved' ||
+                status === 'paid'
+            );
+            if (!blocksSelection) return false;
+
+            const existingStart = parseTimeToMinutes(reservation.time_in || reservation.time);
+            const existingEnd = parseTimeToMinutes(reservation.time_out);
+            if (existingStart === null || existingEnd === null) return false;
+
+            // Overlap rule: existing.start < requested.end AND existing.end > requested.start
+            return existingStart < requestedEnd && existingEnd > requestedStart;
+        });
+    }
+
     if (bookingForm) {
         bookingForm.addEventListener('submit', async function(e) {
             console.log('Form submission started');
@@ -2570,6 +2663,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
+            // Prevent selecting the same table on an already-reserved time slot.
+            const dateInput = bookingForm.querySelector('input[name="date"]');
+            const timeInInput = bookingForm.querySelector('input[name="time_in"]');
+            const selectedDate = dateInput ? dateInput.value : '';
+            const selectedTimeIn = timeInInput ? timeInInput.value : '';
+            const tableNumberInput = bookingForm.querySelector('input[name="table_number"]');
+            const selectedTableNumber = tableNumberInput ? tableNumberInput.value : selectedTable;
+
+            if (hasTableTimeConflict(selectedDate, selectedTableNumber, selectedTimeIn)) {
+                e.preventDefault();
+                showRestrictionModal('This table is already reserved at the selected time. Please choose another date, time, or table.');
+                return false;
+            }
+
             const usesPaymentFlow = bookingForm.dataset.paymentFlow === 'table-downpayment';
             if (!usesPaymentFlow) {
                 return true;
@@ -2582,12 +2689,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 setBookButtonState(true);
 
                 const formData = new FormData(bookingForm);
+                formData.set('_token', getCsrfToken());
                 const response = await fetch(bookingForm.action, {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': csrfToken,
+                        'X-CSRF-TOKEN': getCsrfToken(),
                         'Accept': 'application/json',
                     },
+                    credentials: 'same-origin',
                     body: formData,
                 });
 
@@ -2599,6 +2708,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     throw new Error(errorMessages);
                 }
 
+                addPendingReservationToCalendar(data.booking);
                 openTablePaymentModal(data.booking);
             } catch (error) {
                 alert(error.message || 'Failed to create reservation.');
@@ -2615,74 +2725,99 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Calendar functionality
     let currentDate = new Date();
-    // Load all reservations (approved, pending, paid, and cancelled events)
+    // Home calendar: show only approved/confirmed reservations and paid bookings
     let initialReservations = @json($reservations ?: []);
     let reservations = {};
+    function isHomeCalendarVisibleStatus(statusValue) {
+        const status = String(statusValue || 'pending').toLowerCase();
+        return (
+            status === 'approved' ||
+            status === 'confirmed' ||
+            status === 'reserved' ||
+            status === 'paid'
+        );
+    }
+
     Object.keys(initialReservations).forEach(date => {
         const visibleReservations = initialReservations[date].filter(r => {
-            const rawStatus = r.status || 'pending';
-            const status = String(rawStatus).toLowerCase();
-            return (
-                status === 'approved' ||
-                status === 'confirmed' ||
-                status === 'pending' ||
-                status === 'paid' ||
-                status === 'cancelled'
-            );
+            return isHomeCalendarVisibleStatus(r.status);
         });
         if (visibleReservations.length > 0) {
             reservations[date] = visibleReservations;
         }
     });
-    
-    // Track dates that are fully blocked due to whole-day event bookings
-    const fullyBlockedDates = new Set();
 
-    function isWholeDayEventBooking(reservation) {
+    function addPendingReservationToCalendar(booking) {
+        if (!booking || !booking.date) return;
+        if (!isHomeCalendarVisibleStatus(booking.status)) return;
+
+        const dateKey = String(booking.date);
+        if (!reservations[dateKey]) {
+            reservations[dateKey] = [];
+        }
+
+        const bookingId = booking.id != null ? String(booking.id) : '';
+        const alreadyExists = reservations[dateKey].some(r => String(r.id ?? '') === bookingId);
+        if (alreadyExists) return;
+
+        const pendingEntry = {
+            id: booking.id,
+            table: booking.table_number || 'N/A',
+            table_number: booking.table_number || 'N/A',
+            guests: booking.guest ?? 'N/A',
+            guest: booking.guest ?? 'N/A',
+            phone: booking.phone || 'N/A',
+            name: booking.name || 'N/A',
+            last_name: booking.last_name || null,
+            status: booking.status || 'pending',
+            occasion: booking.occasion || 'N/A',
+            time: booking.time_in_display || booking.time_in || 'N/A',
+            time_in: booking.time_in_display || booking.time_in || 'N/A',
+            time_out: booking.time_out_display || booking.time_out || 'N/A',
+            special_requests: booking.special_requests || '',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+        };
+
+        reservations[dateKey].push(pendingEntry);
+        recomputeEventBlockedDates();
+        renderCalendar();
+    }
+    
+    // Track dates blocked by any non-cancelled event booking
+    const eventBlockedDates = new Set();
+
+    function isActiveEventBooking(reservation) {
         if (!isEventBooking(reservation)) return false;
 
         const status = String(reservation.status || 'pending').toLowerCase();
-        // Cancelled events should not block the date
-        if (status === 'cancelled') return false;
-
-        const start = reservation.time_in || reservation.time || null;
-        const end = reservation.time_out || null;
-        const startIsNA = !start || start === 'N/A';
-        const endIsNA = !end || end === 'N/A';
-
-        // If both start and end are missing/N.A, treat as whole-day event
-        if (startIsNA && endIsNA) {
-            return true;
-        }
-
-        // Fallback: use the human-readable range text
-        const rangeText = getEventTimeRange(reservation);
-        return String(rangeText).toLowerCase().includes('whole day');
+        // Any non-cancelled event blocks table reservations on that date.
+        return status !== 'cancelled';
     }
 
-    function recomputeFullyBlockedDates() {
-        fullyBlockedDates.clear();
+    function recomputeEventBlockedDates() {
+        eventBlockedDates.clear();
         Object.keys(reservations).forEach(date => {
             const dayReservations = reservations[date] || [];
-            const hasWholeDayEvent = dayReservations.some(r => isWholeDayEventBooking(r));
-            if (hasWholeDayEvent) {
-                fullyBlockedDates.add(date);
+            const hasActiveEvent = dayReservations.some(r => isActiveEventBooking(r));
+            if (hasActiveEvent) {
+                eventBlockedDates.add(date);
             }
         });
     }
 
-    // Initialize fully blocked dates from initial data
-    recomputeFullyBlockedDates();
+    // Initialize event-blocked dates from initial data
+    recomputeEventBlockedDates();
 
-    // Prevent booking on fully blocked dates in the table reservation form
+    // Prevent table booking on dates with existing event bookings
     const dateInputs = document.querySelectorAll('#res_date, #guest_date');
     dateInputs.forEach(input => {
         if (!input) return;
         input.addEventListener('change', function () {
             const selectedDate = this.value; // YYYY-MM-DD
             if (!selectedDate) return;
-            if (fullyBlockedDates.has(selectedDate)) {
-                alert('This date is fully booked for an event. Please choose another date.');
+            if (eventBlockedDates.has(selectedDate)) {
+                showRestrictionModal('This date already has an event booking. Table reservations are not available on this date.');
                 this.value = '';
                 const timeInputId = this.id === 'res_date' ? 'res_time_in' : 'guest_time_in';
                 const timeInput = document.getElementById(timeInputId);
@@ -2700,7 +2835,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function initializeCalendar() {
         renderCalendar();
-        recomputeFullyBlockedDates();
+        recomputeEventBlockedDates();
         setupCalendarNavigation();
         // Start polling for updates every 10 seconds for faster updates
         setInterval(refreshReservations, 10000);
@@ -2717,9 +2852,9 @@ document.addEventListener('DOMContentLoaded', function() {
         window.addEventListener('reservationUpdated', function(e) {
             console.log('Reservation update event received, refreshing calendar...');
             if (e.detail && e.detail.reservations) {
-                // Filter to include approved and pending reservations
+                // Keep home view limited to approved/paid reservations
                 reservations = filterVisibleReservations(e.detail.reservations);
-                recomputeFullyBlockedDates();
+                recomputeEventBlockedDates();
                 renderCalendar();
             }
         });
@@ -2728,20 +2863,12 @@ document.addEventListener('DOMContentLoaded', function() {
         refreshReservations();
     }
     
-    // Function to filter reservations to show approved, pending, paid, and cancelled ones
+    // Function to filter reservations for home calendar visibility only
     function filterVisibleReservations(reservationsData) {
         const filtered = {};
         Object.keys(reservationsData).forEach(date => {
             const visibleReservations = reservationsData[date].filter(r => {
-                const rawStatus = r.status || 'pending';
-                const status = String(rawStatus).toLowerCase();
-                return (
-                    status === 'approved' ||
-                    status === 'confirmed' ||
-                    status === 'pending' ||
-                    status === 'paid' ||
-                    status === 'cancelled'
-                );
+                return isHomeCalendarVisibleStatus(r.status);
             });
             if (visibleReservations.length > 0) {
                 filtered[date] = visibleReservations;
@@ -2757,7 +2884,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (adminReservations) {
             try {
                 const adminData = JSON.parse(adminReservations);
-                // Filter to include approved and pending reservations
+                // Keep home view limited to approved/paid reservations
                 const filteredAdminData = filterVisibleReservations(adminData);
                 // Merge admin data with current reservations
                 Object.keys(filteredAdminData).forEach(date => {
@@ -2771,22 +2898,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 // Also filter existing reservations
                 reservations = filterVisibleReservations(reservations);
-                recomputeFullyBlockedDates();
+                recomputeEventBlockedDates();
                 renderCalendar(); // Re-render calendar with updated data
-                return; // Exit early if we got data from localStorage
             } catch (e) {
                 console.log('Error parsing admin reservations from localStorage:', e);
             }
         }
         
-        // Fallback to API if no localStorage data
+        // Always refresh from API as authoritative source to prevent stale
+        // localStorage values from causing time mismatches.
         fetch('/api/reservations/calendar')
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Filter to include approved and pending reservations
+                    // Keep home view limited to approved/paid reservations
                     reservations = filterVisibleReservations(data.reservations);
-                    recomputeFullyBlockedDates();
+                    recomputeEventBlockedDates();
                     renderCalendar(); // Re-render calendar with updated data
                 }
             })
@@ -2837,8 +2964,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const dayElement = document.createElement('div');
             const dateStr = formatDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day));
             const dayReservations = reservations[dateStr] || [];
-            const hasEventBooking = dayReservations.some(r => isEventBooking(r));
-            const hasWholeDayEventBooking = dayReservations.some(r => isWholeDayEventBooking(r));
+            const hasEventBooking = dayReservations.some(r => isActiveEventBooking(r));
             
             let dayClass = 'calendar-day';
             // Removed 'today' class - no longer highlighting today
@@ -2854,6 +2980,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     return (
                         status === 'approved' ||
                         status === 'confirmed' ||
+                        status === 'reserved' ||
                         status === 'paid'
                     );
                 });
@@ -2876,9 +3003,7 @@ document.addEventListener('DOMContentLoaded', function() {
             dayElement.innerHTML = `
                 <div class="calendar-day-number">${day}</div>
                 <div class="calendar-day-info">${
-                    hasWholeDayEventBooking
-                        ? 'Event Booking (Fully Booked)'
-                        : (hasEventBooking ? 'Event Booking' : `${dayReservations.length} reservations`)
+                    hasEventBooking ? 'Event Booking' : `${dayReservations.length} reservations`
                 }</div>
             `;
             
@@ -2979,7 +3104,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                   </div>
                                   <div><strong>Booked by:</strong> ${maskCustomerName(getReservationCustomerName(reservation))}</div>
                                   <div><strong>Time In:</strong> ${formatTime(getReservationTimeIn(reservation))}</div>
-                                  <div><strong>Time Out:</strong> ${formatTime(reservation.time_out || 'N/A')}</div>
+                                  <div><strong>Time Out:</strong> ${formatTime(getReservationTimeOut(reservation))}</div>
                                   <div><strong>Guests:</strong> ${getGuestCount(reservation)}</div>
                                   <div><strong>Occasion:</strong> ${getOccasionText(reservation)}</div>
                                   ${reservation.special_requests ? `<div><strong>Special Requests:</strong> ${reservation.special_requests}</div>` : ''}
@@ -3096,7 +3221,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Regular table reservations
-        return reservation.time_in || reservation.time || 'N/A';
+        // Prefer "time" first because admin-to-public sync uses this as the
+        // same display-ready value shown in admin calendar modal.
+        return reservation.time || reservation.time_in || 'N/A';
+    }
+
+    // Normalize "Time Out" so public calendar mirrors admin display sources
+    function getReservationTimeOut(reservation) {
+        return (
+            reservation.time_out_display ||
+            reservation.time_out ||
+            reservation.checkout_time ||
+            reservation.end_time ||
+            reservation.timeOut ||
+            'N/A'
+        );
     }
 
     // Normalize guest name so admin can see who booked
@@ -3267,9 +3406,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function formatTime(timeValue) {
         if (!timeValue || timeValue === 'N/A') return 'N/A';
         
-        let hour = 0;
-        let minute = 0;
-        let timeStr = '';
+        let hour;
+        let minute;
         
         // If it's already in HH:MM format (24-hour), convert to 12-hour
         if (typeof timeValue === 'string' && /^\d{1,2}:\d{2}\s*(AM|PM)?$/i.test(timeValue)) {
@@ -3280,7 +3418,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Extract hour and minute
             const match = timeValue.match(/(\d{1,2}):(\d{2})/);
             if (match) {
-                hour = parseInt(match[1]);
+                hour = parseInt(match[1], 10);
                 minute = match[2];
             }
         } else if (typeof timeValue === 'string') {
@@ -3288,7 +3426,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (timeValue.includes('T')) {
                 const timeMatch = timeValue.match(/T(\d{2}):(\d{2})/);
                 if (timeMatch) {
-                    hour = parseInt(timeMatch[1]);
+                    hour = parseInt(timeMatch[1], 10);
                     minute = timeMatch[2];
                 }
             }
@@ -3298,7 +3436,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (parts.length > 1) {
                     const timePart = parts[1].substring(0, 5); // Get HH:MM
                     if (/^\d{2}:\d{2}$/.test(timePart)) {
-                        hour = parseInt(timePart.substring(0, 2));
+                        hour = parseInt(timePart.substring(0, 2), 10);
                         minute = timePart.substring(3, 5);
                     }
                 }
@@ -3312,7 +3450,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return hour12 + ':' + minute + ' ' + period;
         }
         
-        return timeValue;
+        return typeof timeValue === 'string' ? timeValue : 'N/A';
     }
     
     // Helper function to format datetime for display
