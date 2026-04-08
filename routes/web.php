@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Auth\EmailOtpVerificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\NotificationController; // ✅ Add this
 use App\Http\Controllers\AssistantController;
@@ -214,6 +215,12 @@ Route::middleware(['auth'])->group(function () {
 
 // Public route to check authentication status
 Route::get('/check-auth', [EventBookingController::class, 'checkAuth'])->name('check.auth');
+
+Route::middleware('guest')->group(function () {
+    Route::get('/verify-otp', [EmailOtpVerificationController::class, 'show'])->name('otp.verify.notice');
+    Route::post('/verify-otp', [EmailOtpVerificationController::class, 'verify'])->name('otp.verify.submit');
+    Route::post('/verify-otp/resend', [EmailOtpVerificationController::class, 'resend'])->name('otp.verify.resend');
+});
 
 
 

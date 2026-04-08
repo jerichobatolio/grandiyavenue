@@ -33,6 +33,9 @@ class User extends Authenticatable
         'password',
         'phone',
         'address',
+        'email_otp_code',
+        'email_otp_expires_at',
+        'email_otp_verified_at',
     ];
 
     /**
@@ -45,6 +48,7 @@ class User extends Authenticatable
         'remember_token',
         'two_factor_recovery_codes',
         'two_factor_secret',
+        'email_otp_code',
     ];
 
     /**
@@ -66,6 +70,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'email_otp_expires_at' => 'datetime',
+            'email_otp_verified_at' => 'datetime',
         ];
     }
 

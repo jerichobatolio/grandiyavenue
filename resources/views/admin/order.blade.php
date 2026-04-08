@@ -706,15 +706,19 @@
                                         </td>
                                         <td>
                                             <div class="action-buttons" onclick="event.stopPropagation();">
-                                                <a onclick="return updateAllOrdersStatus([{{ implode(',', $orderIds) }}], 'On the Way', 'Change status to: On the Way for all {{ $totalItems }} items?')" class="action-btn btn-onway" href="javascript:void(0);">
-                                                    <i class="fas fa-truck"></i> On Way
-                                                </a>
-                                                <a onclick="return updateAllOrdersStatus([{{ implode(',', $orderIds) }}], 'Delivered', 'Mark all {{ $totalItems }} items as Delivered?')" class="action-btn btn-delivered" href="javascript:void(0);">
-                                                    <i class="fas fa-check"></i> Delivered
-                                                </a>
-                                                <a onclick="return updateAllOrdersStatus([{{ implode(',', $orderIds) }}], 'Cancelled', 'Cancel all {{ $totalItems }} items?')" class="action-btn btn-cancel" href="javascript:void(0);">
-                                                    <i class="fas fa-times"></i> Cancel
-                                                </a>
+                                                @if($groupStatus !== 'Cancelled')
+                                                    <a onclick="return updateAllOrdersStatus([{{ implode(',', $orderIds) }}], 'On the Way', 'Change status to: On the Way for all {{ $totalItems }} items?')" class="action-btn btn-onway" href="javascript:void(0);">
+                                                        <i class="fas fa-truck"></i> On Way
+                                                    </a>
+                                                    <a onclick="return updateAllOrdersStatus([{{ implode(',', $orderIds) }}], 'Delivered', 'Mark all {{ $totalItems }} items as Delivered?')" class="action-btn btn-delivered" href="javascript:void(0);">
+                                                        <i class="fas fa-check"></i> Delivered
+                                                    </a>
+                                                @endif
+                                                @if(!in_array($groupStatus, ['Delivered', 'Cancelled'], true))
+                                                    <a onclick="return updateAllOrdersStatus([{{ implode(',', $orderIds) }}], 'Cancelled', 'Cancel all {{ $totalItems }} items?')" class="action-btn btn-cancel" href="javascript:void(0);">
+                                                        <i class="fas fa-times"></i> Cancel
+                                                    </a>
+                                                @endif
                                                 <a onclick="return archiveAllOrders([{{ implode(',', $orderIds) }}], 'Are you sure you want to archive all {{ $totalItems }} items?')" class="action-btn btn-archive" href="javascript:void(0);">
                                                     <i class="fas fa-archive"></i> Archive
                                                 </a>
@@ -825,15 +829,19 @@
                                             </td>
                                             <td>
                                                 <div class="action-buttons">
-                                                    <a onclick="return confirm('Change status to: On the Way?')" class="action-btn btn-onway" href="{{ route('order.status', ['id' => $order->id, 'status' => 'On the Way']) }}">
-                                                        <i class="fas fa-truck"></i> On Way
-                                                    </a>
-                                                    <a onclick="return confirm('Mark as Delivered?')" class="action-btn btn-delivered" href="{{ route('order.status', ['id' => $order->id, 'status' => 'Delivered']) }}">
-                                                        <i class="fas fa-check"></i> Delivered
-                                                    </a>
-                                                    <a onclick="return confirm('Cancel this order?')" class="action-btn btn-cancel" href="{{ route('order.status', ['id' => $order->id, 'status' => 'Cancelled']) }}">
-                                                        <i class="fas fa-times"></i> Cancel
-                                                    </a>
+                                                    @if($order->delivery_status !== 'Cancelled')
+                                                        <a onclick="return confirm('Change status to: On the Way?')" class="action-btn btn-onway" href="{{ route('order.status', ['id' => $order->id, 'status' => 'On the Way']) }}">
+                                                            <i class="fas fa-truck"></i> On Way
+                                                        </a>
+                                                        <a onclick="return confirm('Mark as Delivered?')" class="action-btn btn-delivered" href="{{ route('order.status', ['id' => $order->id, 'status' => 'Delivered']) }}">
+                                                            <i class="fas fa-check"></i> Delivered
+                                                        </a>
+                                                    @endif
+                                                    @if(!in_array($order->delivery_status, ['Delivered', 'Cancelled'], true))
+                                                        <a onclick="return confirm('Cancel this order?')" class="action-btn btn-cancel" href="{{ route('order.status', ['id' => $order->id, 'status' => 'Cancelled']) }}">
+                                                            <i class="fas fa-times"></i> Cancel
+                                                        </a>
+                                                    @endif
                                                     <a onclick="return confirm('Are you sure you want to archive this order?')" class="action-btn btn-archive" href="{{ route('order.delete', $order->id) }}">
                                                         <i class="fas fa-archive"></i> Archive
                                                     </a>

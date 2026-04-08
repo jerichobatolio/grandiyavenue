@@ -3,6 +3,7 @@
 namespace App\Actions\Fortify;
 
 use App\Models\User;
+use App\Services\EmailOtpService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
@@ -27,7 +28,7 @@ class CreateNewUser implements CreatesNewUsers
             'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature() ? ['accepted', 'required'] : '',
         ])->validate();
 
-        return User::create([
+        $user = User::create([
             'name' => $input['name'],
             'last_name' => $input['last_name'] ?? null,
             'email' => $input['email'],
@@ -35,5 +36,9 @@ class CreateNewUser implements CreatesNewUsers
             'address' => $input['address'],
             'password' => Hash::make($input['password']),
         ]);
+
+        app(EmailOtpService::class)->issue($user);
+
+        return $user;
     }
 }

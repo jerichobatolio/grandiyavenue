@@ -879,6 +879,15 @@
                                             $eventDate = $data['event_date'] ?? 'N/A';
                                             $packageInclusion = $data['package_inclusion'] ?? null;
                                             $timeSlot = $data['time_slot'] ?? null;
+                                            if (empty($timeSlot)) {
+                                                $eventTimeIn = $data['time_in'] ?? null;
+                                                $eventTimeOut = $data['time_out'] ?? null;
+                                                if (!empty($eventTimeIn) && !empty($eventTimeOut)) {
+                                                    $timeSlot = $eventTimeIn . ' - ' . $eventTimeOut;
+                                                } elseif (!empty($eventTimeIn)) {
+                                                    $timeSlot = $eventTimeIn;
+                                                }
+                                            }
                                             $amount = $data['amount'] ?? 0;
                                             $badgeClass = $status === 'Paid' ? 'success' : ($status === 'Cancelled' ? 'danger' : 'warning');
                                         } else {
@@ -972,7 +981,7 @@
                                                         <small class="text-muted">
                                                             Event Date: {{ $eventDate }}
                                                             @if(!empty($timeSlot))
-                                                                | Time: {{ $timeSlot }}
+                                                                | Time Slot: {{ $timeSlot }}
                                                             @endif
                                                         </small><br>
                                                         @if(!empty($packageInclusion))
@@ -1756,7 +1765,16 @@
             const status = data.status || 'Pending';
             const eventDate = data.event_date || 'N/A';
             const packageInclusion = data.package_inclusion || null;
-            const timeSlot = data.time_slot || null;
+            let timeSlot = data.time_slot || null;
+            if (!timeSlot) {
+                const eventTimeIn = data.time_in || null;
+                const eventTimeOut = data.time_out || null;
+                if (eventTimeIn && eventTimeOut) {
+                    timeSlot = `${eventTimeIn} - ${eventTimeOut}`;
+                } else if (eventTimeIn) {
+                    timeSlot = eventTimeIn;
+                }
+            }
             const amount = (data.amount !== undefined && data.amount !== null) ? data.amount : 0;
             const badgeClass = status === 'Paid' ? 'success' : (status === 'Cancelled' ? 'danger' : 'warning');
             
@@ -1764,7 +1782,7 @@
 
             const detailsLineParts = [`Event Date: ${eventDate}`];
             if (timeSlot) {
-                detailsLineParts.push(`Time: ${timeSlot}`);
+                detailsLineParts.push(`Time Slot: ${timeSlot}`);
             }
 
             contentHtml = `

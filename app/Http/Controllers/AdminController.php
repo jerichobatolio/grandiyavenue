@@ -227,17 +227,30 @@ class AdminController extends Controller
     // Change order status and notify all users (single order)
     private function changeOrderStatus(Order $order, $status)
     {
+        // Business rule: delivered orders can no longer be cancelled.
+        if (
+            strcasecmp((string) $status, 'Cancelled') === 0
+            && strcasecmp((string) ($order->delivery_status ?? ''), 'Delivered') === 0
+        ) {
+            return;
+        }
+
         $order->delivery_status = $status;
         $order->save();
 
-        // Get all users to notify everyone
-        $allUsers = User::all();
+        // Create ONE in-app notification for the customer only.
+        $targetUser = null;
+        if (!empty($order->user_id)) {
+            $targetUser = User::find($order->user_id);
+        }
+        if (!$targetUser && !empty($order->email)) {
+            $targetUser = User::where('email', $order->email)->first();
+        }
 
-        // Create notifications for all users
-        foreach ($allUsers as $user) {
+        if ($targetUser) {
             $notifMessage = "Order #{$order->id} status has been updated to: {$status}";
-            $notification = Notification::create([
-                'user_id' => $user->id,
+            Notification::create([
+                'user_id' => $targetUser->id,
                 'order_id' => $order->id,
                 'type' => 'order_status',
                 'message' => $notifMessage,
@@ -256,11 +269,17 @@ class AdminController extends Controller
         }
 
         // External customer notification (email/SMS), independent from in-app feed.
+        $lineTotal = (float) $order->price * (int) $order->quantity;
+
         $this->statusNotifier()->sendStatusUpdate(
             $order->email,
             $order->phone,
-            "Order #{$order->id} {$status}",
-            "Your order #{$order->id} status is now {$status}."
+            "Order {$status}",
+            "Your order #{$order->id} status is now {$status}.\n"
+            . "Item: {$order->title}\n"
+            . "Quantity: {$order->quantity}\n"
+            . "Unit Price: ₱" . number_format((float) $order->price, 2) . "\n"
+            . "Total: ₱" . number_format($lineTotal, 2)
         );
     }
 
@@ -329,6 +348,19 @@ class AdminController extends Controller
         }
 
         // Update all orders' delivery_status without creating per‑order notifications
+        if ($status === 'Cancelled') {
+            $hasDeliveredOrder = $orders->contains(function ($order) {
+                return strcasecmp((string) ($order->delivery_status ?? ''), 'Delivered') === 0;
+            });
+
+            if ($hasDeliveredOrder) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Delivered orders cannot be cancelled.',
+                ], 422);
+            }
+        }
+
         foreach ($orders as $order) {
             $order->delivery_status = $status;
             $order->save();
@@ -341,6 +373,9 @@ class AdminController extends Controller
         });
 
         $itemText = $totalItems === 1 ? 'item' : 'items';
+        $itemDetails = $orders->map(function ($order) {
+            return $order->title . ' x' . (int) $order->quantity;
+        })->implode(', ');
 
         // Send ONE aggregated notification to the customer (if linked to a user)
         if ($firstOrder->user_id) {
@@ -369,38 +404,11 @@ class AdminController extends Controller
         $this->statusNotifier()->sendStatusUpdate(
             $firstOrder->email,
             $firstOrder->phone,
-            "Order Status {$status}",
-            "Your order with {$totalItems} {$itemText} has been updated to {$status}."
+            "Order {$status}",
+            "Your order with {$totalItems} {$itemText} has been updated to {$status}.\n"
+            . "Items: {$itemDetails}\n"
+            . "Total: ₱" . number_format((float) $totalPrice, 2)
         );
-
-        // Optionally also notify other users (e.g. admins) in aggregated form.
-        // This keeps admin notifications concise when a group action is used.
-        $otherUsers = User::when($firstOrder->user_id, function ($query) use ($firstOrder) {
-            return $query->where('id', '!=', $firstOrder->user_id);
-        })->get();
-
-        foreach ($otherUsers as $user) {
-            Notification::create([
-                'user_id'  => $user->id,
-                'order_id' => $firstOrder->id,
-                'type'     => 'order_status',
-                'message'  => "Customer {$firstOrder->name} now has {$totalItems} {$itemText} updated to {$status}.",
-                'is_read'  => false,
-                'data'     => [
-                    'order_id'        => $firstOrder->id,
-                    'status'          => $status,
-                    'title'           => $totalItems > 1 ? "{$totalItems} items" : $firstOrder->title,
-                    'price'           => $totalPrice,
-                    'quantity'        => $totalItems,
-                    'delivery_status' => $status,
-                    'customer_name'   => $firstOrder->name,
-                    'customer_email'  => $firstOrder->email,
-                    'total_items'     => $totalItems,
-                    'total_price'     => $totalPrice,
-                    'order_ids'       => $orderIds,
-                ],
-            ]);
-        }
 
         return response()->json([
             'success' => true,
@@ -430,6 +438,9 @@ class AdminController extends Controller
     {
         $order = Order::find($id);
         if ($order) {
+            if (strcasecmp((string) ($order->delivery_status ?? ''), 'Delivered') === 0) {
+                return redirect()->back()->with('error', 'Delivered orders cannot be cancelled.');
+            }
             $this->changeOrderStatus($order, "Cancelled");
         }
         return redirect()->back()->with('message', 'Order status updated to Cancelled');
@@ -440,6 +451,12 @@ class AdminController extends Controller
     {
         $order = Order::find($id);
         if ($order) {
+            if (
+                strcasecmp((string) $status, 'Cancelled') === 0
+                && strcasecmp((string) ($order->delivery_status ?? ''), 'Delivered') === 0
+            ) {
+                return redirect()->back()->with('error', 'Delivered orders cannot be cancelled.');
+            }
             $this->changeOrderStatus($order, $status);
             return redirect()->back()->with('message', "Order status updated to {$status}");
         }
@@ -851,16 +868,29 @@ class AdminController extends Controller
             // Create notification for the user
             if ($reservation->user_id) {
                 $reservationUser = User::find($reservation->user_id);
-                // Format date and time exactly as customer entered (no extra formatting)
+                // Format date and timeslot for human-readable notification details.
                 $dateFormatted = $reservation->date instanceof \Carbon\Carbon 
                     ? $reservation->date->format('Y-m-d') 
                     : $reservation->date;
-                $timeFormatted = $reservation->time_in instanceof \Carbon\Carbon 
-                    ? $reservation->time_in->format('H:i') 
-                    : (is_string($reservation->time_in) ? substr($reservation->time_in, 11, 5) : $reservation->time_in);
+                $timeInFormatted = $reservation->time_in instanceof \Carbon\Carbon
+                    ? $reservation->time_in->format('g:i A')
+                    : (
+                        !empty($reservation->time_in)
+                            ? \Carbon\Carbon::parse((string) $reservation->time_in)->format('g:i A')
+                            : null
+                    );
                 $timeOutFormatted = $reservation->time_out instanceof \Carbon\Carbon
-                    ? $reservation->time_out->format('H:i')
-                    : (is_string($reservation->time_out) ? substr($reservation->time_out, 11, 5) : $reservation->time_out);
+                    ? $reservation->time_out->format('g:i A')
+                    : (
+                        !empty($reservation->time_out)
+                            ? \Carbon\Carbon::parse((string) $reservation->time_out)->format('g:i A')
+                            : null
+                    );
+                $timeSlot = $timeInFormatted && $timeOutFormatted
+                    ? "{$timeInFormatted} - {$timeOutFormatted}"
+                    : ($timeInFormatted ?: 'Not specified');
+                $tableLabel = $reservation->table_number ?: 'Not assigned';
+                $guestCount = (int) ($reservation->guest ?: 0);
                 
                 \App\Models\Notification::create([
                     'user_id' => $reservation->user_id,
@@ -870,8 +900,9 @@ class AdminController extends Controller
                     'data' => [
                         'reservation_id' => $reservation->id,
                         'date' => $dateFormatted,
-                        'time' => $timeFormatted,
+                        'time' => $timeInFormatted,
                         'time_out' => $timeOutFormatted,
+                        'time_slot' => $timeSlot,
                         'table' => $reservation->table_number,
                         'guests' => $reservation->guest,
                         'amount' => (float) ($reservation->amount_paid ?: $reservation->down_payment_amount ?: 1000),
@@ -882,7 +913,12 @@ class AdminController extends Controller
                     $reservationUser?->email,
                     $reservation->phone,
                     'Reservation Approved',
-                    "Your table reservation for {$dateFormatted} {$timeFormatted} has been approved."
+                    "Your table reservation has been approved.\n"
+                    . "Date: {$dateFormatted}\n"
+                    . "Time In: " . ($timeInFormatted ?: 'Not specified') . "\n"
+                    . "Time Out: " . ($timeOutFormatted ?: 'Not specified') . "\n"
+                    . "Guests: {$guestCount}\n"
+                    . "Table: {$tableLabel}"
                 );
             }
             
@@ -918,22 +954,42 @@ class AdminController extends Controller
             
             $reservation = Book::findOrFail($id);
             \Log::info('Found reservation: ' . $reservation->toJson());
+
+            // Business rule: approved reservations can no longer be cancelled.
+            $currentStatus = strtolower((string) ($reservation->status ?? ''));
+            if (in_array($currentStatus, ['approved', 'confirmed'], true)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Approved reservations cannot be cancelled.',
+                ], 422);
+            }
+
             $reservation->status = 'cancelled';
             $reservation->save();
             
             // Create notification for the user
             if ($reservation->user_id) {
                 $reservationUser = User::find($reservation->user_id);
-                // Format date and time exactly as customer entered (no extra formatting)
+                // Format date and times for human-readable reservation details.
                 $dateFormatted = $reservation->date instanceof \Carbon\Carbon 
                     ? $reservation->date->format('Y-m-d') 
                     : $reservation->date;
-                $timeFormatted = $reservation->time_in instanceof \Carbon\Carbon 
-                    ? $reservation->time_in->format('H:i') 
-                    : (is_string($reservation->time_in) ? substr($reservation->time_in, 11, 5) : $reservation->time_in);
+                $timeFormatted = $reservation->time_in instanceof \Carbon\Carbon
+                    ? $reservation->time_in->format('g:i A')
+                    : (
+                        !empty($reservation->time_in)
+                            ? \Carbon\Carbon::parse((string) $reservation->time_in)->format('g:i A')
+                            : null
+                    );
                 $timeOutFormatted = $reservation->time_out instanceof \Carbon\Carbon
-                    ? $reservation->time_out->format('H:i')
-                    : (is_string($reservation->time_out) ? substr($reservation->time_out, 11, 5) : $reservation->time_out);
+                    ? $reservation->time_out->format('g:i A')
+                    : (
+                        !empty($reservation->time_out)
+                            ? \Carbon\Carbon::parse((string) $reservation->time_out)->format('g:i A')
+                            : null
+                    );
+                $tableLabel = $reservation->table_number ?: 'Not assigned';
+                $guestCount = (int) ($reservation->guest ?: 0);
                 
                 \App\Models\Notification::create([
                     'user_id' => $reservation->user_id,
@@ -955,7 +1011,12 @@ class AdminController extends Controller
                     $reservationUser?->email,
                     $reservation->phone,
                     'Reservation Cancelled',
-                    "Your table reservation for {$dateFormatted} {$timeFormatted} has been cancelled."
+                    "Your table reservation has been cancelled.\n"
+                    . "Date: {$dateFormatted}\n"
+                    . "Time In: " . ($timeFormatted ?: 'Not specified') . "\n"
+                    . "Time Out: " . ($timeOutFormatted ?: 'Not specified') . "\n"
+                    . "Guests: {$guestCount}\n"
+                    . "Table: {$tableLabel}"
                 );
             }
             
@@ -1230,6 +1291,15 @@ class AdminController extends Controller
                 ], 400);
             }
 
+            // Avoid duplicate notifications/emails when status did not change.
+            if ((string) $booking->status === (string) $newStatus) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Event booking status is already up to date.',
+                    'booking' => $booking
+                ]);
+            }
+
             // Business rule: once a booking is accepted and marked as Paid,
             // it can no longer be cancelled.
             if ($booking->status === 'Paid' && $newStatus === 'Cancelled') {
@@ -1347,13 +1417,14 @@ class AdminController extends Controller
 
         $statusTitles = [
             'Pending' => 'Event Booking Pending',
-            'Paid' => '🎉 Booking Accepted & Payment Confirmed',
+            'Paid' => 'Event Booking Approved',
             'Cancelled' => 'Event Booking Cancelled'
         ];
 
         $message = $statusMessages[$status] ?? 'Your event booking status has been updated';
         $title = $statusTitles[$status] ?? 'Event Booking Update';
         $eventDateFormatted = $booking->event_date->format('M d, Y');
+        $eventName = optional($booking->eventType)->name ?: 'Event';
 
         // Package inclusion name (if any) with pax included
         $package = optional($booking->packageInclusion);
@@ -1401,12 +1472,12 @@ class AdminController extends Controller
                 : (float) ($booking->down_payment_amount ?? 0));
 
         // Build readable details for the notification message
-        $detailsParts = ["Event on {$eventDateFormatted}"];
+        $detailsParts = ["Event: {$eventName}", "Date: {$eventDateFormatted}"];
         if ($packageDisplayName) {
             $detailsParts[] = "Package: {$packageDisplayName}";
         }
         if ($timeSlot) {
-            $detailsParts[] = "Time: {$timeSlot}";
+            $detailsParts[] = "Time Slot: {$timeSlot}";
         }
         $detailsText = implode(' | ', $detailsParts);
         
@@ -1425,6 +1496,8 @@ class AdminController extends Controller
                     'booking_id' => $booking->id,
                     'status' => $status,
                     'event_date' => $booking->event_date->format('Y-m-d'),
+                    'event' => $eventName,
+                    'number_of_guests' => $booking->number_of_guests,
                     // New preferred fields for frontend display
                     'package_inclusion' => $packageDisplayName,
                     'time_slot' => $timeSlot,
@@ -1436,11 +1509,17 @@ class AdminController extends Controller
         }
 
         if ($booking->email || $booking->contact_number) {
+            $emailSmsMessage = $message
+                . "\nEvent: {$eventName}"
+                . "\nDate: {$eventDateFormatted}"
+                . ($timeSlot ? "\nTime Slot: {$timeSlot}" : '')
+                . ($packageDisplayName ? "\nPackage Inclusion: {$packageDisplayName}" : '');
+
             $this->statusNotifier()->sendStatusUpdate(
                 $booking->email,
                 $booking->contact_number,
                 $title,
-                $message . ' Event date: ' . $eventDateFormatted . '.'
+                $emailSmsMessage
             );
         }
     }

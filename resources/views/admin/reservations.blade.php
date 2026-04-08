@@ -792,12 +792,16 @@
                       </td>
                       <td>
                         <div class="action-buttons">
-                          <button class="btn-approve" onclick="approveReservation({{ $reservation->id }})" title="Approve Reservation">
-                            ✅ Approve
-                          </button>
-                          <button class="btn-cancel" onclick="cancelReservation({{ $reservation->id }})" title="Cancel Reservation">
-                            ❌ Cancel
-                          </button>
+                          @if(!in_array(strtolower((string) $status), ['approved', 'confirmed', 'cancelled'], true))
+                            <button class="btn-approve" onclick="approveReservation({{ $reservation->id }})" title="Approve Reservation">
+                              ✅ Approve
+                            </button>
+                          @endif
+                          @if(!in_array(strtolower((string) $status), ['approved', 'confirmed', 'cancelled'], true))
+                            <button class="btn-cancel" onclick="cancelReservation({{ $reservation->id }})" title="Cancel Reservation">
+                              ❌ Cancel
+                            </button>
+                          @endif
                           <button class="btn-delete" onclick="archiveReservation({{ $reservation->id }})" title="Archive Reservation">
                             📦 Archive
                           </button>

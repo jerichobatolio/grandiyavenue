@@ -561,7 +561,17 @@
                                             $bookingId = $data['booking_id'] ?? 'N/A';
                                             $status = $data['status'] ?? 'Pending';
                                             $eventDate = $data['event_date'] ?? 'N/A';
-                                            $guests = $data['guests'] ?? 'N/A';
+                                            $guests = $data['number_of_guests'] ?? ($data['guests'] ?? 'N/A');
+                                            $timeSlot = $data['time_slot'] ?? null;
+                                            if (empty($timeSlot)) {
+                                                $eventTimeIn = $data['time_in'] ?? null;
+                                                $eventTimeOut = $data['time_out'] ?? null;
+                                                if (!empty($eventTimeIn) && !empty($eventTimeOut)) {
+                                                    $timeSlot = $eventTimeIn . ' - ' . $eventTimeOut;
+                                                } elseif (!empty($eventTimeIn)) {
+                                                    $timeSlot = $eventTimeIn;
+                                                }
+                                            }
                                             $amount = $data['amount'] ?? 0;
                                             $badgeClass = $status === 'Paid' ? 'success' : ($status === 'Cancelled' ? 'danger' : 'warning');
                                         } else {
@@ -608,7 +618,13 @@
                                                     @elseif($type === 'event_booking')
                                                         <strong>Event Booking #{{ $bookingId }}</strong>
                                                         <p class="mb-1 text-dark">{{ $notification->message }}</p>
-                                                        <small class="text-muted">Event Date: {{ $eventDate }} | Guests: {{ $guests }}</small><br>
+                                                        <small class="text-muted">
+                                                            Event Date: {{ $eventDate }}
+                                                            @if(!empty($timeSlot))
+                                                                | Time Slot: {{ $timeSlot }}
+                                                            @endif
+                                                            | Guests/Pax: {{ $guests }}
+                                                        </small><br>
                                                         <small class="text-muted">Amount: ₱{{ number_format($amount, 2) }}</small>
                                                     @else
                                                         <strong>Order #{{ $orderId }}</strong>
