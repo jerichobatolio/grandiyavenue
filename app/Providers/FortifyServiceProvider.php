@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\EmailOtpService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -45,6 +46,22 @@ class FortifyServiceProvider extends ServiceProvider
 
             if (! $user || ! Hash::check((string) $request->password, (string) $user->password)) {
                 return null;
+            }
+
+            // Existing accounts created before OTP rollout should not be blocked by OTP.
+            $otpRolloutDate = Carbon::create(2026, 4, 8, 0, 0, 0, config('app.timezone'));
+            $isLegacyAccount = $user->created_at
+                && $user->created_at->lt($otpRolloutDate)
+                && ! $user->email_otp_verified_at;
+
+            if ($isLegacyAccount) {
+                $user->forceFill([
+                    'email_otp_verified_at' => Carbon::now(),
+                    'email_otp_code' => null,
+                    'email_otp_expires_at' => null,
+                ])->save();
+
+                return $user;
             }
 
             $hasPendingEmailOtp = ! $user->email_otp_verified_at
